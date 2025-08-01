@@ -53,7 +53,7 @@ class WebRTCService {
   private publicKey: string | null = null;
   
   // Configuration
-  private readonly SIGNALING_SERVER = 'http://10.0.2.2:3001'; // Use 10.0.2.2 for Android emulator, or your machine's IP for physical devices
+  private readonly SIGNALING_SERVER = 'http://localhost:3001'; // For development on Windows
   private readonly STUN_SERVERS = [
     { urls: 'stun:stun.l.google.com:19302' },
     { urls: 'stun:stun1.l.google.com:19302' },
