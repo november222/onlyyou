@@ -33,6 +33,10 @@ class WebRTCService {
 
   constructor() {
     console.warn('WebRTC Service: Web platform detected - limited functionality available');
+    // Initialize with web-specific error message
+    this.updateConnectionState({
+      error: 'WebRTC features are not available on web platform. Please use the mobile app for full functionality.'
+    });
   }
 
   // Update connection state

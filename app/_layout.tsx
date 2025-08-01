@@ -1,8 +1,13 @@
-import 'react-native-get-random-values';
 import { useEffect } from 'react';
 import { Stack } from 'expo-router/stack';
 import { StatusBar } from 'expo-status-bar';
+import { Platform } from 'react-native';
 import { useFrameworkReady } from '@/hooks/useFrameworkReady';
+
+// Only import crypto polyfill on native platforms
+if (Platform.OS !== 'web') {
+  require('react-native-get-random-values');
+}
 
 export default function RootLayout() {
   useFrameworkReady();

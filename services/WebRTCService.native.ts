@@ -1,7 +1,12 @@
 import { Platform } from 'react-native';
 import io, { Socket } from 'socket.io-client';
-import CryptoJS from 'crypto-js';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+
+// Only import crypto on native platforms
+let CryptoJS: any = null;
+if (Platform.OS !== 'web') {
+  CryptoJS = require('crypto-js');
+}
 
 // Dynamic imports for native WebRTC components
 let RTCPeerConnection: any = null;
@@ -78,6 +83,7 @@ class WebRTCService {
       this.updateConnectionState({
         error: 'WebRTC features are not available on web platform. Please use the mobile app for full functionality.'
       });
+      return;
     } else {
       this.generateKeyPair();
     }
@@ -85,6 +91,11 @@ class WebRTCService {
 
   // Generate ECDH key pair for encryption
   private async generateKeyPair() {
+    if (Platform.OS === 'web' || !CryptoJS) {
+      console.warn('Crypto not available on this platform');
+      return;
+    }
+    
     try {
       // In a real implementation, use proper ECDH key generation
       // For demo purposes, using a simplified approach
@@ -100,7 +111,7 @@ class WebRTCService {
 
   // Derive shared key from partner's public key
   private deriveSharedKey(partnerPublicKey: string) {
-    if (!this.privateKey) return;
+    if (!this.privateKey || Platform.OS === 'web' || !CryptoJS) return;
     
     // Simplified key derivation - in production, use proper ECDH
     this.sharedKey = CryptoJS.SHA256(this.privateKey + partnerPublicKey).toString();
@@ -108,7 +119,7 @@ class WebRTCService {
 
   // Encrypt message
   private encryptMessage(message: string): string {
-    if (!this.sharedKey) return message;
+    if (!this.sharedKey || Platform.OS === 'web' || !CryptoJS) return message;
     
     try {
       const encrypted = CryptoJS.AES.encrypt(message, this.sharedKey).toString();
@@ -121,7 +132,7 @@ class WebRTCService {
 
   // Decrypt message
   private decryptMessage(encryptedMessage: string): string {
-    if (!this.sharedKey) return encryptedMessage;
+    if (!this.sharedKey || Platform.OS === 'web' || !CryptoJS) return encryptedMessage;
     
     try {
       const decrypted = CryptoJS.AES.decrypt(encryptedMessage, this.sharedKey);
