@@ -59,7 +59,7 @@ class WebRTCService {
   // Configuration
   private readonly SIGNALING_SERVER = Platform.OS === 'web' 
     ? 'http://localhost:3001' 
-    : 'http://192.168.1.100:3001'; // Thay bằng IP thật của máy Windows
+    : 'http://192.168.35.83:3001'; // IP WiFi của máy Windows
   private readonly STUN_SERVERS = [
     { urls: 'stun:stun.l.google.com:19302' },
     { urls: 'stun:stun1.l.google.com:19302' },
