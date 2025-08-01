@@ -1,23 +1,22 @@
 import { Platform } from 'react-native';
-import io, { Socket } from 'socket.io-client';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 
-// Only import crypto on native platforms
+// Platform-specific imports
+let io: any = null;
 let CryptoJS: any = null;
-if (Platform.OS !== 'web') {
-  CryptoJS = require('crypto-js');
-}
-
-// Dynamic imports for native WebRTC components
+let AsyncStorage: any = null;
 let RTCPeerConnection: any = null;
 let RTCIceCandidate: any = null;
 let RTCSessionDescription: any = null;
 let mediaDevices: any = null;
 let MediaStream: any = null;
 
-// Initialize WebRTC components only on native platforms
+// Only import dependencies on native platforms
 if (Platform.OS !== 'web') {
   try {
+    io = require('socket.io-client').default || require('socket.io-client');
+    CryptoJS = require('crypto-js');
+    AsyncStorage = require('@react-native-async-storage/async-storage').default;
+    
     const webrtc = require('react-native-webrtc');
     RTCPeerConnection = webrtc.RTCPeerConnection;
     RTCIceCandidate = webrtc.RTCIceCandidate;
@@ -25,7 +24,7 @@ if (Platform.OS !== 'web') {
     mediaDevices = webrtc.mediaDevices;
     MediaStream = webrtc.MediaStream;
   } catch (error) {
-    console.warn('WebRTC not available:', error);
+    console.warn('Native dependencies not available:', error);
   }
 }
 
@@ -46,11 +45,11 @@ export interface ConnectionState {
 }
 
 class WebRTCService {
-  private peerConnection: RTCPeerConnection | null = null;
-  private socket: Socket | null = null;
-  private dataChannel: RTCDataChannel | null = null;
-  private localStream: MediaStream | null = null;
-  private remoteStream: MediaStream | null = null;
+  private peerConnection: any = null;
+  private socket: any = null;
+  private dataChannel: any = null;
+  private localStream: any = null;
+  private remoteStream: any = null;
   
   // Encryption
   private sharedKey: string | null = null;
@@ -58,7 +57,9 @@ class WebRTCService {
   private publicKey: string | null = null;
   
   // Configuration
-  private readonly SIGNALING_SERVER = 'http://localhost:3001'; // For development on Windows
+  private readonly SIGNALING_SERVER = Platform.OS === 'web' 
+    ? 'http://localhost:3001' 
+    : 'http://localhost:3001';
   private readonly STUN_SERVERS = [
     { urls: 'stun:stun.l.google.com:19302' },
     { urls: 'stun:stun1.l.google.com:19302' },
@@ -67,8 +68,8 @@ class WebRTCService {
   // Event callbacks
   public onConnectionStateChange: ((state: ConnectionState) => void) | null = null;
   public onMessageReceived: ((message: WebRTCMessage) => void) | null = null;
-  public onRemoteStream: ((stream: MediaStream) => void) | null = null;
-  public onLocalStream: ((stream: MediaStream) => void) | null = null;
+  public onRemoteStream: ((stream: any) => void) | null = null;
+  public onLocalStream: ((stream: any) => void) | null = null;
 
   private connectionState: ConnectionState = {
     isConnected: false,
@@ -83,22 +84,23 @@ class WebRTCService {
       this.updateConnectionState({
         error: 'WebRTC features are not available on web platform. Please use the mobile app for full functionality.'
       });
+      console.warn('WebRTC Service: Web platform detected - limited functionality available');
       return;
-    } else {
-      this.generateKeyPair();
     }
+
+    // Only initialize on native platforms
+    this.generateKeyPair();
   }
 
   // Generate ECDH key pair for encryption
   private async generateKeyPair() {
-    if (Platform.OS === 'web' || !CryptoJS) {
+    if (Platform.OS === 'web' || !CryptoJS || !AsyncStorage) {
       console.warn('Crypto not available on this platform');
       return;
     }
     
     try {
-      // In a real implementation, use proper ECDH key generation
-      // For demo purposes, using a simplified approach
+      // Generate random values using crypto-js
       this.privateKey = CryptoJS.lib.WordArray.random(32).toString();
       this.publicKey = CryptoJS.SHA256(this.privateKey).toString();
       
@@ -163,7 +165,7 @@ class WebRTCService {
     this.peerConnection = new RTCPeerConnection(configuration);
 
     // Handle ICE candidates
-    this.peerConnection.onicecandidate = (event) => {
+    this.peerConnection.onicecandidate = (event: any) => {
       if (event.candidate && this.socket && this.connectionState.roomCode) {
         this.socket.emit('webrtc-ice-candidate', {
           roomCode: this.connectionState.roomCode,
@@ -173,7 +175,7 @@ class WebRTCService {
     };
 
     // Handle remote stream
-    this.peerConnection.onaddstream = (event) => {
+    this.peerConnection.onaddstream = (event: any) => {
       this.remoteStream = event.stream;
       this.onRemoteStream?.(event.stream);
     };
@@ -199,7 +201,7 @@ class WebRTCService {
       console.log('Data channel opened');
     };
 
-    this.dataChannel.onmessage = (event) => {
+    this.dataChannel.onmessage = (event: any) => {
       try {
         const data = JSON.parse(event.data);
         const decryptedText = this.decryptMessage(data.text);
@@ -219,9 +221,9 @@ class WebRTCService {
     };
 
     // Handle incoming data channel
-    this.peerConnection.ondatachannel = (event) => {
+    this.peerConnection.ondatachannel = (event: any) => {
       const channel = event.channel;
-      channel.onmessage = (event) => {
+      channel.onmessage = (event: any) => {
         try {
           const data = JSON.parse(event.data);
           const decryptedText = this.decryptMessage(data.text);
@@ -251,6 +253,10 @@ class WebRTCService {
       throw new Error('WebRTC not supported on web platform');
     }
 
+    if (!io) {
+      throw new Error('Socket.IO not available');
+    }
+
     return new Promise((resolve, reject) => {
       this.socket = io(this.SIGNALING_SERVER, {
         transports: ['websocket'],
@@ -262,13 +268,13 @@ class WebRTCService {
         resolve();
       });
 
-      this.socket.on('connect_error', (error) => {
+      this.socket.on('connect_error', (error: any) => {
         console.error('Signaling server connection failed:', error);
         this.updateConnectionState({ error: 'Failed to connect to server' });
         reject(error);
       });
 
-      this.socket.on('room-joined', ({ roomCode, isFirst, partnerPublicKey }) => {
+      this.socket.on('room-joined', ({ roomCode, isFirst, partnerPublicKey }: any) => {
         console.log('Joined room:', roomCode);
         this.updateConnectionState({ roomCode, isConnecting: !isFirst });
         
@@ -281,7 +287,7 @@ class WebRTCService {
         }
       });
 
-      this.socket.on('partner-joined', ({ partnerPublicKey }) => {
+      this.socket.on('partner-joined', ({ partnerPublicKey }: any) => {
         console.log('Partner joined');
         this.updateConnectionState({ partnerConnected: true });
         this.deriveSharedKey(partnerPublicKey);
@@ -289,8 +295,8 @@ class WebRTCService {
         this.createOffer();
       });
 
-      this.socket.on('webrtc-offer', async ({ offer }) => {
-        if (this.peerConnection) {
+      this.socket.on('webrtc-offer', async ({ offer }: any) => {
+        if (this.peerConnection && RTCSessionDescription) {
           await this.peerConnection.setRemoteDescription(new RTCSessionDescription(offer));
           const answer = await this.peerConnection.createAnswer();
           await this.peerConnection.setLocalDescription(answer);
@@ -302,14 +308,14 @@ class WebRTCService {
         }
       });
 
-      this.socket.on('webrtc-answer', async ({ answer }) => {
-        if (this.peerConnection) {
+      this.socket.on('webrtc-answer', async ({ answer }: any) => {
+        if (this.peerConnection && RTCSessionDescription) {
           await this.peerConnection.setRemoteDescription(new RTCSessionDescription(answer));
         }
       });
 
-      this.socket.on('webrtc-ice-candidate', async ({ candidate }) => {
-        if (this.peerConnection) {
+      this.socket.on('webrtc-ice-candidate', async ({ candidate }: any) => {
+        if (this.peerConnection && RTCIceCandidate) {
           await this.peerConnection.addIceCandidate(new RTCIceCandidate(candidate));
         }
       });
@@ -323,7 +329,7 @@ class WebRTCService {
         });
       });
 
-      this.socket.on('room-error', ({ message }) => {
+      this.socket.on('room-error', ({ message }: any) => {
         console.error('Room error:', message);
         this.updateConnectionState({ error: message });
       });
@@ -432,7 +438,7 @@ class WebRTCService {
   // End call
   public endCall(): void {
     if (this.localStream) {
-      this.localStream.getTracks().forEach(track => track.stop());
+      this.localStream.getTracks().forEach((track: any) => track.stop());
       this.localStream = null;
     }
     
