@@ -33,7 +33,8 @@ import {
   History,
   Trash2,
   Crown,
-  X
+  X,
+  Shield
 } from 'lucide-react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import WebRTCService, { ConnectionState } from '@/services/WebRTCService';
@@ -42,6 +43,11 @@ interface ConnectionSession {
   id: string;
   startDate: Date;
   endDate: Date | null;
+  duration: number; // in seconds
+  roomCode: string;
+  isActive: boolean;
+}
+
 // Swipeable Session Card Component
 const SwipeableSessionCard = ({ 
   item, 
@@ -80,20 +86,20 @@ const SwipeableSessionCard = ({
       }
     },
   });
-  duration: number; // in seconds
+
   const animatedStyle = useAnimatedStyle(() => {
     return {
       transform: [{ translateX: translateX.value }],
       opacity: opacity.value,
     };
   });
-  roomCode: string;
+
   const deleteButtonStyle = useAnimatedStyle(() => {
     return {
       opacity: translateX.value < -20 ? 1 : 0,
     };
   });
-  isActive: boolean;
+
   const handleDelete = () => {
     // Animate out then delete
     opacity.value = withSpring(0);
@@ -102,7 +108,7 @@ const SwipeableSessionCard = ({
       runOnJS(onDelete)();
     }, 300);
   };
-}
+
   return (
     <View style={styles.swipeContainer}>
       <PanGestureHandler onGestureEvent={gestureHandler}>
@@ -769,8 +775,10 @@ const styles = StyleSheet.create({
   sessionStatusText: {
     fontSize: 12,
     color: '#fff',
-    flexDirection: 'row',
     fontWeight: '500',
+  },
+  sessionRight: {
+    flexDirection: 'row',
     gap: 12,
   },
   sessionDuration: {
@@ -780,6 +788,9 @@ const styles = StyleSheet.create({
   },
   sessionDurationText: {
     fontSize: 14,
+    color: '#ff6b9d',
+    fontWeight: '500',
+  },
   sessionDetails: {
     gap: 8,
   },
