@@ -1,4 +1,5 @@
 import { Platform } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export interface WebRTCMessage {
   id: string;
@@ -16,6 +17,12 @@ export interface ConnectionState {
   error: string | null;
 }
 
+export interface SavedConnection {
+  roomCode: string;
+  partnerName?: string;
+  connectionDate: string;
+  lastConnected: string;
+}
 class WebRTCService {
   // Mock data for frontend development
   private mockMessages: WebRTCMessage[] = [
@@ -43,12 +50,16 @@ class WebRTCService {
   ];
 
   private connectionState: ConnectionState = {
-    isConnected: true, // Mock as connected
+    isConnected: false, // Start disconnected
     isConnecting: false,
-    roomCode: 'ABC123',
-    partnerConnected: true,
+    roomCode: null,
+    partnerConnected: false,
     error: null,
   };
+
+  private savedConnection: SavedConnection | null = null;
+  private reconnectTimer: NodeJS.Timeout | null = null;
+  private isAutoReconnecting = false;
 
   // Event callbacks
   public onConnectionStateChange: ((state: ConnectionState) => void) | null = null;
@@ -59,14 +70,116 @@ class WebRTCService {
   constructor() {
     console.log('WebRTC Service: Running in frontend-only mode with mock data');
     
-    // Simulate loading mock messages after a delay
-    setTimeout(() => {
-      this.mockMessages.forEach(message => {
-        if (!message.isOwn) {
-          this.onMessageReceived?.(message);
+    // Load saved connection and try to auto-reconnect
+    this.loadSavedConnection();
+  }
+
+  // Load saved connection from storage
+  private async loadSavedConnection(): Promise<void> {
+    try {
+      const saved = await AsyncStorage.getItem('savedConnection');
+      if (saved) {
+        this.savedConnection = JSON.parse(saved);
+        console.log('Loaded saved connection:', this.savedConnection?.roomCode);
+        
+        // Auto-reconnect to saved room
+        if (this.savedConnection?.roomCode) {
+          this.autoReconnect();
         }
+      }
+    } catch (error) {
+      console.error('Failed to load saved connection:', error);
+    }
+  }
+
+  // Save connection to storage
+  private async saveConnection(roomCode: string): Promise<void> {
+    try {
+      const connection: SavedConnection = {
+        roomCode,
+        partnerName: 'My Love',
+        connectionDate: new Date().toISOString(),
+        lastConnected: new Date().toISOString(),
+      };
+      
+      await AsyncStorage.setItem('savedConnection', JSON.stringify(connection));
+      this.savedConnection = connection;
+      console.log('Saved connection:', roomCode);
+    } catch (error) {
+      console.error('Failed to save connection:', error);
+    }
+  }
+
+  // Auto-reconnect to saved room
+  private async autoReconnect(): Promise<void> {
+    if (this.isAutoReconnecting || !this.savedConnection?.roomCode) return;
+    
+    this.isAutoReconnecting = true;
+    console.log('Auto-reconnecting to saved room...');
+    
+    this.updateConnectionState({ 
+      isConnecting: true, 
+      error: 'Đang kết nối lại...' 
+    });
+    
+    try {
+      // Simulate reconnection delay
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
+      await this.joinRoom(this.savedConnection.roomCode);
+      
+      // Load mock messages after successful reconnection
+      setTimeout(() => {
+        this.mockMessages.forEach(message => {
+          if (!message.isOwn) {
+            this.onMessageReceived?.(message);
+          }
+        });
+      }, 1000);
+      
+    } catch (error) {
+      console.error('Auto-reconnect failed:', error);
+      this.updateConnectionState({ 
+        isConnecting: false, 
+        error: 'Kết nối lại thất bại. Vui lòng thử lại.' 
       });
-    }, 1000);
+      
+      // Retry after 10 seconds
+      this.scheduleReconnect();
+    } finally {
+      this.isAutoReconnecting = false;
+    }
+  }
+
+  // Schedule reconnection attempt
+  private scheduleReconnect(): void {
+    if (this.reconnectTimer) {
+      clearTimeout(this.reconnectTimer);
+    }
+    
+    this.reconnectTimer = setTimeout(() => {
+      if (!this.connectionState.isConnected && this.savedConnection) {
+        this.autoReconnect();
+      }
+    }, 10000); // Retry every 10 seconds
+  }
+
+  // Simulate network disconnection and reconnection
+  public simulateNetworkIssue(): void {
+    if (this.connectionState.isConnected) {
+      console.log('Simulating network disconnection...');
+      this.updateConnectionState({
+        isConnected: false,
+        isConnecting: false,
+        partnerConnected: false,
+        error: 'Mất kết nối mạng',
+      });
+      
+      // Try to reconnect after 3 seconds
+      setTimeout(() => {
+        this.autoReconnect();
+      }, 3000);
+    }
   }
 
   // Update connection state
@@ -82,14 +195,6 @@ class WebRTCService {
     // Simulate connection delay
     await new Promise(resolve => setTimeout(resolve, 1000));
     
-    this.updateConnectionState({
-      isConnected: true,
-      isConnecting: false,
-      partnerConnected: true,
-      roomCode: 'ABC123',
-      error: null,
-    });
-    
     console.log('Mock: Connected to signaling server');
   }
 
@@ -102,6 +207,9 @@ class WebRTCService {
     // Simulate connection delay
     await new Promise(resolve => setTimeout(resolve, 2000));
     
+    // Save this connection for future auto-reconnect
+    await this.saveConnection(roomCode);
+    
     this.updateConnectionState({
       isConnected: true,
       isConnecting: false,
@@ -109,6 +217,12 @@ class WebRTCService {
       partnerConnected: true,
       error: null,
     });
+    
+    // Update last connected time
+    if (this.savedConnection) {
+      this.savedConnection.lastConnected = new Date().toISOString();
+      await AsyncStorage.setItem('savedConnection', JSON.stringify(this.savedConnection));
+    }
     
     console.log(`Mock: Successfully joined room ${roomCode}`);
   }
@@ -176,6 +290,12 @@ class WebRTCService {
   public disconnect(): void {
     console.log('Mock: Disconnecting...');
     
+    // Clear reconnect timer
+    if (this.reconnectTimer) {
+      clearTimeout(this.reconnectTimer);
+      this.reconnectTimer = null;
+    }
+    
     this.updateConnectionState({
       isConnected: false,
       isConnecting: false,
@@ -185,6 +305,29 @@ class WebRTCService {
     });
     
     console.log('Mock: Disconnected');
+  }
+
+  // Permanently remove saved connection
+  public async forgetConnection(): Promise<void> {
+    try {
+      await AsyncStorage.removeItem('savedConnection');
+      this.savedConnection = null;
+      
+      if (this.reconnectTimer) {
+        clearTimeout(this.reconnectTimer);
+        this.reconnectTimer = null;
+      }
+      
+      this.disconnect();
+      console.log('Forgot saved connection');
+    } catch (error) {
+      console.error('Failed to forget connection:', error);
+    }
+  }
+
+  // Get saved connection info
+  public getSavedConnection(): SavedConnection | null {
+    return this.savedConnection;
   }
 
   // Mock: Generate room code
