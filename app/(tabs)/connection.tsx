@@ -146,6 +146,17 @@ export default function ConnectionScreen() {
               <Text style={styles.roomCodeValue}>{connectionState.roomCode}</Text>
             </View>
           )}
+
+          {/* Saved Connection Info */}
+          {savedConnection && (
+            <View style={styles.savedConnectionInfo}>
+              <Text style={styles.savedConnectionLabel}>Kết nối đã lưu:</Text>
+              <Text style={styles.savedConnectionValue}>{savedConnection.roomCode}</Text>
+              <Text style={styles.savedConnectionDate}>
+                Từ {new Date(savedConnection.connectionDate).toLocaleDateString('vi-VN')}
+              </Text>
+            </View>
+          )}
         </View>
 
         {/* Security Info */}
@@ -219,6 +230,24 @@ export default function ConnectionScreen() {
               </TouchableOpacity>
             )}
           </View>
+
+          {/* Debug Actions */}
+          {connectionState.isConnected && (
+            <View style={styles.debugActions}>
+              <TouchableOpacity style={styles.debugButton} onPress={simulateNetworkIssue}>
+                <Text style={styles.debugButtonText}>Mô Phỏng Mất Mạng</Text>
+              </TouchableOpacity>
+            </View>
+          )}
+
+          {/* Forget Connection */}
+          {savedConnection && (
+            <View style={styles.forgetActions}>
+              <TouchableOpacity style={styles.forgetButton} onPress={handleForgetConnection}>
+                <Text style={styles.forgetButtonText}>Xóa Kết Nối Đã Lưu</Text>
+              </TouchableOpacity>
+            </View>
+          )}
         )}
 
         {/* Privacy Notice */}
@@ -446,5 +475,57 @@ const styles = StyleSheet.create({
     color: '#888',
     textAlign: 'center',
     lineHeight: 20,
+  },
+  savedConnectionInfo: {
+    backgroundColor: '#222',
+    borderRadius: 8,
+    padding: 12,
+    marginTop: 12,
+  },
+  savedConnectionLabel: {
+    fontSize: 12,
+    color: '#888',
+    marginBottom: 4,
+  },
+  savedConnectionValue: {
+    fontSize: 16,
+    color: '#4ade80',
+    fontFamily: 'monospace',
+    fontWeight: '600',
+    marginBottom: 2,
+  },
+  savedConnectionDate: {
+    fontSize: 12,
+    color: '#888',
+  },
+  debugActions: {
+    marginBottom: 12,
+  },
+  debugButton: {
+    backgroundColor: '#f59e0b',
+    borderRadius: 8,
+    padding: 12,
+    alignItems: 'center',
+  },
+  debugButtonText: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  forgetActions: {
+    marginBottom: 12,
+  },
+  forgetButton: {
+    backgroundColor: 'transparent',
+    borderRadius: 8,
+    padding: 12,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#666',
+  },
+  forgetButtonText: {
+    color: '#666',
+    fontSize: 14,
+    fontWeight: '500',
   },
 });
