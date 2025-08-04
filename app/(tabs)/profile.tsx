@@ -84,7 +84,6 @@ export default function ProfileScreen() {
     }, 1000);
 
     return () => clearInterval(timer);
-  }, [currentConnectionStart]);
   }, [connectionState.isConnected, currentConnectionStart]);
 
   const saveCurrentSession = async () => {
