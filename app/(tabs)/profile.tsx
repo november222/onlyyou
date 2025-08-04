@@ -6,6 +6,8 @@ import {
   ScrollView,
   TouchableOpacity,
   FlatList,
+  Alert,
+  Modal,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { 
@@ -18,7 +20,10 @@ import {
   Users,
   Sparkles,
   TrendingUp,
-  History
+  History,
+  Trash2,
+  Crown,
+  X
 } from 'lucide-react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import WebRTCService, { ConnectionState } from '@/services/WebRTCService';
@@ -46,6 +51,8 @@ export default function ProfileScreen() {
     error: null,
   });
   const [realTimeTimer, setRealTimeTimer] = useState(0);
+  const [showPremiumModal, setShowPremiumModal] = useState(false);
+  const [isPremium, setIsPremium] = useState(false);
 
   useEffect(() => {
     // Get current connection state
@@ -150,6 +157,73 @@ export default function ProfileScreen() {
     setTotalDisconnectedTime(172800); // 2 days total
   };
 
+  const handleDeleteSession = (sessionId: string) => {
+    if (!isPremium) {
+      setShowPremiumModal(true);
+      return;
+    }
+
+    Alert.alert(
+      'Xóa Phiên Kết Nối?',
+      'Bạn có chắc muốn xóa phiên kết nối này khỏi lịch sử?',
+      [
+        { text: 'Hủy', style: 'cancel' },
+        {
+          text: 'Xóa',
+          style: 'destructive',
+          onPress: () => {
+            setConnectionSessions(prev => prev.filter(session => session.id !== sessionId));
+            Alert.alert('Đã Xóa', 'Phiên kết nối đã được xóa khỏi lịch sử.');
+          },
+        },
+      ]
+    );
+  };
+
+  const handleClearAllHistory = () => {
+    if (!isPremium) {
+      setShowPremiumModal(true);
+      return;
+    }
+
+    Alert.alert(
+      'Xóa Toàn Bộ Lịch Sử?',
+      'Bạn có chắc muốn xóa toàn bộ lịch sử kết nối? Hành động này không thể hoàn tác.',
+      [
+        { text: 'Hủy', style: 'cancel' },
+        {
+          text: 'Xóa Tất Cả',
+          style: 'destructive',
+          onPress: () => {
+            setConnectionSessions([]);
+            setTotalConnectedTime(0);
+            setTotalDisconnectedTime(0);
+            Alert.alert('Đã Xóa', 'Toàn bộ lịch sử kết nối đã được xóa.');
+          },
+        },
+      ]
+    );
+  };
+
+  const handleUpgradeToPremium = () => {
+    Alert.alert(
+      'Nâng Cấp Premier',
+      'Tính năng này yêu cầu gói Premier. Bạn có muốn nâng cấp không?',
+      [
+        { text: 'Để Sau', style: 'cancel' },
+        {
+          text: 'Nâng Cấp',
+          onPress: () => {
+            // Mock upgrade - in real app this would integrate with payment
+            setIsPremium(true);
+            setShowPremiumModal(false);
+            Alert.alert('Chúc Mừng!', 'Bạn đã nâng cấp thành công lên gói Premier! 🎉');
+          },
+        },
+      ]
+    );
+  };
+
   const formatDuration = (seconds: number): string => {
     const days = Math.floor(seconds / 86400);
     const hours = Math.floor((seconds % 86400) / 3600);
@@ -199,11 +273,21 @@ export default function ProfileScreen() {
             </Text>
           </View>
         </View>
-        <View style={styles.sessionDuration}>
-          <Timer size={16} color="#ff6b9d" strokeWidth={2} />
-          <Text style={styles.sessionDurationText}>
-            {formatDuration(item.isActive ? currentSessionDuration : item.duration)}
-          </Text>
+        <View style={styles.sessionRight}>
+          <View style={styles.sessionDuration}>
+            <Timer size={16} color="#ff6b9d" strokeWidth={2} />
+            <Text style={styles.sessionDurationText}>
+              {formatDuration(item.isActive ? currentSessionDuration : item.duration)}
+            </Text>
+          </View>
+          {!item.isActive && (
+            <TouchableOpacity
+              style={styles.deleteButton}
+              onPress={() => handleDeleteSession(item.id)}
+            >
+              <Trash2 size={16} color={isPremium ? "#ef4444" : "#666"} strokeWidth={2} />
+            </TouchableOpacity>
+          )}
         </View>
       </View>
       
@@ -315,6 +399,15 @@ export default function ProfileScreen() {
           <View style={styles.historySectionHeader}>
             <History size={20} color="#ff6b9d" strokeWidth={2} />
             <Text style={styles.historySectionTitle}>Lịch Sử Kết Nối</Text>
+            <TouchableOpacity
+              style={styles.clearAllButton}
+              onPress={handleClearAllHistory}
+            >
+              <Trash2 size={16} color={isPremium ? "#ef4444" : "#666"} strokeWidth={2} />
+              <Text style={[styles.clearAllText, { color: isPremium ? "#ef4444" : "#666" }]}>
+                Xóa Tất Cả
+              </Text>
+            </TouchableOpacity>
           </View>
           
           <FlatList
