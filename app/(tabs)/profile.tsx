@@ -403,198 +403,199 @@ export default function ProfileScreen() {
   );
 
   return (
-    <SafeAreaView style={styles.container}>
-      <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-        {/* Header */}
-        <View style={styles.header}>
-          <Heart size={32} color="#ff6b9d" strokeWidth={2} fill="#ff6b9d" />
-          <Text style={styles.title}>Trang Cá Nhân</Text>
-          <Text style={styles.subtitle}>Thống kê kết nối của bạn</Text>
-        </View>
-
-        {/* Love Counter */}
-        <View style={styles.loveCounterCard}>
-          <View style={styles.loveCounterHeader}>
-            <Sparkles size={24} color="#ff6b9d" strokeWidth={2} />
-            <Text style={styles.loveCounterTitle}>Đếm Ngày Yêu Nhau</Text>
-          </View>
-          
-          {currentConnectionStart && (
-            <View style={styles.loveCounterContent}>
-              <Text style={styles.loveCounterNumber}>
-                {Math.floor((Date.now() - currentConnectionStart.getTime()) / (1000 * 60 * 60 * 24))}
-              </Text>
-              <Text style={styles.loveCounterLabel}>ngày đã kết nối</Text>
-              <Text style={styles.loveCounterSubtext}>
-                Từ {formatDate(currentConnectionStart)}
-              </Text>
-            </View>
-          )}
-        </View>
-
-        {/* Current Session Stats */}
-        <View style={styles.statsGrid}>
-          <View style={styles.statCard}>
-            <View style={styles.statIcon}>
-              {connectionState.isConnected ? (
-                <Wifi size={20} color="#4ade80" strokeWidth={2} />
-              ) : (
-                <WifiOff size={20} color="#ef4444" strokeWidth={2} />
-              )}
-            </View>
-            <Text style={styles.statValue}>
-              {connectionState.isConnected 
-                ? formatDuration(realTimeTimer) 
-                : formatDuration(currentSessionDuration)
-              }
-            </Text>
-            <Text style={styles.statLabel}>
-              {connectionState.isConnected ? 'Đang kết nối' : 'Phiên gần nhất'}
-            </Text>
+    <>
+      <SafeAreaView style={styles.container}>
+        <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+          {/* Header */}
+          <View style={styles.header}>
+            <Heart size={32} color="#ff6b9d" strokeWidth={2} fill="#ff6b9d" />
+            <Text style={styles.title}>Trang Cá Nhân</Text>
+            <Text style={styles.subtitle}>Thống kê kết nối của bạn</Text>
           </View>
 
-          <View style={styles.statCard}>
-            <View style={styles.statIcon}>
-              <Clock size={20} color="#3b82f6" strokeWidth={2} />
-            </View>
-            <Text style={styles.statValue}>
-              {formatDuration(totalConnectedTime)}
-            </Text>
-            <Text style={styles.statLabel}>Tổng thời gian kết nối</Text>
-          </View>
-        </View>
-
-        <View style={styles.statsGrid}>
-          <View style={styles.statCard}>
-            <View style={styles.statIcon}>
-              <WifiOff size={20} color="#ef4444" strokeWidth={2} />
-            </View>
-            <Text style={styles.statValue}>
-              {formatDuration(totalDisconnectedTime)}
-            </Text>
-            <Text style={styles.statLabel}>Thời gian ngắt kết nối</Text>
-          </View>
-
-          <View style={styles.statCard}>
-            <View style={styles.statIcon}>
-              <TrendingUp size={20} color="#f59e0b" strokeWidth={2} />
-            </View>
-            <Text style={styles.statValue}>
-              {connectionSessions.length}
-            </Text>
-            <Text style={styles.statLabel}>Tổng số phiên</Text>
-          </View>
-        </View>
-
-        {/* Connection History */}
-        <View style={styles.historySection}>
-          <View style={styles.historySectionHeader}>
-            <View style={styles.historySectionLeft}>
-              <History size={20} color="#ff6b9d" strokeWidth={2} />
-              <Text style={styles.historySectionTitle}>Lịch Sử Kết Nối</Text>
-            </View>
-            <View style={styles.clearAllContainer}>
-              <TouchableOpacity
-                style={styles.clearAllButton}
-                onPress={handleClearAllHistory}
-              >
-                <View style={styles.clearAllContent}>
-                  <Trash2 size={16} color="#ef4444" strokeWidth={2} />
-                  <Text style={styles.clearAllText}>Xóa Tất Cả</Text>
-                  {!isPremium && <Crown size={12} color="#f59e0b" strokeWidth={2} />}
-                </View>
-              </TouchableOpacity>
-            </View>
-          </View>
-          
-          <FlatList
-            data={connectionSessions}
-            renderItem={renderConnectionSession}
-            keyExtractor={item => item.id}
-            scrollEnabled={false}
-            showsVerticalScrollIndicator={false}
-          />
-        </View>
-
-        {/* Premium Modal */}
-        <Modal
-          visible={showPremiumModal}
-          animationType="slide"
-          presentationStyle="pageSheet"
-          onRequestClose={() => setShowPremiumModal(false)}
-        >
-          <View style={styles.premiumModal}>
-            <View style={styles.premiumHeader}>
-              <TouchableOpacity
-                style={styles.closeButton}
-                onPress={() => setShowPremiumModal(false)}
-              >
-                <X size={24} color="#888" strokeWidth={2} />
-              </TouchableOpacity>
+          {/* Love Counter */}
+          <View style={styles.loveCounterCard}>
+            <View style={styles.loveCounterHeader}>
+              <Sparkles size={24} color="#ff6b9d" strokeWidth={2} />
+              <Text style={styles.loveCounterTitle}>Đếm Ngày Yêu Nhau</Text>
             </View>
             
-            <View style={styles.premiumContent}>
-              <View style={styles.premiumIcon}>
-                <Crown size={48} color="#f59e0b" strokeWidth={2} fill="#f59e0b" />
+            {currentConnectionStart && (
+              <View style={styles.loveCounterContent}>
+                <Text style={styles.loveCounterNumber}>
+                  {Math.floor((Date.now() - currentConnectionStart.getTime()) / (1000 * 60 * 60 * 24))}
+                </Text>
+                <Text style={styles.loveCounterLabel}>ngày đã kết nối</Text>
+                <Text style={styles.loveCounterSubtext}>
+                  Từ {formatDate(currentConnectionStart)}
+                </Text>
               </View>
-              
-              <Text style={styles.premiumTitle}>Nâng Cấp Premier</Text>
-              <Text style={styles.premiumSubtitle}>
-                Mở khóa tính năng quản lý lịch sử nâng cao
+            )}
+          </View>
+
+          {/* Current Session Stats */}
+          <View style={styles.statsGrid}>
+            <View style={styles.statCard}>
+              <View style={styles.statIcon}>
+                {connectionState.isConnected ? (
+                  <Wifi size={20} color="#4ade80" strokeWidth={2} />
+                ) : (
+                  <WifiOff size={20} color="#ef4444" strokeWidth={2} />
+                )}
+              </View>
+              <Text style={styles.statValue}>
+                {connectionState.isConnected 
+                  ? formatDuration(realTimeTimer) 
+                  : formatDuration(currentSessionDuration)
+                }
               </Text>
-              
-              <View style={styles.premiumFeatures}>
-                <View style={styles.premiumFeature}>
-                  <Trash2 size={20} color="#4ade80" strokeWidth={2} />
-                  <Text style={styles.premiumFeatureText}>Xóa từng phiên kết nối</Text>
-                </View>
-                <View style={styles.premiumFeature}>
-                  <History size={20} color="#4ade80" strokeWidth={2} />
-                  <Text style={styles.premiumFeatureText}>Xóa toàn bộ lịch sử</Text>
-                </View>
-                <View style={styles.premiumFeature}>
-                  <Shield size={20} color="#4ade80" strokeWidth={2} />
-                  <Text style={styles.premiumFeatureText}>Bảo mật nâng cao</Text>
-                </View>
-                <View style={styles.premiumFeature}>
-                  <Heart size={20} color="#4ade80" strokeWidth={2} />
-                  <Text style={styles.premiumFeatureText}>Hỗ trợ phát triển app</Text>
-                </View>
+              <Text style={styles.statLabel}>
+                {connectionState.isConnected ? 'Đang kết nối' : 'Phiên gần nhất'}
+              </Text>
+            </View>
+
+            <View style={styles.statCard}>
+              <View style={styles.statIcon}>
+                <Clock size={20} color="#3b82f6" strokeWidth={2} />
               </View>
-              
-              <View style={styles.premiumPricing}>
-                <Text style={styles.premiumPrice}>₫99,000</Text>
-                <Text style={styles.premiumPriceSubtext}>Mua một lần, sử dụng mãi mãi</Text>
+              <Text style={styles.statValue}>
+                {formatDuration(totalConnectedTime)}
+              </Text>
+              <Text style={styles.statLabel}>Tổng thời gian kết nối</Text>
+            </View>
+          </View>
+
+          <View style={styles.statsGrid}>
+            <View style={styles.statCard}>
+              <View style={styles.statIcon}>
+                <WifiOff size={20} color="#ef4444" strokeWidth={2} />
               </View>
-              
-              <View style={styles.premiumActions}>
+              <Text style={styles.statValue}>
+                {formatDuration(totalDisconnectedTime)}
+              </Text>
+              <Text style={styles.statLabel}>Thời gian ngắt kết nối</Text>
+            </View>
+
+            <View style={styles.statCard}>
+              <View style={styles.statIcon}>
+                <TrendingUp size={20} color="#f59e0b" strokeWidth={2} />
+              </View>
+              <Text style={styles.statValue}>
+                {connectionSessions.length}
+              </Text>
+              <Text style={styles.statLabel}>Tổng số phiên</Text>
+            </View>
+          </View>
+
+          {/* Connection History */}
+          <View style={styles.historySection}>
+            <View style={styles.historySectionHeader}>
+              <View style={styles.historySectionLeft}>
+                <History size={20} color="#ff6b9d" strokeWidth={2} />
+                <Text style={styles.historySectionTitle}>Lịch Sử Kết Nối</Text>
+              </View>
+              <View style={styles.clearAllContainer}>
                 <TouchableOpacity
-                  style={styles.upgradeButton}
-                  onPress={handleUpgradeToPremium}
+                  style={styles.clearAllButton}
+                  onPress={handleClearAllHistory}
                 >
-                  <Crown size={20} color="#fff" strokeWidth={2} />
-                  <Text style={styles.upgradeButtonText}>Nâng Cấp Ngay</Text>
-                </TouchableOpacity>
-                
-                <TouchableOpacity
-                  style={styles.laterButton}
-                  onPress={() => setShowPremiumModal(false)}
-                >
-                  <Text style={styles.laterButtonText}>Để Sau</Text>
+                  <View style={styles.clearAllContent}>
+                    <Trash2 size={16} color="#ef4444" strokeWidth={2} />
+                    <Text style={styles.clearAllText}>Xóa Tất Cả</Text>
+                    {!isPremium && <Crown size={12} color="#f59e0b" strokeWidth={2} />}
+                  </View>
                 </TouchableOpacity>
               </View>
             </View>
+            
+            <FlatList
+              data={connectionSessions}
+              renderItem={renderConnectionSession}
+              keyExtractor={item => item.id}
+              scrollEnabled={false}
+              showsVerticalScrollIndicator={false}
+            />
           </View>
-        </Modal>
-        {/* Love Quote */}
-        <View style={styles.quoteCard}>
-          <Text style={styles.quoteText}>
-            "Tình yêu không phải là nhìn vào mắt nhau, mà là cùng nhau nhìn về một hướng."
-          </Text>
-          <Text style={styles.quoteAuthor}>- Antoine de Saint-Exupéry</Text>
-        </View>
-      </ScrollView>
-    </SafeAreaView>
+
+          {/* Premium Modal */}
+          <Modal
+            visible={showPremiumModal}
+            animationType="slide"
+            presentationStyle="pageSheet"
+            onRequestClose={() => setShowPremiumModal(false)}
+          >
+            <View style={styles.premiumModal}>
+              <View style={styles.premiumHeader}>
+                <TouchableOpacity
+                  style={styles.closeButton}
+                  onPress={() => setShowPremiumModal(false)}
+                >
+                  <X size={24} color="#888" strokeWidth={2} />
+                </TouchableOpacity>
+              </View>
+              
+              <View style={styles.premiumContent}>
+                <View style={styles.premiumIcon}>
+                  <Crown size={48} color="#f59e0b" strokeWidth={2} fill="#f59e0b" />
+                </View>
+                
+                <Text style={styles.premiumTitle}>Nâng Cấp Premier</Text>
+                <Text style={styles.premiumSubtitle}>
+                  Mở khóa tính năng quản lý lịch sử nâng cao
+                </Text>
+                
+                <View style={styles.premiumFeatures}>
+                  <View style={styles.premiumFeature}>
+                    <Trash2 size={20} color="#4ade80" strokeWidth={2} />
+                    <Text style={styles.premiumFeatureText}>Xóa từng phiên kết nối</Text>
+                  </View>
+                  <View style={styles.premiumFeature}>
+                    <History size={20} color="#4ade80" strokeWidth={2} />
+                    <Text style={styles.premiumFeatureText}>Xóa toàn bộ lịch sử</Text>
+                  </View>
+                  <View style={styles.premiumFeature}>
+                    <Shield size={20} color="#4ade80" strokeWidth={2} />
+                    <Text style={styles.premiumFeatureText}>Bảo mật nâng cao</Text>
+                  </View>
+                  <View style={styles.premiumFeature}>
+                    <Heart size={20} color="#4ade80" strokeWidth={2} />
+                    <Text style={styles.premiumFeatureText}>Hỗ trợ phát triển app</Text>
+                  </View>
+                </View>
+                
+                <View style={styles.premiumPricing}>
+                  <Text style={styles.premiumPrice}>₫99,000</Text>
+                  <Text style={styles.premiumPriceSubtext}>Mua một lần, sử dụng mãi mãi</Text>
+                </View>
+                
+                <View style={styles.premiumActions}>
+                  <TouchableOpacity
+                    style={styles.upgradeButton}
+                    onPress={handleUpgradeToPremium}
+                  >
+                    <Crown size={20} color="#fff" strokeWidth={2} />
+                    <Text style={styles.upgradeButtonText}>Nâng Cấp Ngay</Text>
+                  </TouchableOpacity>
+                  
+                  <TouchableOpacity
+                    style={styles.laterButton}
+                    onPress={() => setShowPremiumModal(false)}
+                  >
+                    <Text style={styles.laterButtonText}>Để Sau</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            </View>
+          </Modal>
+          {/* Love Quote */}
+          <View style={styles.quoteCard}>
+            <Text style={styles.quoteText}>
+              "Tình yêu không phải là nhìn vào mắt nhau, mà là cùng nhau nhìn về một hướng."
+            </Text>
+            <Text style={styles.quoteAuthor}>- Antoine de Saint-Exupéry</Text>
+          </View>
+        </ScrollView>
+      </SafeAreaView>
       {/* Total Sessions Navigation */}
       <TouchableOpacity 
         style={styles.totalSessionsCard}
@@ -611,7 +612,7 @@ export default function ProfileScreen() {
           {connectionSessions.length} phiên kết nối • Nhấn để xem chi tiết
         </Text>
       </TouchableOpacity>
-
+    </>
   );
 }
 
