@@ -21,6 +21,7 @@ import {
   History
 } from 'lucide-react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import WebRTCService, { ConnectionState } from '@/services/WebRTCService';
 
 interface ConnectionSession {
   id: string;
@@ -37,21 +38,71 @@ export default function ProfileScreen() {
   const [totalDisconnectedTime, setTotalDisconnectedTime] = useState(0);
   const [connectionSessions, setConnectionSessions] = useState<ConnectionSession[]>([]);
   const [currentSessionDuration, setCurrentSessionDuration] = useState(86400); // Mock: 1 day
+  const [connectionState, setConnectionState] = useState<ConnectionState>({
+    isConnected: false,
+    isConnecting: false,
+    roomCode: null,
+    partnerConnected: false,
+    error: null,
+  });
+  const [realTimeTimer, setRealTimeTimer] = useState(0);
 
   useEffect(() => {
+    // Get current connection state
+    const currentState = WebRTCService.getConnectionState();
+    setConnectionState(currentState);
+    
+    // Listen for connection state changes
+    WebRTCService.onConnectionStateChange = (state) => {
+      setConnectionState(state);
+      
+      // Reset timer when connection state changes
+      if (state.isConnected && !connectionState.isConnected) {
+        // Just connected - start new timer
+        setRealTimeTimer(0);
+        setCurrentConnectionStart(new Date());
+      } else if (!state.isConnected && connectionState.isConnected) {
+        // Just disconnected - save session
+        saveCurrentSession();
+      }
+    };
+
     loadConnectionData();
     
-    // Update current session duration every second
+    // Real-time timer that updates every second
     const timer = setInterval(() => {
-      if (currentConnectionStart) {
-        const now = new Date();
-        const duration = Math.floor((now.getTime() - currentConnectionStart.getTime()) / 1000);
-        setCurrentSessionDuration(duration);
+      if (connectionState.isConnected) {
+        setRealTimeTimer(prev => prev + 1);
+        
+        // Also update current session duration for display
+        if (currentConnectionStart) {
+          const now = new Date();
+          const duration = Math.floor((now.getTime() - currentConnectionStart.getTime()) / 1000);
+          setCurrentSessionDuration(duration);
+        }
       }
     }, 1000);
 
     return () => clearInterval(timer);
   }, [currentConnectionStart]);
+  }, [connectionState.isConnected, currentConnectionStart]);
+
+  const saveCurrentSession = async () => {
+    if (currentConnectionStart && connectionState.roomCode) {
+      const newSession: ConnectionSession = {
+        id: Date.now().toString(),
+        startDate: currentConnectionStart,
+        endDate: new Date(),
+        duration: realTimeTimer,
+        roomCode: connectionState.roomCode,
+        isActive: false,
+      };
+      
+      setConnectionSessions(prev => [newSession, ...prev]);
+      setTotalConnectedTime(prev => prev + realTimeTimer);
+      setRealTimeTimer(0);
+    }
+  };
 
   const loadConnectionData = async () => {
     // Mock data for demonstration
@@ -210,12 +261,21 @@ export default function ProfileScreen() {
         <View style={styles.statsGrid}>
           <View style={styles.statCard}>
             <View style={styles.statIcon}>
-              <Wifi size={20} color="#4ade80" strokeWidth={2} />
+              {connectionState.isConnected ? (
+                <Wifi size={20} color="#4ade80" strokeWidth={2} />
+              ) : (
+                <WifiOff size={20} color="#ef4444" strokeWidth={2} />
+              )}
             </View>
             <Text style={styles.statValue}>
-              {formatDuration(currentSessionDuration)}
+              {connectionState.isConnected 
+                ? formatDuration(realTimeTimer) 
+                : formatDuration(currentSessionDuration)
+              }
             </Text>
-            <Text style={styles.statLabel}>Thời gian hiện tại</Text>
+            <Text style={styles.statLabel}>
+              {connectionState.isConnected ? 'Đang kết nối' : 'Phiên gần nhất'}
+            </Text>
           </View>
 
           <View style={styles.statCard}>
