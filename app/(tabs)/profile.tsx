@@ -8,8 +8,6 @@ import {
   FlatList,
   Alert,
   Modal,
-  PanGestureHandler,
-  State,
 } from 'react-native';
 import { PanGestureHandler, State } from 'react-native-gesture-handler';
 import Animated, {
