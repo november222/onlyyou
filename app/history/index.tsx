@@ -263,6 +263,18 @@ export default function HistoryScreen() {
   };
 
   const handleSessionPress = (session: ConnectionSession) => {
+    if (!isPremium) {
+      Alert.alert(
+        'Tính Năng Premier',
+        'Bạn cần nâng cấp Premier để xem chi tiết phiên kết nối.',
+        [
+          { text: 'Để Sau', style: 'cancel' },
+          { text: 'Nâng Cấp', onPress: () => console.log('Navigate to premium') },
+        ]
+      );
+      return;
+    }
+
     if (session.isActive) {
       Alert.alert('Phiên Đang Hoạt Động', 'Không thể xem chi tiết phiên đang kết nối.');
       return;
