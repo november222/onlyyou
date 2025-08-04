@@ -397,8 +397,10 @@ export default function ProfileScreen() {
         {/* Connection History */}
         <View style={styles.historySection}>
           <View style={styles.historySectionHeader}>
-            <History size={20} color="#ff6b9d" strokeWidth={2} />
-            <Text style={styles.historySectionTitle}>Lịch Sử Kết Nối</Text>
+            <View style={styles.historySectionLeft}>
+              <History size={20} color="#ff6b9d" strokeWidth={2} />
+              <Text style={styles.historySectionTitle}>Lịch Sử Kết Nối</Text>
+            </View>
             <TouchableOpacity
               style={styles.clearAllButton}
               onPress={handleClearAllHistory}
