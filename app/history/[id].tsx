@@ -9,23 +9,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router, useLocalSearchParams } from 'expo-router';
-import { 
-  ArrowLeft,
-  Calendar,
-  Timer,
-  Wifi,
-  WifiOff,
-  Zap,
-  Clock,
-  PlayCircle,
-  StopCircle,
-  Heart,
-  MessageCircle,
-  Phone,
-  Video,
-  Trash2,
-  Crown
-} from 'lucide-react-native';
+import { ArrowLeft, Calendar, Timer, Wifi, WifiOff, Zap, Clock, CirclePlay as PlayCircle, CircleStop as StopCircle, Heart, MessageCircle, Phone, Video, Trash2, Crown } from 'lucide-react-native';
 
 interface ConnectionSession {
   id: string;
