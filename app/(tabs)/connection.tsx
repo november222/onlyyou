@@ -24,6 +24,7 @@ export default function ConnectionScreen() {
   const [isSetupMode, setIsSetupMode] = useState(false);
   const [isGeneratingCode, setIsGeneratingCode] = useState(false);
   const [isConnectingToServer, setIsConnectingToServer] = useState(false);
+  const [savedConnection, setSavedConnection] = useState(WebRTCService.getSavedConnection());
 
   useEffect(() => {
     // Set up WebRTC event listeners
@@ -100,6 +101,28 @@ export default function ConnectionScreen() {
     Alert.alert('Copied!', 'Room code copied to clipboard.');
   };
 
+  const simulateNetworkIssue = () => {
+    WebRTCService.simulateNetworkIssue();
+    Alert.alert('Network Issue Simulated', 'Connection will attempt to reconnect...');
+  };
+
+  const handleForgetConnection = () => {
+    Alert.alert(
+      'Xóa Kết Nối Đã Lưu?',
+      'Bạn sẽ cần tạo kết nối mới với đối tác.',
+      [
+        { text: 'Hủy', style: 'cancel' },
+        {
+          text: 'Xóa',
+          style: 'destructive',
+          onPress: () => {
+            WebRTCService.clearSavedConnection();
+            setSavedConnection(null);
+          },
+        },
+      ]
+    );
+  };
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.content}>
@@ -218,36 +241,36 @@ export default function ConnectionScreen() {
 
         {/* Action Buttons */}
         {connectionState.isConnected && (
-          <View style={styles.actions}>
-            <TouchableOpacity style={styles.disconnectButton} onPress={handleDisconnect}>
-              <Text style={styles.disconnectButtonText}>Disconnect</Text>
-            </TouchableOpacity>
-            
-            {connectionState.roomCode && (
-              <TouchableOpacity style={styles.copyCodeButton} onPress={copyRoomCode}>
-                <Copy size={16} color="#ff6b9d" strokeWidth={2} />
-                <Text style={styles.copyCodeButtonText}>Copy Room Code</Text>
+          <>
+            <View style={styles.actions}>
+              <TouchableOpacity style={styles.disconnectButton} onPress={handleDisconnect}>
+                <Text style={styles.disconnectButtonText}>Disconnect</Text>
               </TouchableOpacity>
-            )}
-          </View>
+              
+              {connectionState.roomCode && (
+                <TouchableOpacity style={styles.copyCodeButton} onPress={copyRoomCode}>
+                  <Copy size={16} color="#ff6b9d" strokeWidth={2} />
+                  <Text style={styles.copyCodeButtonText}>Copy Room Code</Text>
+                </TouchableOpacity>
+              )}
+            </View>
 
-          {/* Debug Actions */}
-          {connectionState.isConnected && (
+            {/* Debug Actions */}
             <View style={styles.debugActions}>
               <TouchableOpacity style={styles.debugButton} onPress={simulateNetworkIssue}>
                 <Text style={styles.debugButtonText}>Mô Phỏng Mất Mạng</Text>
               </TouchableOpacity>
             </View>
-          )}
 
-          {/* Forget Connection */}
-          {savedConnection && (
-            <View style={styles.forgetActions}>
-              <TouchableOpacity style={styles.forgetButton} onPress={handleForgetConnection}>
-                <Text style={styles.forgetButtonText}>Xóa Kết Nối Đã Lưu</Text>
-              </TouchableOpacity>
-            </View>
-          )}
+            {/* Forget Connection */}
+            {savedConnection && (
+              <View style={styles.forgetActions}>
+                <TouchableOpacity style={styles.forgetButton} onPress={handleForgetConnection}>
+                  <Text style={styles.forgetButtonText}>Xóa Kết Nối Đã Lưu</Text>
+                </TouchableOpacity>
+              </View>
+            )}
+          </>
         )}
 
         {/* Privacy Notice */}
