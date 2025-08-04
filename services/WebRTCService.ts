@@ -22,6 +22,7 @@ export interface SavedConnection {
   partnerName?: string;
   connectionDate: string;
   lastConnected: string;
+  buzzCallsCount?: number;
 }
 class WebRTCService {
   // Mock data for frontend development
@@ -328,6 +329,24 @@ class WebRTCService {
   // Get saved connection info
   public getSavedConnection(): SavedConnection | null {
     return this.savedConnection;
+  }
+
+  // Clear saved connection (for forget functionality)
+  public async clearSavedConnection(): Promise<void> {
+    try {
+      await AsyncStorage.removeItem('savedConnection');
+      this.savedConnection = null;
+      
+      if (this.reconnectTimer) {
+        clearTimeout(this.reconnectTimer);
+        this.reconnectTimer = null;
+      }
+      
+      this.disconnect();
+      console.log('Cleared saved connection');
+    } catch (error) {
+      console.error('Failed to clear saved connection:', error);
+    }
   }
 
   // Mock: Generate room code

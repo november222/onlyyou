@@ -32,10 +32,12 @@ import {
   Trash2,
   Crown,
   X,
-  Shield
+  Shield,
+  ChevronRight
 } from 'lucide-react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import WebRTCService, { ConnectionState } from '@/services/WebRTCService';
+import { router } from 'expo-router';
 
 interface ConnectionSession {
   id: string;
@@ -593,6 +595,23 @@ export default function ProfileScreen() {
         </View>
       </ScrollView>
     </SafeAreaView>
+      {/* Total Sessions Navigation */}
+      <TouchableOpacity 
+        style={styles.totalSessionsCard}
+        onPress={() => router.push('/history')}
+      >
+        <View style={styles.totalSessionsHeader}>
+          <View style={styles.totalSessionsLeft}>
+            <History size={24} color="#ff6b9d" strokeWidth={2} />
+            <Text style={styles.totalSessionsTitle}>Xem Tất Cả Phiên Kết Nối</Text>
+          </View>
+          <ChevronRight size={20} color="#666" strokeWidth={2} />
+        </View>
+        <Text style={styles.totalSessionsSubtitle}>
+          {connectionSessions.length} phiên kết nối • Nhấn để xem chi tiết
+        </Text>
+      </TouchableOpacity>
+
   );
 }
 
@@ -936,5 +955,34 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#ff6b9d',
     fontWeight: '500',
+  },
+  totalSessionsCard: {
+    backgroundColor: '#111',
+    marginHorizontal: 20,
+    marginBottom: 20,
+    borderRadius: 16,
+    padding: 20,
+    borderWidth: 1,
+    borderColor: '#333',
+  },
+  totalSessionsHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  totalSessionsLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  totalSessionsTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#fff',
+    marginLeft: 12,
+  },
+  totalSessionsSubtitle: {
+    fontSize: 14,
+    color: '#888',
   },
 });
