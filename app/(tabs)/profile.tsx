@@ -976,6 +976,11 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
   },
+  totalSessionsRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
   totalSessionsTitle: {
     fontSize: 18,
     fontWeight: '600',

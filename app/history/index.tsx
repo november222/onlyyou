@@ -482,6 +482,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 4,
   },
+  sessionRightIcons: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
   sessionDurationText: {
     fontSize: 13,
     color: '#ff6b9d',
