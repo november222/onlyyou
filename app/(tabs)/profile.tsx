@@ -551,15 +551,15 @@ export default function ProfileScreen() {
                   </View>
                   <View style={styles.premiumFeature}>
                     <History size={20} color="#4ade80" strokeWidth={2} />
+                    <Text style={styles.premiumFeatureText}>Xem chi tiết lịch sử</Text>
+                  </View>
+                  <View style={styles.premiumFeature}>
+                    <Trash2 size={20} color="#4ade80" strokeWidth={2} />
                     <Text style={styles.premiumFeatureText}>Xóa toàn bộ lịch sử</Text>
                   </View>
                   <View style={styles.premiumFeature}>
                     <Shield size={20} color="#4ade80" strokeWidth={2} />
                     <Text style={styles.premiumFeatureText}>Bảo mật nâng cao</Text>
-                  </View>
-                  <View style={styles.premiumFeature}>
-                    <Heart size={20} color="#4ade80" strokeWidth={2} />
-                    <Text style={styles.premiumFeatureText}>Hỗ trợ phát triển app</Text>
                   </View>
                 </View>
                 
@@ -975,11 +975,6 @@ const styles = StyleSheet.create({
   totalSessionsLeft: {
     flexDirection: 'row',
     alignItems: 'center',
-  },
-  totalSessionsRight: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
   },
   totalSessionsTitle: {
     fontSize: 18,
