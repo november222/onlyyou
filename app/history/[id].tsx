@@ -97,7 +97,7 @@ export default function SessionDetailScreen() {
         'Bạn cần nâng cấp Premier để xóa lịch sử kết nối.',
         [
           { text: 'Để Sau', style: 'cancel' },
-          { text: 'Nâng Cấp', onPress: () => console.log('Navigate to premium') },
+          { text: 'Nâng Cấp', onPress: () => router.push('/premium') },
         ]
       );
       return;
