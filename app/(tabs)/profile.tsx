@@ -720,26 +720,34 @@ const styles = StyleSheet.create({
     color: '#fff',
     marginLeft: 8,
   },
-  clearAllContainer: {
-    // Container for the clear all button
-  },
-  clearAllButton: {
-    backgroundColor: 'rgba(239, 68, 68, 0.1)',
+  viewAllButton: {
+    backgroundColor: 'rgba(255, 107, 157, 0.1)',
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: 'rgba(239, 68, 68, 0.3)',
+    borderColor: 'rgba(255, 107, 157, 0.3)',
   },
-  clearAllContent: {
+  viewAllContent: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 12,
     paddingVertical: 8,
     gap: 6,
   },
-  clearAllText: {
+  viewAllText: {
     fontSize: 14,
     fontWeight: '500',
-    color: '#ef4444',
+    color: '#ff6b9d',
+  },
+  historyPreview: {
+    backgroundColor: '#222',
+    borderRadius: 8,
+    padding: 16,
+    alignItems: 'center',
+  },
+  historyPreviewText: {
+    fontSize: 14,
+    color: '#888',
+    textAlign: 'center',
   },
   swipeContainer: {
     position: 'relative',
