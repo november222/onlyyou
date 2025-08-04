@@ -8,7 +8,17 @@ import {
   FlatList,
   Alert,
   Modal,
+  PanGestureHandler,
+  State,
 } from 'react-native';
+import { PanGestureHandler, State } from 'react-native-gesture-handler';
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  useAnimatedGestureHandler,
+  runOnJS,
+  withSpring,
+} from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { 
   Heart, 
@@ -32,10 +42,126 @@ interface ConnectionSession {
   id: string;
   startDate: Date;
   endDate: Date | null;
+// Swipeable Session Card Component
+const SwipeableSessionCard = ({ 
+  item, 
+  currentSessionDuration, 
+  onDelete, 
+  isPremium, 
+  formatDuration, 
+  formatDateTime 
+}: {
+  item: ConnectionSession;
+  currentSessionDuration: number;
+  onDelete: () => void;
+  isPremium: boolean;
+  formatDuration: (seconds: number) => string;
+  formatDateTime: (date: Date) => string;
+}) => {
+  const translateX = useSharedValue(0);
+  const opacity = useSharedValue(1);
+
+  const gestureHandler = useAnimatedGestureHandler({
+    onStart: (_, context) => {
+      context.startX = translateX.value;
+    },
+    onActive: (event, context) => {
+      // Only allow swipe left (negative values)
+      const newTranslateX = context.startX + event.translationX;
+      translateX.value = Math.min(0, Math.max(-80, newTranslateX));
+    },
+    onEnd: (event) => {
+      if (event.translationX < -40) {
+        // Swipe threshold reached - show delete button
+        translateX.value = withSpring(-80);
+      } else {
+        // Snap back
+        translateX.value = withSpring(0);
+      }
+    },
+  });
   duration: number; // in seconds
+  const animatedStyle = useAnimatedStyle(() => {
+    return {
+      transform: [{ translateX: translateX.value }],
+      opacity: opacity.value,
+    };
+  });
   roomCode: string;
+  const deleteButtonStyle = useAnimatedStyle(() => {
+    return {
+      opacity: translateX.value < -20 ? 1 : 0,
+    };
+  });
   isActive: boolean;
+  const handleDelete = () => {
+    // Animate out then delete
+    opacity.value = withSpring(0);
+    translateX.value = withSpring(-200);
+    setTimeout(() => {
+      runOnJS(onDelete)();
+    }, 300);
+  };
 }
+  return (
+    <View style={styles.swipeContainer}>
+      <PanGestureHandler onGestureEvent={gestureHandler}>
+        <Animated.View style={[styles.sessionCard, animatedStyle]}>
+          <View style={styles.sessionHeader}>
+            <View style={styles.sessionInfo}>
+              <Text style={styles.sessionRoomCode}>{item.roomCode}</Text>
+              <View style={[
+                styles.sessionStatus,
+                { backgroundColor: item.isActive ? '#4ade80' : '#666' }
+              ]}>
+                <Text style={styles.sessionStatusText}>
+                  {item.isActive ? 'Đang kết nối' : 'Đã ngắt'}
+                </Text>
+              </View>
+            </View>
+            <View style={styles.sessionRight}>
+              <View style={styles.sessionDuration}>
+                <Timer size={16} color="#ff6b9d" strokeWidth={2} />
+                <Text style={styles.sessionDurationText}>
+                  {formatDuration(item.isActive ? currentSessionDuration : item.duration)}
+                </Text>
+              </View>
+            </View>
+          </View>
+          
+          <View style={styles.sessionDetails}>
+            <View style={styles.sessionDate}>
+              <Calendar size={14} color="#888" strokeWidth={2} />
+              <Text style={styles.sessionDateText}>
+                Bắt đầu: {formatDateTime(item.startDate)}
+              </Text>
+            </View>
+            {item.endDate && (
+              <View style={styles.sessionDate}>
+                <WifiOff size={14} color="#888" strokeWidth={2} />
+                <Text style={styles.sessionDateText}>
+                  Kết thúc: {formatDateTime(item.endDate)}
+                </Text>
+              </View>
+            )}
+          </View>
+        </Animated.View>
+      </PanGestureHandler>
+      
+      {/* Delete Button (appears when swiped) */}
+      {!item.isActive && (
+        <Animated.View style={[styles.deleteButtonContainer, deleteButtonStyle]}>
+          <TouchableOpacity
+            style={styles.swipeDeleteButton}
+            onPress={handleDelete}
+          >
+            <Trash2 size={20} color="#fff" strokeWidth={2} />
+          </TouchableOpacity>
+        </Animated.View>
+      )}
+    </View>
+  );
+};
 
 export default function ProfileScreen() {
   const [currentConnectionStart, setCurrentConnectionStart] = useState<Date | null>(new Date(Date.now() - 86400000)); // Mock: started 1 day ago
@@ -260,54 +386,14 @@ export default function ProfileScreen() {
   };
 
   const renderConnectionSession = ({ item }: { item: ConnectionSession }) => (
-    <View style={styles.sessionCard}>
-      <View style={styles.sessionHeader}>
-        <View style={styles.sessionInfo}>
-          <Text style={styles.sessionRoomCode}>{item.roomCode}</Text>
-          <View style={[
-            styles.sessionStatus,
-            { backgroundColor: item.isActive ? '#4ade80' : '#666' }
-          ]}>
-            <Text style={styles.sessionStatusText}>
-              {item.isActive ? 'Đang kết nối' : 'Đã ngắt'}
-            </Text>
-          </View>
-        </View>
-        <View style={styles.sessionRight}>
-          <View style={styles.sessionDuration}>
-            <Timer size={16} color="#ff6b9d" strokeWidth={2} />
-            <Text style={styles.sessionDurationText}>
-              {formatDuration(item.isActive ? currentSessionDuration : item.duration)}
-            </Text>
-          </View>
-          {!item.isActive && (
-            <TouchableOpacity
-              style={styles.deleteButton}
-              onPress={() => handleDeleteSession(item.id)}
-            >
-              <Trash2 size={16} color={isPremium ? "#ef4444" : "#666"} strokeWidth={2} />
-            </TouchableOpacity>
-          )}
-        </View>
-      </View>
-      
-      <View style={styles.sessionDetails}>
-        <View style={styles.sessionDate}>
-          <Calendar size={14} color="#888" strokeWidth={2} />
-          <Text style={styles.sessionDateText}>
-            Bắt đầu: {formatDateTime(item.startDate)}
-          </Text>
-        </View>
-        {item.endDate && (
-          <View style={styles.sessionDate}>
-            <WifiOff size={14} color="#888" strokeWidth={2} />
-            <Text style={styles.sessionDateText}>
-              Kết thúc: {formatDateTime(item.endDate)}
-            </Text>
-          </View>
-        )}
-      </View>
-    </View>
+    <SwipeableSessionCard
+      item={item}
+      currentSessionDuration={currentSessionDuration}
+      onDelete={() => handleDeleteSession(item.id)}
+      isPremium={isPremium}
+      formatDuration={formatDuration}
+      formatDateTime={formatDateTime}
+    />
   );
 
   return (
@@ -401,15 +487,18 @@ export default function ProfileScreen() {
               <History size={20} color="#ff6b9d" strokeWidth={2} />
               <Text style={styles.historySectionTitle}>Lịch Sử Kết Nối</Text>
             </View>
-            <TouchableOpacity
-              style={styles.clearAllButton}
-              onPress={handleClearAllHistory}
-            >
-              <Trash2 size={16} color={isPremium ? "#ef4444" : "#666"} strokeWidth={2} />
-              <Text style={[styles.clearAllText, { color: isPremium ? "#ef4444" : "#666" }]}>
-                Xóa Tất Cả
-              </Text>
-            </TouchableOpacity>
+            <View style={styles.clearAllContainer}>
+              <TouchableOpacity
+                style={styles.clearAllButton}
+                onPress={handleClearAllHistory}
+              >
+                <View style={styles.clearAllContent}>
+                  <Trash2 size={16} color="#ef4444" strokeWidth={2} />
+                  <Text style={styles.clearAllText}>Xóa Tất Cả</Text>
+                  {!isPremium && <Crown size={12} color="#f59e0b" strokeWidth={2} />}
+                </View>
+              </TouchableOpacity>
+            </View>
           </View>
           
           <FlatList
@@ -421,6 +510,76 @@ export default function ProfileScreen() {
           />
         </View>
 
+        {/* Premium Modal */}
+        <Modal
+          visible={showPremiumModal}
+          animationType="slide"
+          presentationStyle="pageSheet"
+          onRequestClose={() => setShowPremiumModal(false)}
+        >
+          <View style={styles.premiumModal}>
+            <View style={styles.premiumHeader}>
+              <TouchableOpacity
+                style={styles.closeButton}
+                onPress={() => setShowPremiumModal(false)}
+              >
+                <X size={24} color="#888" strokeWidth={2} />
+              </TouchableOpacity>
+            </View>
+            
+            <View style={styles.premiumContent}>
+              <View style={styles.premiumIcon}>
+                <Crown size={48} color="#f59e0b" strokeWidth={2} fill="#f59e0b" />
+              </View>
+              
+              <Text style={styles.premiumTitle}>Nâng Cấp Premier</Text>
+              <Text style={styles.premiumSubtitle}>
+                Mở khóa tính năng quản lý lịch sử nâng cao
+              </Text>
+              
+              <View style={styles.premiumFeatures}>
+                <View style={styles.premiumFeature}>
+                  <Trash2 size={20} color="#4ade80" strokeWidth={2} />
+                  <Text style={styles.premiumFeatureText}>Xóa từng phiên kết nối</Text>
+                </View>
+                <View style={styles.premiumFeature}>
+                  <History size={20} color="#4ade80" strokeWidth={2} />
+                  <Text style={styles.premiumFeatureText}>Xóa toàn bộ lịch sử</Text>
+                </View>
+                <View style={styles.premiumFeature}>
+                  <Shield size={20} color="#4ade80" strokeWidth={2} />
+                  <Text style={styles.premiumFeatureText}>Bảo mật nâng cao</Text>
+                </View>
+                <View style={styles.premiumFeature}>
+                  <Heart size={20} color="#4ade80" strokeWidth={2} />
+                  <Text style={styles.premiumFeatureText}>Hỗ trợ phát triển app</Text>
+                </View>
+              </View>
+              
+              <View style={styles.premiumPricing}>
+                <Text style={styles.premiumPrice}>₫99,000</Text>
+                <Text style={styles.premiumPriceSubtext}>Mua một lần, sử dụng mãi mãi</Text>
+              </View>
+              
+              <View style={styles.premiumActions}>
+                <TouchableOpacity
+                  style={styles.upgradeButton}
+                  onPress={handleUpgradeToPremium}
+                >
+                  <Crown size={20} color="#fff" strokeWidth={2} />
+                  <Text style={styles.upgradeButtonText}>Nâng Cấp Ngay</Text>
+                </TouchableOpacity>
+                
+                <TouchableOpacity
+                  style={styles.laterButton}
+                  onPress={() => setShowPremiumModal(false)}
+                >
+                  <Text style={styles.laterButtonText}>Để Sau</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
+        </Modal>
         {/* Love Quote */}
         <View style={styles.quoteCard}>
           <Text style={styles.quoteText}>
@@ -539,8 +698,13 @@ const styles = StyleSheet.create({
   },
   historySectionHeader: {
     flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: 16,
+  },
+  historySectionLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
   },
   historySectionTitle: {
     fontSize: 18,
@@ -548,11 +712,35 @@ const styles = StyleSheet.create({
     color: '#fff',
     marginLeft: 8,
   },
+  clearAllContainer: {
+    // Container for the clear all button
+  },
+  clearAllButton: {
+    backgroundColor: 'rgba(239, 68, 68, 0.1)',
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(239, 68, 68, 0.3)',
+  },
+  clearAllContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    gap: 6,
+  },
+  clearAllText: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: '#ef4444',
+  },
+  swipeContainer: {
+    position: 'relative',
+    marginBottom: 12,
+  },
   sessionCard: {
     backgroundColor: '#111',
     borderRadius: 12,
     padding: 16,
-    marginBottom: 12,
     borderWidth: 1,
     borderColor: '#333',
   },
@@ -581,7 +769,9 @@ const styles = StyleSheet.create({
   sessionStatusText: {
     fontSize: 12,
     color: '#fff',
+    flexDirection: 'row',
     fontWeight: '500',
+    gap: 12,
   },
   sessionDuration: {
     flexDirection: 'row',
@@ -590,9 +780,6 @@ const styles = StyleSheet.create({
   },
   sessionDurationText: {
     fontSize: 14,
-    color: '#ff6b9d',
-    fontWeight: '600',
-  },
   sessionDetails: {
     gap: 8,
   },
@@ -604,6 +791,120 @@ const styles = StyleSheet.create({
   sessionDateText: {
     fontSize: 14,
     color: '#888',
+  },
+  deleteButtonContainer: {
+    position: 'absolute',
+    right: 0,
+    top: 0,
+    bottom: 0,
+    width: 80,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  swipeDeleteButton: {
+    backgroundColor: '#ef4444',
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  premiumModal: {
+    flex: 1,
+    backgroundColor: '#000',
+  },
+  premiumHeader: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    padding: 20,
+    paddingTop: 60,
+  },
+  closeButton: {
+    padding: 8,
+  },
+  premiumContent: {
+    flex: 1,
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingTop: 20,
+  },
+  premiumIcon: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    backgroundColor: 'rgba(245, 158, 11, 0.1)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 24,
+  },
+  premiumTitle: {
+    fontSize: 28,
+    fontWeight: '700',
+    color: '#fff',
+    marginBottom: 8,
+  },
+  premiumSubtitle: {
+    fontSize: 16,
+    color: '#888',
+    textAlign: 'center',
+    marginBottom: 40,
+    lineHeight: 22,
+  },
+  premiumFeatures: {
+    width: '100%',
+    marginBottom: 40,
+  },
+  premiumFeature: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 12,
+    gap: 16,
+  },
+  premiumFeatureText: {
+    fontSize: 16,
+    color: '#fff',
+    fontWeight: '500',
+  },
+  premiumPricing: {
+    alignItems: 'center',
+    marginBottom: 40,
+  },
+  premiumPrice: {
+    fontSize: 36,
+    fontWeight: '700',
+    color: '#f59e0b',
+    marginBottom: 4,
+  },
+  premiumPriceSubtext: {
+    fontSize: 14,
+    color: '#888',
+  },
+  premiumActions: {
+    width: '100%',
+    gap: 12,
+  },
+  upgradeButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#f59e0b',
+    borderRadius: 12,
+    paddingVertical: 16,
+    gap: 8,
+  },
+  upgradeButtonText: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#fff',
+  },
+  laterButton: {
+    alignItems: 'center',
+    paddingVertical: 16,
+  },
+  laterButtonText: {
+    fontSize: 16,
+    color: '#888',
+    fontWeight: '500',
   },
   quoteCard: {
     backgroundColor: '#111',
