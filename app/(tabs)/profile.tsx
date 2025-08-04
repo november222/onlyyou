@@ -596,6 +596,22 @@ export default function ProfileScreen() {
           </View>
         </ScrollView>
       </SafeAreaView>
+      {/* Total Sessions Navigation */}
+      <TouchableOpacity 
+        style={styles.totalSessionsCard}
+        onPress={() => router.push('/history')}
+      >
+        <View style={styles.totalSessionsHeader}>
+          <View style={styles.totalSessionsLeft}>
+            <History size={24} color="#ff6b9d" strokeWidth={2} />
+            <Text style={styles.totalSessionsTitle}>Xem Tất Cả Phiên Kết Nối</Text>
+          </View>
+          <ChevronRight size={20} color="#666" strokeWidth={2} />
+        </View>
+        <Text style={styles.totalSessionsSubtitle}>
+          {connectionSessions.length} phiên kết nối • Nhấn để xem chi tiết
+        </Text>
+      </TouchableOpacity>
     </>
   );
 }
@@ -720,34 +736,26 @@ const styles = StyleSheet.create({
     color: '#fff',
     marginLeft: 8,
   },
-  viewAllButton: {
-    backgroundColor: 'rgba(255, 107, 157, 0.1)',
+  clearAllContainer: {
+    // Container for the clear all button
+  },
+  clearAllButton: {
+    backgroundColor: 'rgba(239, 68, 68, 0.1)',
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: 'rgba(255, 107, 157, 0.3)',
+    borderColor: 'rgba(239, 68, 68, 0.3)',
   },
-  viewAllContent: {
+  clearAllContent: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 12,
     paddingVertical: 8,
     gap: 6,
   },
-  viewAllText: {
+  clearAllText: {
     fontSize: 14,
     fontWeight: '500',
-    color: '#ff6b9d',
-  },
-  historyPreview: {
-    backgroundColor: '#222',
-    borderRadius: 8,
-    padding: 16,
-    alignItems: 'center',
-  },
-  historyPreviewText: {
-    fontSize: 14,
-    color: '#888',
-    textAlign: 'center',
+    color: '#ef4444',
   },
   swipeContainer: {
     position: 'relative',

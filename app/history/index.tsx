@@ -269,7 +269,7 @@ export default function HistoryScreen() {
         'Bạn cần nâng cấp Premier để xem chi tiết phiên kết nối.',
         [
           { text: 'Để Sau', style: 'cancel' },
-          { text: 'Nâng Cấp', onPress: () => router.push('/premium') },
+          { text: 'Nâng Cấp', onPress: () => console.log('Navigate to premium') },
         ]
       );
       return;
@@ -281,7 +281,7 @@ export default function HistoryScreen() {
     }
     
     router.push({
-      pathname: '/session-detail',
+      pathname: '/history/[id]',
       params: { 
         id: session.id,
         sessionData: JSON.stringify(session)
@@ -478,6 +478,11 @@ const styles = StyleSheet.create({
     color: '#888',
   },
   sessionDuration: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  sessionRightIcons: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
