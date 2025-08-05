@@ -6,6 +6,7 @@ import {
   FlatList,
   TouchableOpacity,
   Alert,
+  Modal,
 } from 'react-native';
 import { PanGestureHandler } from 'react-native-gesture-handler';
 import Animated, {
@@ -26,7 +27,10 @@ import {
   Trash2,
   Crown,
   ChevronRight,
-  Zap
+  Zap,
+  X,
+  History,
+  Shield
 } from 'lucide-react-native';
 
 interface ConnectionSession {
@@ -175,6 +179,7 @@ const SwipeableSessionCard = ({
 export default function HistoryScreen() {
   const [connectionSessions, setConnectionSessions] = useState<ConnectionSession[]>([]);
   const [isPremium, setIsPremium] = useState(false);
+  const [showPremiumModal, setShowPremiumModal] = useState(false);
 
   useEffect(() => {
     loadConnectionHistory();
@@ -235,14 +240,7 @@ export default function HistoryScreen() {
 
   const handleDeleteSession = (sessionId: string) => {
     if (!isPremium) {
-      Alert.alert(
-        'Tính Năng Premier',
-        'Bạn cần nâng cấp Premier để xóa lịch sử kết nối.',
-        [
-          { text: 'Để Sau', style: 'cancel' },
-          { text: 'Nâng Cấp', onPress: () => router.push('/premium') },
-        ]
-      );
+      setShowPremiumModal(true);
       return;
     }
 
@@ -264,14 +262,7 @@ export default function HistoryScreen() {
 
   const handleSessionPress = (session: ConnectionSession) => {
     if (!isPremium) {
-      Alert.alert(
-        'Tính Năng Premier',
-        'Bạn cần nâng cấp Premier để xem chi tiết phiên kết nối.',
-        [
-          { text: 'Để Sau', style: 'cancel' },
-          { text: 'Nâng Cấp', onPress: () => console.log('Navigate to premium') },
-        ]
-      );
+      setShowPremiumModal(true);
       return;
     }
 
@@ -321,44 +312,121 @@ export default function HistoryScreen() {
   const totalBuzzCalls = connectionSessions.reduce((sum, session) => sum + session.buzzCallsCount, 0);
 
   return (
-    <SafeAreaView style={styles.container}>
-      {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
-          <ArrowLeft size={24} color="#fff" strokeWidth={2} />
-        </TouchableOpacity>
-        <Text style={styles.title}>Lịch Sử Kết Nối</Text>
-        <View style={styles.headerRight} />
-      </View>
+    <>
+      <SafeAreaView style={styles.container}>
+        {/* Header */}
+        <View style={styles.header}>
+          <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
+            <ArrowLeft size={24} color="#fff" strokeWidth={2} />
+          </TouchableOpacity>
+          <Text style={styles.title}>Lịch Sử Kết Nối</Text>
+          <View style={styles.headerRight} />
+        </View>
 
-      {/* Summary Stats */}
-      <View style={styles.summaryCard}>
-        <View style={styles.summaryRow}>
-          <View style={styles.summaryItem}>
-            <Text style={styles.summaryValue}>{connectionSessions.length}</Text>
-            <Text style={styles.summaryLabel}>Tổng phiên</Text>
-          </View>
-          <View style={styles.summaryItem}>
-            <Text style={styles.summaryValue}>{formatDuration(totalDuration)}</Text>
-            <Text style={styles.summaryLabel}>Tổng thời gian</Text>
-          </View>
-          <View style={styles.summaryItem}>
-            <Text style={styles.summaryValue}>{totalBuzzCalls}</Text>
-            <Text style={styles.summaryLabel}>Buzz calls</Text>
+        {/* Summary Stats */}
+        <View style={styles.summaryCard}>
+          <View style={styles.summaryRow}>
+            <View style={styles.summaryItem}>
+              <Text style={styles.summaryValue}>{connectionSessions.length}</Text>
+              <Text style={styles.summaryLabel}>Tổng phiên</Text>
+            </View>
+            <View style={styles.summaryItem}>
+              <Text style={styles.summaryValue}>{formatDuration(totalDuration)}</Text>
+              <Text style={styles.summaryLabel}>Tổng thời gian</Text>
+            </View>
+            <View style={styles.summaryItem}>
+              <Text style={styles.summaryValue}>{totalBuzzCalls}</Text>
+              <Text style={styles.summaryLabel}>Buzz calls</Text>
+            </View>
           </View>
         </View>
-      </View>
 
-      {/* Sessions List */}
-      <FlatList
-        data={connectionSessions}
-        renderItem={renderConnectionSession}
-        keyExtractor={item => item.id}
-        style={styles.sessionsList}
-        contentContainerStyle={styles.sessionsContent}
-        showsVerticalScrollIndicator={false}
-      />
-    </SafeAreaView>
+        {/* Sessions List */}
+        <FlatList
+          data={connectionSessions}
+          renderItem={renderConnectionSession}
+          keyExtractor={item => item.id}
+          style={styles.sessionsList}
+          contentContainerStyle={styles.sessionsContent}
+          showsVerticalScrollIndicator={false}
+        />
+      </SafeAreaView>
+
+      {/* Premium Modal */}
+      <Modal
+        visible={showPremiumModal}
+        animationType="slide"
+        presentationStyle="pageSheet"
+        onRequestClose={() => setShowPremiumModal(false)}
+      >
+        <View style={styles.premiumModal}>
+          <View style={styles.premiumHeader}>
+            <Text style={styles.premiumTitle}>Nâng Cấp Premier</Text>
+            <TouchableOpacity
+              style={styles.closeButton}
+              onPress={() => setShowPremiumModal(false)}
+            >
+              <X size={24} color="#888" strokeWidth={2} />
+            </TouchableOpacity>
+          </View>
+          
+          <View style={styles.premiumContent}>
+            <View style={styles.premiumIcon}>
+              <Crown size={48} color="#f59e0b" strokeWidth={2} fill="#f59e0b" />
+            </View>
+            
+            <Text style={styles.premiumMainTitle}>Only You Premier</Text>
+            <Text style={styles.premiumSubtitle}>
+              Mở khóa tính năng xem và quản lý lịch sử kết nối chi tiết
+            </Text>
+            
+            <View style={styles.premiumFeatures}>
+              <View style={styles.premiumFeature}>
+                <History size={20} color="#4ade80" strokeWidth={2} />
+                <Text style={styles.premiumFeatureText}>Xem chi tiết từng phiên kết nối</Text>
+              </View>
+              <View style={styles.premiumFeature}>
+                <Trash2 size={20} color="#4ade80" strokeWidth={2} />
+                <Text style={styles.premiumFeatureText}>Xóa và quản lý lịch sử</Text>
+              </View>
+              <View style={styles.premiumFeature}>
+                <Zap size={20} color="#4ade80" strokeWidth={2} />
+                <Text style={styles.premiumFeatureText}>Thống kê Buzz Calls chi tiết</Text>
+              </View>
+              <View style={styles.premiumFeature}>
+                <Shield size={20} color="#4ade80" strokeWidth={2} />
+                <Text style={styles.premiumFeatureText}>Bảo mật và sao lưu nâng cao</Text>
+              </View>
+            </View>
+            
+            <View style={styles.premiumPricing}>
+              <Text style={styles.premiumPrice}>₫399,000/năm</Text>
+              <Text style={styles.premiumPriceSubtext}>Hoặc ₫49,000/tháng • Tiết kiệm 32%</Text>
+            </View>
+            
+            <View style={styles.premiumActions}>
+              <TouchableOpacity
+                style={styles.upgradeButton}
+                onPress={() => {
+                  setShowPremiumModal(false);
+                  router.push('/premium');
+                }}
+              >
+                <Crown size={20} color="#fff" strokeWidth={2} />
+                <Text style={styles.upgradeButtonText}>Xem Chi Tiết Gói</Text>
+              </TouchableOpacity>
+              
+              <TouchableOpacity
+                style={styles.laterButton}
+                onPress={() => setShowPremiumModal(false)}
+              >
+                <Text style={styles.laterButtonText}>Để Sau</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+    </>
   );
 }
 
@@ -518,5 +586,108 @@ const styles = StyleSheet.create({
     borderRadius: 30,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  premiumModal: {
+    flex: 1,
+    backgroundColor: '#000',
+  },
+  premiumHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: '#333',
+  },
+  premiumTitle: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#fff',
+  },
+  closeButton: {
+    padding: 8,
+  },
+  premiumContent: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 20,
+  },
+  premiumIcon: {
+    marginBottom: 24,
+  },
+  premiumMainTitle: {
+    fontSize: 28,
+    fontWeight: '700',
+    color: '#fff',
+    marginBottom: 8,
+    textAlign: 'center',
+  },
+  premiumSubtitle: {
+    fontSize: 16,
+    color: '#888',
+    textAlign: 'center',
+    marginBottom: 32,
+    lineHeight: 24,
+  },
+  premiumFeatures: {
+    width: '100%',
+    marginBottom: 32,
+  },
+  premiumFeature: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 16,
+    paddingHorizontal: 16,
+  },
+  premiumFeatureText: {
+    fontSize: 16,
+    color: '#fff',
+    marginLeft: 12,
+  },
+  premiumPricing: {
+    alignItems: 'center',
+    marginBottom: 32,
+  },
+  premiumPrice: {
+    fontSize: 32,
+    fontWeight: '700',
+    color: '#f59e0b',
+    marginBottom: 4,
+  },
+  premiumPriceSubtext: {
+    fontSize: 14,
+    color: '#888',
+  },
+  premiumActions: {
+    width: '100%',
+    gap: 12,
+  },
+  upgradeButton: {
+    backgroundColor: '#f59e0b',
+    borderRadius: 12,
+    padding: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+  },
+  upgradeButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#fff',
+  },
+  laterButton: {
+    backgroundColor: 'transparent',
+    borderRadius: 12,
+    padding: 16,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#333',
+  },
+  laterButtonText: {
+    fontSize: 16,
+    fontWeight: '500',
+    color: '#888',
   },
 });

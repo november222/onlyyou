@@ -186,6 +186,9 @@ export default function ProfileScreen() {
   const [showPremiumModal, setShowPremiumModal] = useState(false);
   const [isPremium, setIsPremium] = useState(false);
 
+  const showPremiumAlert = () => {
+    setShowPremiumModal(true);
+  };
   useEffect(() => {
     // Get current connection state
     const currentState = WebRTCService.getConnectionState();
@@ -291,7 +294,7 @@ export default function ProfileScreen() {
 
   const handleDeleteSession = (sessionId: string) => {
     if (!isPremium) {
-      setShowPremiumModal(true);
+      showPremiumAlert();
       return;
     }
 
@@ -314,7 +317,7 @@ export default function ProfileScreen() {
 
   const handleClearAllHistory = () => {
     if (!isPremium) {
-      setShowPremiumModal(true);
+      showPremiumAlert();
       return;
     }
 
@@ -526,6 +529,7 @@ export default function ProfileScreen() {
           >
             <View style={styles.premiumModal}>
               <View style={styles.premiumHeader}>
+                <Text style={styles.premiumTitle}>Nâng Cấp Premier</Text>
                 <TouchableOpacity
                   style={styles.closeButton}
                   onPress={() => setShowPremiumModal(false)}
@@ -539,42 +543,49 @@ export default function ProfileScreen() {
                   <Crown size={48} color="#f59e0b" strokeWidth={2} fill="#f59e0b" />
                 </View>
                 
-                <Text style={styles.premiumTitle}>Nâng Cấp Premier</Text>
+                <Text style={styles.premiumMainTitle}>Only You Premier</Text>
                 <Text style={styles.premiumSubtitle}>
-                  Mở khóa tính năng quản lý lịch sử nâng cao
+                  Mở khóa tất cả tính năng premium và trải nghiệm yêu xa hoàn hảo
                 </Text>
                 
                 <View style={styles.premiumFeatures}>
                   <View style={styles.premiumFeature}>
-                    <Trash2 size={20} color="#4ade80" strokeWidth={2} />
-                    <Text style={styles.premiumFeatureText}>Xóa từng phiên kết nối</Text>
-                  </View>
-                  <View style={styles.premiumFeature}>
                     <History size={20} color="#4ade80" strokeWidth={2} />
-                    <Text style={styles.premiumFeatureText}>Xem chi tiết lịch sử</Text>
+                    <Text style={styles.premiumFeatureText}>Xem chi tiết lịch sử kết nối</Text>
                   </View>
                   <View style={styles.premiumFeature}>
                     <Trash2 size={20} color="#4ade80" strokeWidth={2} />
-                    <Text style={styles.premiumFeatureText}>Xóa toàn bộ lịch sử</Text>
+                    <Text style={styles.premiumFeatureText}>Quản lý và xóa lịch sử</Text>
+                  </View>
+                  <View style={styles.premiumFeature}>
+                    <Zap size={20} color="#4ade80" strokeWidth={2} />
+                    <Text style={styles.premiumFeatureText}>Buzz Calls nâng cao</Text>
                   </View>
                   <View style={styles.premiumFeature}>
                     <Shield size={20} color="#4ade80" strokeWidth={2} />
                     <Text style={styles.premiumFeatureText}>Bảo mật nâng cao</Text>
                   </View>
+                  <View style={styles.premiumFeature}>
+                    <Sparkles size={20} color="#4ade80" strokeWidth={2} />
+                    <Text style={styles.premiumFeatureText}>Giao diện và theme độc quyền</Text>
+                  </View>
                 </View>
                 
                 <View style={styles.premiumPricing}>
-                  <Text style={styles.premiumPrice}>₫99,000</Text>
-                  <Text style={styles.premiumPriceSubtext}>Mua một lần, sử dụng mãi mãi</Text>
+                  <Text style={styles.premiumPrice}>₫399,000/năm</Text>
+                  <Text style={styles.premiumPriceSubtext}>Hoặc ₫49,000/tháng • Tiết kiệm 32%</Text>
                 </View>
                 
                 <View style={styles.premiumActions}>
                   <TouchableOpacity
                     style={styles.upgradeButton}
-                    onPress={handleUpgradeToPremium}
+                    onPress={() => {
+                      setShowPremiumModal(false);
+                      router.push('/premium');
+                    }}
                   >
                     <Crown size={20} color="#fff" strokeWidth={2} />
-                    <Text style={styles.upgradeButtonText}>Nâng Cấp Ngay</Text>
+                    <Text style={styles.upgradeButtonText}>Xem Chi Tiết Gói</Text>
                   </TouchableOpacity>
                   
                   <TouchableOpacity
@@ -861,6 +872,13 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   premiumTitle: {
+    fontSize: 28,
+    fontWeight: '700',
+    color: '#fff',
+    marginBottom: 8,
+    textAlign: 'center',
+  },
+  premiumMainTitle: {
     fontSize: 28,
     fontWeight: '700',
     color: '#fff',
