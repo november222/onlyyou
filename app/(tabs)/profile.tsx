@@ -33,7 +33,8 @@ import {
   Crown,
   X,
   Shield,
-  ChevronRight
+  ChevronRight,
+  Zap
 } from 'lucide-react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import WebRTCService, { ConnectionState } from '@/services/WebRTCService';
