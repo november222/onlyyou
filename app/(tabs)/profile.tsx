@@ -599,10 +599,10 @@ export default function ProfileScreen() {
               </View>
             </View>
           </Modal>
-          {/* Love Quote */}
+
           <View style={styles.quoteCard}>
             <Text style={styles.quoteText}>
-              "Tình yêu không phải là nhìn vào mắt nhau, mà là cùng nhau nhìn về một hướng."
+              "Yêu không phải là nhìn vào mắt nhau, mà là cùng nhau nhìn về một hướng."
             </Text>
             <Text style={styles.quoteAuthor}>- Antoine de Saint-Exupéry</Text>
           </View>
@@ -728,9 +728,230 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     lineHeight: 16,
   },
-  chevronIcon: {
-    marginTop: 4,
-    alignSelf: 'center',
+  historySection: {
+    marginHorizontal: 20,
+    marginBottom: 20,
+  },
+  historySectionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  historySectionLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  historySectionTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#fff',
+    marginLeft: 8,
+  },
+  clearAllContainer: {
+    // Container for the clear all button
+  },
+  clearAllButton: {
+    backgroundColor: 'rgba(239, 68, 68, 0.1)',
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(239, 68, 68, 0.3)',
+  },
+  clearAllContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    gap: 6,
+  },
+  clearAllText: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: '#ef4444',
+  },
+  swipeContainer: {
+    position: 'relative',
+    marginBottom: 12,
+  },
+  sessionCard: {
+    backgroundColor: '#111',
+    borderRadius: 12,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: '#333',
+  },
+  sessionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  sessionInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  sessionRoomCode: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#fff',
+    fontFamily: 'monospace',
+  },
+  sessionStatus: {
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+  },
+  sessionStatusText: {
+    fontSize: 12,
+    color: '#fff',
+    fontWeight: '500',
+  },
+  sessionRight: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  sessionDuration: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  sessionDurationText: {
+    fontSize: 14,
+    color: '#ff6b9d',
+    fontWeight: '500',
+  },
+  sessionDetails: {
+    gap: 8,
+  },
+  sessionDate: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  sessionDateText: {
+    fontSize: 14,
+    color: '#888',
+  },
+  deleteButtonContainer: {
+    position: 'absolute',
+    right: 0,
+    top: 0,
+    bottom: 0,
+    width: 80,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  swipeDeleteButton: {
+    backgroundColor: '#ef4444',
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  premiumModal: {
+    flex: 1,
+    backgroundColor: '#000',
+  },
+  premiumHeader: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    padding: 20,
+    paddingBottom: 0,
+  },
+  closeButton: {
+    padding: 8,
+  },
+  premiumContent: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 20,
+  },
+  premiumIcon: {
+    marginBottom: 24,
+  },
+  premiumTitle: {
+    fontSize: 28,
+    fontWeight: '700',
+    color: '#fff',
+    marginBottom: 8,
+    textAlign: 'center',
+  },
+  premiumMainTitle: {
+    fontSize: 28,
+    fontWeight: '700',
+    color: '#fff',
+    marginBottom: 8,
+    textAlign: 'center',
+  },
+  premiumSubtitle: {
+    fontSize: 16,
+    color: '#888',
+    textAlign: 'center',
+    marginBottom: 32,
+    lineHeight: 24,
+  },
+  premiumFeatures: {
+    width: '100%',
+    marginBottom: 32,
+  },
+  premiumFeature: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 16,
+    paddingHorizontal: 16,
+  },
+  premiumFeatureText: {
+    fontSize: 16,
+    color: '#fff',
+    marginLeft: 12,
+  },
+  premiumPricing: {
+    alignItems: 'center',
+    marginBottom: 32,
+  },
+  premiumPrice: {
+    fontSize: 32,
+    fontWeight: '700',
+    color: '#f59e0b',
+    marginBottom: 4,
+  },
+  premiumPriceSubtext: {
+    fontSize: 14,
+    color: '#888',
+  },
+  premiumActions: {
+    width: '100%',
+    gap: 12,
+  },
+  upgradeButton: {
+    backgroundColor: '#f59e0b',
+    borderRadius: 12,
+    padding: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+  },
+  upgradeButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#fff',
+  },
+  laterButton: {
+    backgroundColor: 'transparent',
+    borderRadius: 12,
+    padding: 16,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#333',
+  },
+  laterButtonText: {
+    fontSize: 16,
+    fontWeight: '500',
+    color: '#888',
   },
   quoteCard: {
     backgroundColor: '#111',
@@ -754,5 +975,37 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#ff6b9d',
     fontWeight: '500',
+  },
+  totalSessionsCard: {
+    backgroundColor: '#111',
+    marginHorizontal: 20,
+    marginBottom: 20,
+    borderRadius: 16,
+    padding: 20,
+    borderWidth: 1,
+    borderColor: '#333',
+  },
+  totalSessionsHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  totalSessionsLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  totalSessionsTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#fff',
+    marginLeft: 12,
+  },
+  totalSessionsSubtitle: {
+    fontSize: 14,
+    color: '#888',
+  },
+  chevronIcon: {
+    marginLeft: 4,
   },
 });
