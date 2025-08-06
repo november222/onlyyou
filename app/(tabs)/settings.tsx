@@ -9,6 +9,7 @@ import {
   ScrollView,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useEffect } from 'react';
 import {
   Bell,
   Moon,
@@ -19,13 +20,29 @@ import {
   Info,
   Heart,
   ChevronRight,
+  User,
+  LogOut,
 } from 'lucide-react-native';
+import AuthService, { AuthState } from '@/services/AuthService';
+import { router } from 'expo-router';
 
 export default function SettingsScreen() {
   const [notifications, setNotifications] = useState(true);
   const [darkMode, setDarkMode] = useState(true);
   const [readReceipts, setReadReceipts] = useState(true);
   const [autoBackup, setAutoBackup] = useState(true);
+  const [authState, setAuthState] = useState<AuthState>(AuthService.getAuthState());
+
+  useEffect(() => {
+    // Listen for auth state changes
+    AuthService.onAuthStateChange = (state) => {
+      setAuthState(state);
+    };
+
+    return () => {
+      AuthService.onAuthStateChange = null;
+    };
+  }, []);
 
   const handleClearMessages = () => {
     Alert.alert(
@@ -48,6 +65,28 @@ export default function SettingsScreen() {
 
   const handleBackupMessages = () => {
     Alert.alert('Backup Created', 'Your messages have been backed up securely.');
+  };
+
+  const handleSignOut = () => {
+    Alert.alert(
+      'Đăng Xuất',
+      'Bạn có chắc muốn đăng xuất khỏi ứng dụng?',
+      [
+        { text: 'Hủy', style: 'cancel' },
+        {
+          text: 'Đăng Xuất',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await AuthService.signOut();
+              router.replace('/auth/login');
+            } catch (error) {
+              Alert.alert('Lỗi', 'Không thể đăng xuất. Vui lòng thử lại.');
+            }
+          },
+        },
+      ]
+    );
   };
 
   const SettingItem = ({ 
@@ -90,6 +129,27 @@ export default function SettingsScreen() {
           <Heart size={24} color="#ff6b9d" strokeWidth={2} fill="#ff6b9d" />
           <Text style={styles.title}>Settings</Text>
         </View>
+
+        {/* Account Section */}
+        {authState.user && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Tài Khoản</Text>
+            <View style={styles.sectionContent}>
+              <SettingItem
+                icon={<User size={20} color="#ff6b9d" strokeWidth={2} />}
+                title={authState.user.name}
+                subtitle={`${authState.user.email} • Đăng nhập qua ${authState.user.provider === 'google' ? 'Google' : 'Apple'}`}
+              />
+              <SettingItem
+                icon={<LogOut size={20} color="#ef4444" strokeWidth={2} />}
+                title="Đăng Xuất"
+                subtitle="Đăng xuất khỏi ứng dụng"
+                onPress={handleSignOut}
+                showChevron
+              />
+            </View>
+          </View>
+        )}
 
         {/* Notifications Section */}
         <View style={styles.section}>

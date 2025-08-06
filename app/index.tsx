@@ -1,13 +1,21 @@
 import { useEffect } from 'react';
 import { router } from 'expo-router';
 import { View, ActivityIndicator, StyleSheet } from 'react-native';
+import AuthService, { AuthState } from '@/services/AuthService';
 
 export default function IndexScreen() {
   useEffect(() => {
-    // In a real app, you would check if user has completed onboarding
-    // For now, always show onboarding
+    // Check authentication status
+    const authState = AuthService.getAuthState();
+    
     const timer = setTimeout(() => {
-      router.replace('/onboarding');
+      if (authState.isAuthenticated) {
+        // User is logged in, go to main app
+        router.replace('/(tabs)/profile');
+      } else {
+        // User not logged in, show login
+        router.replace('/auth/login');
+      }
     }, 1000);
 
     return () => clearTimeout(timer);

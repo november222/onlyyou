@@ -20,6 +20,7 @@ import {
   ChevronRight,
   ArrowRight 
 } from 'lucide-react-native';
+import AuthService from '@/services/AuthService';
 
 const { width: screenWidth } = Dimensions.get('window');
 
@@ -91,12 +92,25 @@ export default function OnboardingScreen() {
   };
 
   const handleGetStarted = () => {
-    // In a real app, you would save that onboarding is completed
-    router.replace('/(tabs)/profile');
+    // Check if user is authenticated
+    const authState = AuthService.getAuthState();
+    
+    if (authState.isAuthenticated) {
+      router.replace('/(tabs)/profile');
+    } else {
+      router.replace('/auth/login');
+    }
   };
 
   const handleSkip = () => {
-    router.replace('/(tabs)/profile');
+    // Check if user is authenticated
+    const authState = AuthService.getAuthState();
+    
+    if (authState.isAuthenticated) {
+      router.replace('/(tabs)/profile');
+    } else {
+      router.replace('/auth/login');
+    }
   };
 
   const renderSlide = ({ item, index }: { item: OnboardingSlide; index: number }) => (
