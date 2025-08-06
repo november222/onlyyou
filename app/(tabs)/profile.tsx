@@ -590,11 +590,7 @@ export default function ProfileScreen() {
           </View>
           <ChevronRight size={20} color="#666" strokeWidth={2} />
         </View>
-
-        {/* Total Sessions Navigation */}
-        <TouchableOpacity 
-          style={styles.totalSessionsCard}
-          onPress={() => router.push('/history')}
+      </TouchableOpacity>
     </>
   );
 }
