@@ -77,6 +77,55 @@ export default function SettingsScreen() {
     );
   };
 
+  const handleDeleteAccount = () => {
+    Alert.alert(
+      'Xóa Tài Khoản Vĩnh Viễn?',
+      'Hành động này sẽ xóa hoàn toàn tài khoản của bạn và tất cả dữ liệu liên quan. Bạn sẽ không thể khôi phục lại.',
+      [
+        { text: 'Hủy', style: 'cancel' },
+        {
+          text: 'Tiếp Tục',
+          style: 'destructive',
+          onPress: () => {
+            // Second confirmation
+            Alert.alert(
+              'Xác Nhận Cuối Cùng',
+              'Bạn có THỰC SỰ muốn xóa tài khoản vĩnh viễn? Hành động này KHÔNG THỂ hoàn tác.',
+              [
+                { text: 'Hủy', style: 'cancel' },
+                {
+                  text: 'Xóa Vĩnh Viễn',
+                  style: 'destructive',
+                  onPress: async () => {
+                    try {
+                      // Mock account deletion
+                      await new Promise(resolve => setTimeout(resolve, 2000));
+                      
+                      Alert.alert(
+                        'Tài Khoản Đã Được Xóa',
+                        'Tài khoản của bạn đã được xóa vĩnh viễn. Cảm ơn bạn đã sử dụng Only You.',
+                        [
+                          {
+                            text: 'OK',
+                            onPress: () => {
+                              AuthService.signOut();
+                              router.replace('/auth/login');
+                            },
+                          },
+                        ]
+                      );
+                    } catch (error) {
+                      Alert.alert('Lỗi', 'Không thể xóa tài khoản. Vui lòng thử lại.');
+                    }
+                  },
+                },
+              ]
+            );
+          },
+        },
+      ]
+    );
+  };
   const SettingItem = ({ 
     icon, 
     title, 
@@ -235,6 +284,20 @@ export default function SettingsScreen() {
               title="Clear All Messages"
               subtitle="Permanently delete all messages"
               onPress={handleClearMessages}
+              showChevron
+            />
+          </View>
+        </View>
+
+        {/* Account Management Section */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Quản Lý Tài Khoản</Text>
+          <View style={styles.sectionContent}>
+            <SettingItem
+              icon={<UserX size={20} color="#ef4444" strokeWidth={2} />}
+              title="Xóa Tài Khoản Vĩnh Viễn"
+              subtitle="Xóa hoàn toàn tài khoản và tất cả dữ liệu"
+              onPress={handleDeleteAccount}
               showChevron
             />
           </View>
