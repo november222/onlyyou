@@ -590,10 +590,11 @@ export default function ProfileScreen() {
           </View>
           <ChevronRight size={20} color="#666" strokeWidth={2} />
         </View>
-        <Text style={styles.totalSessionsSubtitle}>
-          {connectionSessions.length} phiên kết nối • Nhấn để xem chi tiết
-        </Text>
-      </TouchableOpacity>
+
+        {/* Total Sessions Navigation */}
+        <TouchableOpacity 
+          style={styles.totalSessionsCard}
+          onPress={() => router.push('/history')}
     </>
   );
 }
