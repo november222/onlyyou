@@ -22,22 +22,22 @@ export default function TabLayout() {
         },
       }}>
       <Tabs.Screen
-        name="index"
-        options={{
-          title: 'Messages',
-          headerShown: false,
-          tabBarIcon: ({ size, color }) => (
-            <MessageCircle size={size} color={color} strokeWidth={2} />
-          ),
-        }}
-      />
-      <Tabs.Screen
         name="profile"
         options={{
           title: 'Profile',
           headerShown: false,
           tabBarIcon: ({ size, color }) => (
             <User size={size} color={color} strokeWidth={2} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="index"
+        options={{
+          title: 'Messages',
+          headerShown: false,
+          tabBarIcon: ({ size, color }) => (
+            <MessageCircle size={size} color={color} strokeWidth={2} />
           ),
         }}
       />
