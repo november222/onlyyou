@@ -25,6 +25,7 @@ export default function TabLayout() {
         name="index"
         options={{
           title: 'Messages',
+          headerShown: false,
           tabBarIcon: ({ size, color }) => (
             <MessageCircle size={size} color={color} strokeWidth={2} />
           ),
@@ -34,6 +35,7 @@ export default function TabLayout() {
         name="profile"
         options={{
           title: 'Profile',
+          headerShown: false,
           tabBarIcon: ({ size, color }) => (
             <User size={size} color={color} strokeWidth={2} />
           ),
@@ -43,6 +45,7 @@ export default function TabLayout() {
         name="connection"
         options={{
           title: 'Connection',
+          headerShown: false,
           tabBarIcon: ({ size, color }) => (
             <Heart size={size} color={color} strokeWidth={2} />
           ),
@@ -52,6 +55,7 @@ export default function TabLayout() {
         name="settings"
         options={{
           title: 'Settings',
+          headerShown: false,
           tabBarIcon: ({ size, color }) => (
             <Settings size={size} color={color} strokeWidth={2} />
           ),
