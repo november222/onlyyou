@@ -591,7 +591,6 @@ export default function ProfileScreen() {
           <ChevronRight size={20} color="#666" strokeWidth={2} />
         </View>
       </TouchableOpacity>
-      </TouchableOpacity>
     </>
   );
 }
