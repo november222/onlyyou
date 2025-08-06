@@ -437,6 +437,20 @@ export default function ProfileScreen() {
             )}
           </View>
 
+          {/* Total Sessions Navigation */}
+          <TouchableOpacity 
+            style={styles.totalSessionsCard}
+            onPress={() => router.push('/history')}
+          >
+            <View style={styles.totalSessionsHeader}>
+              <View style={styles.totalSessionsLeft}>
+                <History size={24} color="#ff6b9d" strokeWidth={2} />
+                <Text style={styles.totalSessionsTitle}>Xem Tất Cả Phiên Kết Nối</Text>
+              </View>
+              <ChevronRight size={20} color="#666" strokeWidth={2} />
+            </View>
+          </TouchableOpacity>
+
           {/* Current Session Stats */}
           <View style={styles.statsGrid}>
             <View style={styles.statCard}>
@@ -577,19 +591,6 @@ export default function ProfileScreen() {
             <Text style={styles.quoteAuthor}>- Antoine de Saint-Exupéry</Text>
           </View>
 
-          {/* Total Sessions Navigation */}
-          <TouchableOpacity 
-            style={styles.totalSessionsCard}
-            onPress={() => router.push('/history')}
-          >
-            <View style={styles.totalSessionsHeader}>
-              <View style={styles.totalSessionsLeft}>
-                <History size={24} color="#ff6b9d" strokeWidth={2} />
-                <Text style={styles.totalSessionsTitle}>Xem Tất Cả Phiên Kết Nối</Text>
-              </View>
-              <ChevronRight size={20} color="#666" strokeWidth={2} />
-            </View>
-          </TouchableOpacity>
         </ScrollView>
       </SafeAreaView>
     </>
