@@ -92,11 +92,11 @@ export default function OnboardingScreen() {
 
   const handleGetStarted = () => {
     // In a real app, you would save that onboarding is completed
-    router.replace('/(tabs)');
+    router.replace('/(tabs)/profile');
   };
 
   const handleSkip = () => {
-    router.replace('/(tabs)');
+    router.replace('/(tabs)/profile');
   };
 
   const renderSlide = ({ item, index }: { item: OnboardingSlide; index: number }) => (

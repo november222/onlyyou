@@ -7,7 +7,7 @@ export default function IndexScreen() {
     // In a real app, you would check if user has completed onboarding
     // For now, always show onboarding
     const timer = setTimeout(() => {
-      router.replace('/(tabs)/profile');
+      router.replace('/onboarding');
     }, 1000);
 
     return () => clearTimeout(timer);
