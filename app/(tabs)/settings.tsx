@@ -10,21 +10,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useEffect } from 'react';
-import {
-  Bell,
-  Moon,
-  Shield,
-  Trash2,
-  Download,
-  Upload,
-  Info,
-  Heart,
-  ChevronRight,
-  User,
-  LogOut,
-  UserX,
-  AlertTriangle,
-} from 'lucide-react-native';
+import { Bell, Moon, Shield, Trash2, Download, Upload, Info, Heart, ChevronRight, User, LogOut, UserX, TriangleAlert as AlertTriangle } from 'lucide-react-native';
 import AuthService, { AuthState } from '@/services/AuthService';
 import { router } from 'expo-router';
 
@@ -91,51 +77,6 @@ export default function SettingsScreen() {
     );
   };
 
-  const handleDeleteAccount = () => {
-    Alert.alert(
-      'Xóa Tài Khoản Vĩnh Viễn',
-      'CẢNH BÁO: Hành động này sẽ xóa vĩnh viễn tài khoản và tất cả dữ liệu của bạn. Bạn sẽ không thể khôi phục lại được.\n\nBạn có chắc chắn muốn tiếp tục?',
-      [
-        { text: 'Hủy', style: 'cancel' },
-        {
-          text: 'Tôi Hiểu, Xóa Tài Khoản',
-          style: 'destructive',
-          onPress: () => {
-            // Second confirmation
-            Alert.alert(
-              'Xác Nhận Cuối Cùng',
-              'Đây là bước xác nhận cuối cùng. Tài khoản và tất cả dữ liệu sẽ bị xóa vĩnh viễn.\n\nBạn có thực sự muốn xóa tài khoản?',
-              [
-                { text: 'Không, Giữ Tài Khoản', style: 'cancel' },
-                {
-                  text: 'Có, Xóa Vĩnh Viễn',
-                  style: 'destructive',
-                  onPress: async () => {
-                    try {
-                      // Mock account deletion
-                      console.log('Mock: Deleting account permanently...');
-                      await new Promise(resolve => setTimeout(resolve, 2000));
-                      
-                      await AuthService.signOut();
-                      router.replace('/auth/login');
-                      
-                      Alert.alert(
-                        'Tài Khoản Đã Được Xóa',
-                        'Tài khoản của bạn đã được xóa vĩnh viễn. Cảm ơn bạn đã sử dụng Only You.',
-                        [{ text: 'OK' }]
-                      );
-                    } catch (error) {
-                      Alert.alert('Lỗi', 'Không thể xóa tài khoản. Vui lòng thử lại sau.');
-                    }
-                  },
-                },
-              ]
-            );
-          },
-        },
-      ]
-    );
-  };
   const SettingItem = ({ 
     icon, 
     title, 
@@ -192,25 +133,6 @@ export default function SettingsScreen() {
                 title="Đăng Xuất"
                 subtitle="Đăng xuất khỏi ứng dụng"
                 onPress={handleSignOut}
-                showChevron
-              />
-            </View>
-          </View>
-        )}
-
-        {/* Account Management Section */}
-        {authState.user && (
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Quản Lý Tài Khoản</Text>
-            <View style={styles.sectionContent}>
-              <SettingItem
-                icon={<UserX size={20} color="#ef4444" strokeWidth={2} />}
-                title="Xóa Tài Khoản Vĩnh Viễn"
-                subtitle="Xóa tài khoản và tất cả dữ liệu không thể khôi phục"
-                onPress={handleDeleteAccount}
-                rightElement={
-                  <AlertTriangle size={16} color="#ef4444" strokeWidth={2} />
-                }
                 showChevron
               />
             </View>
