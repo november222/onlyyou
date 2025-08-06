@@ -491,36 +491,6 @@ export default function ProfileScreen() {
             </View>
           </View>
 
-          {/* Connection History */}
-          <View style={styles.historySection}>
-            <View style={styles.historySectionHeader}>
-              <View style={styles.historySectionLeft}>
-                <History size={20} color="#ff6b9d" strokeWidth={2} />
-                <Text style={styles.historySectionTitle}>Lịch Sử Kết Nối</Text>
-              </View>
-              <View style={styles.clearAllContainer}>
-                <TouchableOpacity
-                  style={styles.clearAllButton}
-                  onPress={handleClearAllHistory}
-                >
-                  <View style={styles.clearAllContent}>
-                    <Trash2 size={16} color="#ef4444" strokeWidth={2} />
-                    <Text style={styles.clearAllText}>Xóa Tất Cả</Text>
-                    {!isPremium && <Crown size={12} color="#f59e0b" strokeWidth={2} />}
-                  </View>
-                </TouchableOpacity>
-              </View>
-            </View>
-            
-            <FlatList
-              data={connectionSessions}
-              renderItem={renderConnectionSession}
-              keyExtractor={item => item.id}
-              scrollEnabled={false}
-              showsVerticalScrollIndicator={false}
-            />
-          </View>
-
           {/* Premium Modal */}
           <Modal
             visible={showPremiumModal}
