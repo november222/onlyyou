@@ -14,10 +14,12 @@ import WebRTCService from '../services/WebRTCService';
 let RTCView: any = null;
 if (Platform.OS !== 'web') {
   try {
-    const webrtc = require('react-native-webrtc');
-    RTCView = webrtc.RTCView;
+    // Check if react-native-webrtc is available
+    RTCView = require('react-native-webrtc').RTCView;
   } catch (error) {
-    console.warn('RTCView not available:', error);
+    // Silently handle the case where WebRTC is not available
+    // This is expected in Expo managed workflow
+    RTCView = null;
   }
 }
 
