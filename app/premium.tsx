@@ -329,21 +329,25 @@ const styles = StyleSheet.create({
   crownContainer: {
     position: 'relative',
     marginBottom: 24,
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: 120,
+    height: 120,
   },
   sparkle1: {
     position: 'absolute',
-    top: -10,
-    right: -10,
+    top: 10,
+    right: 10,
   },
   sparkle2: {
     position: 'absolute',
-    bottom: -5,
-    left: -8,
+    bottom: 15,
+    left: 15,
   },
   sparkle3: {
     position: 'absolute',
-    top: 10,
-    left: -15,
+    top: 30,
+    left: 5,
   },
   heroTitle: {
     fontSize: 32,
@@ -351,13 +355,15 @@ const styles = StyleSheet.create({
     color: '#fff',
     marginBottom: 12,
     textAlign: 'center',
+    paddingHorizontal: 20,
   },
   heroSubtitle: {
     fontSize: 16,
     color: '#888',
     textAlign: 'center',
     lineHeight: 24,
-    maxWidth: 280,
+    paddingHorizontal: 20,
+    marginHorizontal: 20,
   },
   pricingSection: {
     paddingHorizontal: 20,
@@ -373,6 +379,7 @@ const styles = StyleSheet.create({
   pricingCards: {
     flexDirection: 'row',
     gap: 12,
+    minHeight: 140,
   },
   pricingCard: {
     flex: 1,
@@ -382,6 +389,8 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: '#333',
     position: 'relative',
+    minHeight: 120,
+    justifyContent: 'space-between',
   },
   selectedPricingCard: {
     borderColor: '#f59e0b',
@@ -392,9 +401,8 @@ const styles = StyleSheet.create({
   },
   recommendedBadge: {
     position: 'absolute',
-    top: -10,
-    left: '50%',
-    transform: [{ translateX: -40 }],
+    top: -12,
+    alignSelf: 'center',
     backgroundColor: '#f59e0b',
     borderRadius: 12,
     paddingHorizontal: 12,
@@ -402,6 +410,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
+    zIndex: 1,
   },
   recommendedText: {
     fontSize: 12,
@@ -413,11 +422,13 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: 12,
+    minHeight: 24,
   },
   pricingTitle: {
     fontSize: 16,
     fontWeight: '600',
     color: '#fff',
+    flex: 1,
   },
   selectedBadge: {
     backgroundColor: '#4ade80',
@@ -426,6 +437,7 @@ const styles = StyleSheet.create({
     height: 20,
     alignItems: 'center',
     justifyContent: 'center',
+    flexShrink: 0,
   },
   pricingPrice: {
     fontSize: 24,
@@ -438,6 +450,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 8,
     marginBottom: 4,
+    flexWrap: 'wrap',
   },
   originalPrice: {
     fontSize: 16,
@@ -473,6 +486,7 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     borderWidth: 1,
     borderColor: '#333',
+    minHeight: 80,
   },
   featureIcon: {
     width: 48,
@@ -481,20 +495,24 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 16,
+    flexShrink: 0,
   },
   featureContent: {
     flex: 1,
+    paddingRight: 8,
   },
   featureTitle: {
     fontSize: 16,
     fontWeight: '600',
     color: '#fff',
     marginBottom: 4,
+    lineHeight: 22,
   },
   featureDescription: {
     fontSize: 14,
     color: '#888',
     lineHeight: 20,
+    flexWrap: 'wrap',
   },
   featureCheck: {
     width: 32,
@@ -503,6 +521,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(74, 222, 128, 0.1)',
     alignItems: 'center',
     justifyContent: 'center',
+    flexShrink: 0,
   },
   guaranteeSection: {
     alignItems: 'center',
