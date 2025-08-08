@@ -591,6 +591,9 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#000',
   },
+  premiumModalSafe: {
+    flex: 1,
+  },
   premiumHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -607,13 +610,16 @@ const styles = StyleSheet.create({
   closeButton: {
     padding: 8,
   },
-  premiumContent: {
+  premiumScrollView: {
     flex: 1,
-    justifyContent: 'center',
+  },
+  premiumContent: {
+    flexGrow: 1,
     padding: 20,
+    paddingTop: 40,
   },
   premiumIcon: {
-    alignSelf: 'center',
+    alignItems: 'center',
     marginBottom: 24,
   },
   premiumMainTitle: {
@@ -631,12 +637,13 @@ const styles = StyleSheet.create({
     lineHeight: 24,
     paddingHorizontal: 20,
   },
-  premiumFeatures: {
+  premiumFeaturesContainer: {
     marginBottom: 32,
   },
   premiumFeature: {
     flexDirection: 'row',
     alignItems: 'center',
+    alignSelf: 'stretch',
     backgroundColor: '#111',
     borderRadius: 12,
     padding: 16,
@@ -644,11 +651,14 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#333',
   },
+  premiumFeatureTextContainer: {
+    flex: 1,
+    marginLeft: 12,
+  },
   premiumFeatureText: {
     fontSize: 16,
     color: '#fff',
-    marginLeft: 12,
-    flex: 1,
+    flexWrap: 'wrap',
   },
   premiumPricing: {
     alignItems: 'center',
@@ -666,9 +676,9 @@ const styles = StyleSheet.create({
     color: '#888',
     textAlign: 'center',
   },
-  premiumActions: {
-    gap: 12,
+  premiumActionsContainer: {
     paddingHorizontal: 20,
+    paddingBottom: 20,
   },
   upgradeButton: {
     backgroundColor: '#f59e0b',
@@ -678,6 +688,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
+    marginBottom: 12,
   },
   upgradeButtonText: {
     fontSize: 16,
