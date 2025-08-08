@@ -356,10 +356,10 @@ export default function HistoryScreen() {
       <Modal
         visible={showPremiumModal}
         animationType="slide"
-        presentationStyle="pageSheet"
+        presentationStyle="fullScreen"
         onRequestClose={() => setShowPremiumModal(false)}
       >
-        <SafeAreaView style={styles.premiumModal}>
+        <SafeAreaView style={styles.premiumModal} edges={['top', 'bottom']}>
           <View style={styles.premiumHeader}>
             <Text style={styles.premiumTitle}>Nâng Cấp Premier</Text>
             <TouchableOpacity
@@ -370,7 +370,7 @@ export default function HistoryScreen() {
             </TouchableOpacity>
           </View>
           
-          <View style={styles.premiumContent}>
+          <ScrollView style={styles.premiumScrollView} contentContainerStyle={styles.premiumContent}>
             <View style={styles.premiumIcon}>
               <Crown size={48} color="#f59e0b" strokeWidth={2} fill="#f59e0b" />
             </View>
@@ -423,7 +423,7 @@ export default function HistoryScreen() {
                 <Text style={styles.laterButtonText}>Để Sau</Text>
               </TouchableOpacity>
             </View>
-          </View>
+          </ScrollView>
         </SafeAreaView>
       </Modal>
     </>
@@ -607,10 +607,14 @@ const styles = StyleSheet.create({
   closeButton: {
     padding: 8,
   },
-  premiumContent: {
+  premiumScrollView: {
     flex: 1,
-    justifyContent: 'center',
+  },
+  premiumContent: {
+    flexGrow: 1,
     padding: 20,
+    paddingTop: 40,
+    paddingBottom: 40,
   },
   premiumIcon: {
     alignSelf: 'center',

@@ -509,10 +509,10 @@ export default function ProfileScreen() {
           <Modal
             visible={showPremiumModal}
             animationType="slide"
-            presentationStyle="pageSheet"
+            presentationStyle="fullScreen"
             onRequestClose={() => setShowPremiumModal(false)}
           >
-            <SafeAreaView style={styles.premiumModal}>
+            <SafeAreaView style={styles.premiumModal} edges={['top', 'bottom']}>
               <View style={styles.premiumHeader}>
                 <Text style={styles.premiumTitle}>Nâng Cấp Premier</Text>
                 <TouchableOpacity
@@ -523,7 +523,7 @@ export default function ProfileScreen() {
                 </TouchableOpacity>
               </View>
               
-              <View style={styles.premiumContent}>
+              <ScrollView style={styles.premiumScrollView} contentContainerStyle={styles.premiumContent}>
                 <View style={styles.premiumIcon}>
                   <Crown size={48} color="#f59e0b" strokeWidth={2} fill="#f59e0b" />
                 </View>
@@ -580,7 +580,7 @@ export default function ProfileScreen() {
                     <Text style={styles.laterButtonText}>Để Sau</Text>
                   </TouchableOpacity>
                 </View>
-              </View>
+              </ScrollView>
             </SafeAreaView>
           </Modal>
 
@@ -828,7 +828,6 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     padding: 20,
-    paddingBottom: 10,
     borderBottomWidth: 1,
     borderBottomColor: '#333',
   },
@@ -840,10 +839,14 @@ const styles = StyleSheet.create({
   closeButton: {
     padding: 8,
   },
-  premiumContent: {
+  premiumScrollView: {
     flex: 1,
-    justifyContent: 'center',
+  },
+  premiumContent: {
+    flexGrow: 1,
     padding: 20,
+    paddingTop: 40,
+    paddingBottom: 40,
   },
   premiumIcon: {
     alignSelf: 'center',
