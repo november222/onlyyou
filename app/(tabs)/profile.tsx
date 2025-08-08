@@ -512,7 +512,7 @@ export default function ProfileScreen() {
             presentationStyle="pageSheet"
             onRequestClose={() => setShowPremiumModal(false)}
           >
-            <View style={styles.premiumModal}>
+            <SafeAreaView style={styles.premiumModal}>
               <View style={styles.premiumHeader}>
                 <Text style={styles.premiumTitle}>Nâng Cấp Premier</Text>
                 <TouchableOpacity
@@ -581,7 +581,7 @@ export default function ProfileScreen() {
                   </TouchableOpacity>
                 </View>
               </View>
-            </View>
+            </SafeAreaView>
           </Modal>
 
           <View style={styles.quoteCard}>
@@ -825,28 +825,29 @@ const styles = StyleSheet.create({
   },
   premiumHeader: {
     flexDirection: 'row',
-    justifyContent: 'flex-end',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     padding: 20,
-    paddingBottom: 0,
+    paddingBottom: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: '#333',
+  },
+  premiumTitle: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#fff',
   },
   closeButton: {
     padding: 8,
   },
   premiumContent: {
     flex: 1,
-    alignItems: 'center',
     justifyContent: 'center',
     padding: 20,
   },
   premiumIcon: {
+    alignSelf: 'center',
     marginBottom: 24,
-  },
-  premiumTitle: {
-    fontSize: 28,
-    fontWeight: '700',
-    color: '#fff',
-    marginBottom: 8,
-    textAlign: 'center',
   },
   premiumMainTitle: {
     fontSize: 28,
@@ -861,25 +862,31 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginBottom: 32,
     lineHeight: 24,
+    paddingHorizontal: 20,
   },
   premiumFeatures: {
-    width: '100%',
     marginBottom: 32,
   },
   premiumFeature: {
     flexDirection: 'row',
     alignItems: 'center',
+    backgroundColor: '#111',
+    borderRadius: 12,
+    padding: 16,
     marginBottom: 16,
-    paddingHorizontal: 16,
+    borderWidth: 1,
+    borderColor: '#333',
   },
   premiumFeatureText: {
     fontSize: 16,
     color: '#fff',
     marginLeft: 12,
+    flex: 1,
   },
   premiumPricing: {
     alignItems: 'center',
     marginBottom: 32,
+    paddingHorizontal: 20,
   },
   premiumPrice: {
     fontSize: 32,
@@ -890,10 +897,11 @@ const styles = StyleSheet.create({
   premiumPriceSubtext: {
     fontSize: 14,
     color: '#888',
+    textAlign: 'center',
   },
   premiumActions: {
-    width: '100%',
     gap: 12,
+    paddingHorizontal: 20,
   },
   upgradeButton: {
     backgroundColor: '#f59e0b',
