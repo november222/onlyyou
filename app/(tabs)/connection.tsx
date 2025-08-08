@@ -7,6 +7,7 @@ import {
   Alert,
   TextInput,
   ActivityIndicator,
+  ScrollView,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Heart, Shield, Wifi, WifiOff, Copy, Key, Plus } from 'lucide-react-native';
@@ -125,7 +126,11 @@ export default function ConnectionScreen() {
   };
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.content}>
+      <ScrollView 
+        style={styles.content} 
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
         {/* Header */}
         <View style={styles.header}>
           <Heart size={32} color="#ff6b9d" strokeWidth={2} fill="#ff6b9d" />
@@ -280,7 +285,7 @@ export default function ConnectionScreen() {
             just you and your special person. 💕
           </Text>
         </View>
-      </View>
+      </ScrollView>
     </SafeAreaView>
   );
 }
@@ -292,6 +297,9 @@ const styles = StyleSheet.create({
   },
   content: {
     flex: 1,
+  },
+  scrollContent: {
+    flexGrow: 1,
     padding: 20,
   },
   header: {
