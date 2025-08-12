@@ -484,7 +484,7 @@ export default function ProfileScreen() {
                     style={styles.upgradeButton}
                     onPress={() => {
                       setShowPremiumModal(false);
-                      setShowPremiumDetailsModal(true);
+                      setTimeout(() => setShowPremiumDetailsModal(true), 100);
                     }}
                   >
                     <Crown size={20} color="#fff" strokeWidth={2} />
