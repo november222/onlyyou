@@ -15,7 +15,7 @@ const tabs = [
 ];
 
 export default function TabLayout() {
-  const [activeTab, setActiveTab] = useState('profile');
+  const [activeTab, setActiveTab] = useState('connection');
 
   const ActiveComponent = tabs.find(tab => tab.key === activeTab)?.component || ProfileScreen;
 
