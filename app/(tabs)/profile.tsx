@@ -186,6 +186,8 @@ export default function ProfileScreen() {
   const [realTimeTimer, setRealTimeTimer] = useState(0);
   const [showPremiumModal, setShowPremiumModal] = useState(false);
   const [isPremium, setIsPremium] = useState(false);
+  const [showHistoryModal, setShowHistoryModal] = useState(false);
+  const [allConnectionSessions, setAllConnectionSessions] = useState<ConnectionSession[]>([]);
 
   const showPremiumAlert = () => {
     setShowPremiumModal(true);
@@ -251,39 +253,62 @@ export default function ProfileScreen() {
     const mockSessions: ConnectionSession[] = [
       {
         id: '1',
-        startDate: new Date(Date.now() - 7 * 86400000), // 7 days ago
-        endDate: new Date(Date.now() - 6 * 86400000), // 6 days ago
-        duration: 14400, // 4 hours
+        startDate: new Date('2024-01-15T14:30:25'),
+        endDate: new Date('2024-01-15T18:45:12'),
+        duration: 15287, // 4h 14m 47s
         roomCode: 'LOVE01',
         isActive: false,
+        buzzCallsCount: 23,
       },
       {
         id: '2',
-        startDate: new Date(Date.now() - 5 * 86400000), // 5 days ago
-        endDate: new Date(Date.now() - 4 * 86400000), // 4 days ago
-        duration: 28800, // 8 hours
+        startDate: new Date('2024-01-14T09:15:33'),
+        endDate: new Date('2024-01-14T17:22:18'),
+        duration: 29205, // 8h 6m 45s
         roomCode: 'HEART2',
         isActive: false,
+        buzzCallsCount: 45,
       },
       {
         id: '3',
-        startDate: new Date(Date.now() - 3 * 86400000), // 3 days ago
-        endDate: new Date(Date.now() - 2 * 86400000), // 2 days ago
-        duration: 21600, // 6 hours
+        startDate: new Date('2024-01-13T20:10:15'),
+        endDate: new Date('2024-01-14T02:35:42'),
+        duration: 23127, // 6h 25m 27s
         roomCode: 'SWEET3',
         isActive: false,
+        buzzCallsCount: 18,
       },
       {
         id: '4',
+        startDate: new Date('2024-01-12T16:45:08'),
+        endDate: new Date('2024-01-12T23:12:55'),
+        duration: 23267, // 6h 27m 47s
+        roomCode: 'CUTE44',
+        isActive: false,
+        buzzCallsCount: 31,
+      },
+      {
+        id: '5',
+        startDate: new Date('2024-01-11T11:20:42'),
+        endDate: new Date('2024-01-11T19:58:33'),
+        duration: 31071, // 8h 37m 51s
+        roomCode: 'BABY55',
+        isActive: false,
+        buzzCallsCount: 52,
+      },
+      {
+        id: '6',
         startDate: new Date(Date.now() - 86400000), // 1 day ago
         endDate: null, // Currently active
         duration: 86400, // 1 day so far
         roomCode: 'ABC123',
         isActive: true,
+        buzzCallsCount: 0,
       },
     ];
 
     setConnectionSessions(mockSessions);
+    setAllConnectionSessions(mockSessions);
     
     // Calculate total times
     const totalConnected = mockSessions.reduce((sum, session) => sum + session.duration, 0);
@@ -354,6 +379,52 @@ export default function ProfileScreen() {
             setIsPremium(true);
             setShowPremiumModal(false);
             Alert.alert('Chúc Mừng!', 'Bạn đã nâng cấp thành công lên gói Premier! 🎉');
+          },
+        },
+      ]
+    );
+  };
+
+  const handleHistorySessionPress = (session: ConnectionSession) => {
+    if (!isPremium) {
+      setShowHistoryModal(false);
+      setShowPremiumModal(true);
+      return;
+    }
+
+    if (session.isActive) {
+      Alert.alert('Phiên Đang Hoạt Động', 'Không thể xem chi tiết phiên đang kết nối.');
+      return;
+    }
+    
+    setShowHistoryModal(false);
+    router.push({
+      pathname: '/history/[id]',
+      params: { 
+        id: session.id,
+        sessionData: JSON.stringify(session)
+      }
+    });
+  };
+
+  const handleDeleteHistorySession = (sessionId: string) => {
+    if (!isPremium) {
+      setShowHistoryModal(false);
+      setShowPremiumModal(true);
+      return;
+    }
+
+    Alert.alert(
+      'Xóa Phiên Kết Nối?',
+      'Bạn có chắc muốn xóa phiên kết nối này khỏi lịch sử?',
+      [
+        { text: 'Hủy', style: 'cancel' },
+        {
+          text: 'Xóa',
+          style: 'destructive',
+          onPress: () => {
+            setAllConnectionSessions(prev => prev.filter(session => session.id !== sessionId));
+            setConnectionSessions(prev => prev.filter(session => session.id !== sessionId));
           },
         },
       ]
