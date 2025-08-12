@@ -7,6 +7,7 @@ import {
   Switch,
   Alert,
   ScrollView,
+  Modal,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useEffect } from 'react';
