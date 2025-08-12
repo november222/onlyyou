@@ -8,9 +8,9 @@ import ConnectionScreen from './connection';
 import SettingsScreen from './settings';
 
 const tabs = [
+  { key: 'connection', title: 'Connect', icon: Heart, component: ConnectionScreen },
   { key: 'profile', title: 'Profile', icon: User, component: ProfileScreen },
   { key: 'messages', title: 'Text', icon: MessageCircle, component: MessagesScreen },
-  { key: 'connection', title: 'Connect', icon: Heart, component: ConnectionScreen },
   { key: 'settings', title: 'Set', icon: Settings, component: SettingsScreen },
 ];
 
