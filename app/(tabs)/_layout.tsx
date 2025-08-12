@@ -11,7 +11,7 @@ const tabs = [
   { key: 'profile', title: 'Profile', icon: User, component: ProfileScreen },
   { key: 'messages', title: 'Text', icon: MessageCircle, component: MessagesScreen },
   { key: 'connection', title: 'Connect', icon: Heart, component: ConnectionScreen },
-  { key: 'settings', title: 'Settings', icon: Settings, component: SettingsScreen },
+  { key: 'settings', title: 'Set', icon: Settings, component: SettingsScreen },
 ];
 
 export default function TabLayout() {
