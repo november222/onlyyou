@@ -58,6 +58,7 @@ export default function ProfileScreen() {
   const [showPremiumModal, setShowPremiumModal] = useState(false);
   const [isPremium, setIsPremium] = useState(false);
   const [showHistoryModal, setShowHistoryModal] = useState(false);
+  const [showPremiumDetailsModal, setShowPremiumDetailsModal] = useState(false);
   const [allConnectionSessions, setAllConnectionSessions] = useState<ConnectionSession[]>([]);
 
   const showPremiumAlert = () => {
@@ -483,7 +484,7 @@ export default function ProfileScreen() {
                     style={styles.upgradeButton}
                     onPress={() => {
                       setShowPremiumModal(false);
-                      router.push('/premium');
+                      setShowPremiumDetailsModal(true);
                     }}
                   >
                     <Crown size={20} color="#fff" strokeWidth={2} />
