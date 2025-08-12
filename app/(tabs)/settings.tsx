@@ -19,6 +19,8 @@ export default function SettingsScreen() {
   const [darkMode, setDarkMode] = useState(true);
   const [readReceipts, setReadReceipts] = useState(true);
   const [autoBackup, setAutoBackup] = useState(true);
+  const [selectedLanguage, setSelectedLanguage] = useState('vi');
+  const [showLanguageModal, setShowLanguageModal] = useState(false);
   const [authState, setAuthState] = useState<AuthState>(AuthService.getAuthState());
 
   useEffect(() => {
@@ -31,6 +33,28 @@ export default function SettingsScreen() {
       AuthService.onAuthStateChange = null;
     };
   }, []);
+
+  const languages = [
+    { code: 'vi', name: 'Tiếng Việt', flag: '🇻🇳' },
+    { code: 'en', name: 'English', flag: '🇺🇸' },
+    { code: 'ko', name: '한국어', flag: '🇰🇷' },
+    { code: 'ja', name: '日本語', flag: '🇯🇵' },
+    { code: 'zh', name: '中文', flag: '🇨🇳' },
+    { code: 'th', name: 'ไทย', flag: '🇹🇭' },
+    { code: 'es', name: 'Español', flag: '🇪🇸' },
+    { code: 'fr', name: 'Français', flag: '🇫🇷' },
+  ];
+
+  const handleLanguageChange = (languageCode: string) => {
+    setSelectedLanguage(languageCode);
+    setShowLanguageModal(false);
+    const selectedLang = languages.find(lang => lang.code === languageCode);
+    Alert.alert(
+      'Ngôn ngữ đã thay đổi',
+      `Đã chuyển sang ${selectedLang?.name}. Ứng dụng sẽ khởi động lại để áp dụng thay đổi.`,
+      [{ text: 'OK' }]
+    );
+  };
 
   const handleClearMessages = () => {
     Alert.alert(
@@ -210,12 +234,19 @@ export default function SettingsScreen() {
 
         {/* Appearance Section */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Appearance</Text>
+          <Text style={styles.sectionTitle}>Giao Diện</Text>
           <View style={styles.sectionContent}>
             <SettingItem
+              icon={<Globe size={20} color="#ff6b9d" strokeWidth={2} />}
+              title="Ngôn ngữ"
+              subtitle={languages.find(lang => lang.code === selectedLanguage)?.name || 'Tiếng Việt'}
+              onPress={() => setShowLanguageModal(true)}
+              showChevron
+            />
+            <SettingItem
               icon={<Moon size={20} color="#ff6b9d" strokeWidth={2} />}
-              title="Dark Mode"
-              subtitle="Use dark theme for better night viewing"
+              title="Chế độ tối"
+              subtitle="Sử dụng giao diện tối để bảo vệ mắt"
               rightElement={
                 <Switch
                   value={darkMode}
@@ -230,12 +261,12 @@ export default function SettingsScreen() {
 
         {/* Privacy Section */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Privacy & Security</Text>
+          <Text style={styles.sectionTitle}>Riêng Tư & Bảo Mật</Text>
           <View style={styles.sectionContent}>
             <SettingItem
               icon={<Shield size={20} color="#ff6b9d" strokeWidth={2} />}
-              title="Read Receipts"
-              subtitle="Let your partner know when you've read their messages"
+              title="Xác nhận đã đọc"
+              subtitle="Cho đối tác biết khi bạn đã đọc tin nhắn"
               rightElement={
                 <Switch
                   value={readReceipts}
@@ -250,12 +281,12 @@ export default function SettingsScreen() {
 
         {/* Data Section */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Data & Storage</Text>
+          <Text style={styles.sectionTitle}>Dữ Liệu & Lưu Trữ</Text>
           <View style={styles.sectionContent}>
             <SettingItem
               icon={<Upload size={20} color="#ff6b9d" strokeWidth={2} />}
-              title="Auto Backup"
-              subtitle="Automatically backup your messages"
+              title="Sao lưu tự động"
+              subtitle="Tự động sao lưu tin nhắn của bạn"
               rightElement={
                 <Switch
                   value={autoBackup}
@@ -267,22 +298,22 @@ export default function SettingsScreen() {
             />
             <SettingItem
               icon={<Download size={20} color="#4ade80" strokeWidth={2} />}
-              title="Export Messages"
-              subtitle="Download your conversation history"
+              title="Xuất tin nhắn"
+              subtitle="Tải xuống lịch sử trò chuyện"
               onPress={handleExportMessages}
               showChevron
             />
             <SettingItem
               icon={<Upload size={20} color="#3b82f6" strokeWidth={2} />}
-              title="Create Backup"
-              subtitle="Manually backup your messages"
+              title="Tạo bản sao lưu"
+              subtitle="Sao lưu tin nhắn thủ công"
               onPress={handleBackupMessages}
               showChevron
             />
             <SettingItem
               icon={<Trash2 size={20} color="#ef4444" strokeWidth={2} />}
-              title="Clear All Messages"
-              subtitle="Permanently delete all messages"
+              title="Xóa tất cả tin nhắn"
+              subtitle="Xóa vĩnh viễn tất cả tin nhắn"
               onPress={handleClearMessages}
               showChevron
             />
@@ -305,12 +336,12 @@ export default function SettingsScreen() {
 
         {/* About Section */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>About</Text>
+          <Text style={styles.sectionTitle}>Thông Tin</Text>
           <View style={styles.sectionContent}>
             <SettingItem
               icon={<Info size={20} color="#ff6b9d" strokeWidth={2} />}
-              title="About Only You"
-              subtitle="Version 1.0.0 • Made with ❤️"
+              title="Về Only You"
+              subtitle="Phiên bản 1.0.0 • Được tạo với ❤️"
               showChevron
             />
           </View>
@@ -319,11 +350,49 @@ export default function SettingsScreen() {
         {/* Footer */}
         <View style={styles.footer}>
           <Text style={styles.footerText}>
-            Only You is designed for two people who want complete privacy in their communication.
-            Your messages are encrypted and stored only on your devices.
+            Only You được thiết kế cho hai người muốn có sự riêng tư hoàn toàn trong giao tiếp.
+            Tin nhắn của bạn được mã hóa và chỉ lưu trữ trên thiết bị của bạn.
           </Text>
         </View>
       </ScrollView>
+
+      {/* Language Selection Modal */}
+      <Modal
+        visible={showLanguageModal}
+        animationType="slide"
+        presentationStyle="pageSheet"
+        onRequestClose={() => setShowLanguageModal(false)}
+      >
+        <View style={styles.languageModal}>
+          <View style={styles.languageHeader}>
+            <Text style={styles.languageTitle}>Chọn Ngôn Ngữ</Text>
+            <TouchableOpacity
+              style={styles.closeButton}
+              onPress={() => setShowLanguageModal(false)}
+            >
+              <X size={24} color="#888" strokeWidth={2} />
+            </TouchableOpacity>
+          </View>
+          
+          <ScrollView style={styles.languageList}>
+            {languages.map((language) => (
+              <TouchableOpacity
+                key={language.code}
+                style={styles.languageItem}
+                onPress={() => handleLanguageChange(language.code)}
+              >
+                <View style={styles.languageLeft}>
+                  <Text style={styles.languageFlag}>{language.flag}</Text>
+                  <Text style={styles.languageName}>{language.name}</Text>
+                </View>
+                {selectedLanguage === language.code && (
+                  <Check size={20} color="#ff6b9d" strokeWidth={2} />
+                )}
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -415,5 +484,53 @@ const styles = StyleSheet.create({
     color: '#666',
     textAlign: 'center',
     lineHeight: 20,
+  },
+  languageModal: {
+    flex: 1,
+    backgroundColor: '#000',
+  },
+  languageHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: '#333',
+  },
+  languageTitle: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#fff',
+  },
+  closeButton: {
+    padding: 8,
+  },
+  languageList: {
+    flex: 1,
+    padding: 20,
+  },
+  languageItem: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    backgroundColor: '#111',
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: '#333',
+  },
+  languageLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  languageFlag: {
+    fontSize: 24,
+    marginRight: 12,
+  },
+  languageName: {
+    fontSize: 16,
+    color: '#fff',
+    fontWeight: '500',
   },
 });
