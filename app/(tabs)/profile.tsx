@@ -192,6 +192,150 @@ export default function ProfileScreen() {
   const showPremiumAlert = () => {
     setShowPremiumModal(true);
   };
+
+  const HistorySwipeableSessionCard = ({ 
+    item, 
+    onDelete, 
+    onPress,
+    isPremium, 
+    formatDuration, 
+    formatDateTime 
+  }: {
+    item: ConnectionSession;
+    onDelete: () => void;
+    onPress: () => void;
+    isPremium: boolean;
+    formatDuration: (seconds: number) => string;
+    formatDateTime: (date: Date) => string;
+  }) => {
+    const translateX = useSharedValue(0);
+    const opacity = useSharedValue(1);
+
+    const gestureHandler = useAnimatedGestureHandler({
+      onStart: (_, context) => {
+        context.startX = translateX.value;
+      },
+      onActive: (event, context) => {
+        // Only allow swipe left (negative values)
+        const newTranslateX = context.startX + event.translationX;
+        translateX.value = Math.min(0, Math.max(-80, newTranslateX));
+      },
+      onEnd: (event) => {
+        if (event.translationX < -40) {
+          // Swipe threshold reached - show delete button
+          translateX.value = withSpring(-80);
+        } else {
+          // Snap back
+          translateX.value = withSpring(0);
+        }
+      },
+    });
+
+    const animatedStyle = useAnimatedStyle(() => {
+      return {
+        transform: [{ translateX: translateX.value }],
+        opacity: opacity.value,
+      };
+    });
+
+    const deleteButtonStyle = useAnimatedStyle(() => {
+      return {
+        opacity: translateX.value < -20 ? 1 : 0,
+      };
+    });
+
+    const handleDelete = () => {
+      // Animate out then delete
+      opacity.value = withSpring(0);
+      translateX.value = withSpring(-200);
+      setTimeout(() => {
+        runOnJS(onDelete)();
+      }, 300);
+    };
+
+    return (
+      <View style={styles.historySwipeContainer}>
+        <PanGestureHandler onGestureEvent={gestureHandler}>
+          <Animated.View style={[styles.historySessionCard, animatedStyle]}>
+            <TouchableOpacity onPress={onPress} style={styles.historySessionCardContent}>
+              <View style={styles.historySessionHeader}>
+                <View style={styles.historySessionInfo}>
+                  <Text style={styles.historySessionRoomCode}>{item.roomCode}</Text>
+                  <View style={[
+                    styles.historySessionStatus,
+                    { backgroundColor: item.isActive ? '#4ade80' : '#666' }
+                  ]}>
+                    <Text style={styles.historySessionStatusText}>
+                      {item.isActive ? 'Đang kết nối' : 'Đã ngắt'}
+                    </Text>
+                  </View>
+                </View>
+                <ChevronRight size={16} color="#666" strokeWidth={2} />
+              </View>
+              
+              <View style={styles.historySessionDetails}>
+                <View style={styles.historySessionDetailRow}>
+                  <View style={styles.historySessionDate}>
+                    <Calendar size={14} color="#888" strokeWidth={2} />
+                    <Text style={styles.historySessionDateText}>
+                      {formatDateTime(item.startDate)}
+                    </Text>
+                  </View>
+                  <View style={styles.historySessionDuration}>
+                    <Timer size={14} color="#ff6b9d" strokeWidth={2} />
+                    <Text style={styles.historySessionDurationText}>
+                      {formatDuration(item.duration)}
+                    </Text>
+                  </View>
+                </View>
+                
+                {item.endDate && (
+                  <View style={styles.historySessionDate}>
+                    <WifiOff size={14} color="#888" strokeWidth={2} />
+                    <Text style={styles.historySessionDateText}>
+                      {formatDateTime(item.endDate)}
+                    </Text>
+                  </View>
+                )}
+                
+                {/* Buzz Calls Count */}
+                <View style={styles.historyBuzzCallsRow}>
+                  <Zap size={14} color="#f59e0b" strokeWidth={2} />
+                  <Text style={styles.historyBuzzCallsText}>
+                    {item.buzzCallsCount} buzz calls
+                  </Text>
+                </View>
+              </View>
+            </TouchableOpacity>
+          </Animated.View>
+        </PanGestureHandler>
+        
+        {/* Delete Button (appears when swiped) */}
+        {!item.isActive && (
+          <Animated.View style={[styles.historyDeleteButtonContainer, deleteButtonStyle]}>
+            <TouchableOpacity
+              style={styles.historySwipeDeleteButton}
+              onPress={handleDelete}
+            >
+              <Trash2 size={20} color="#fff" strokeWidth={2} />
+            </TouchableOpacity>
+          </Animated.View>
+        )}
+      </View>
+    );
+  };
+
+  const renderHistorySession = ({ item }: { item: ConnectionSession }) => (
+    <HistorySwipeableSessionCard
+      item={item}
+      onDelete={() => handleDeleteHistorySession(item.id)}
+      onPress={() => handleHistorySessionPress(item)}
+      isPremium={isPremium}
+      formatDuration={formatDuration}
+      formatDateTime={formatDateTime}
+    />
+  );
+
   useEffect(() => {
     // Get current connection state
     const currentState = WebRTCService.getConnectionState();
@@ -477,6 +621,9 @@ export default function ProfileScreen() {
     />
   );
 
+  const totalHistoryDuration = allConnectionSessions.reduce((sum, session) => sum + session.duration, 0);
+  const totalHistoryBuzzCalls = allConnectionSessions.reduce((sum, session) => sum + session.buzzCallsCount, 0);
+
   return (
     <>
       <SafeAreaView style={styles.container}>
@@ -511,7 +658,7 @@ export default function ProfileScreen() {
           {/* Total Sessions Navigation */}
           <TouchableOpacity 
             style={styles.totalSessionsCard}
-            onPress={() => router.push('/history')}
+            onPress={() => setShowHistoryModal(true)}
           >
             <View style={styles.totalSessionsHeader}>
               <View style={styles.totalSessionsLeft}>
@@ -652,6 +799,55 @@ export default function ProfileScreen() {
                   </TouchableOpacity>
                 </View>
               </ScrollView>
+            </SafeAreaView>
+          </Modal>
+
+          {/* History Modal */}
+          <Modal
+            visible={showHistoryModal}
+            animationType="slide"
+            presentationStyle="fullScreen"
+            onRequestClose={() => setShowHistoryModal(false)}
+          >
+            <SafeAreaView style={styles.historyModal} edges={['top', 'bottom']}>
+              {/* Header */}
+              <View style={styles.historyHeader}>
+                <Text style={styles.historyTitle}>Lịch Sử Kết Nối</Text>
+                <TouchableOpacity
+                  style={styles.closeButton}
+                  onPress={() => setShowHistoryModal(false)}
+                >
+                  <X size={24} color="#888" strokeWidth={2} />
+                </TouchableOpacity>
+              </View>
+
+              {/* Summary Stats */}
+              <View style={styles.historySummaryCard}>
+                <View style={styles.historySummaryRow}>
+                  <View style={styles.historySummaryItem}>
+                    <Text style={styles.historySummaryValue}>{allConnectionSessions.length}</Text>
+                    <Text style={styles.historySummaryLabel}>Tổng phiên</Text>
+                  </View>
+                  <View style={styles.historySummaryItem}>
+                    <Text style={styles.historySummaryValue}>{formatDuration(totalHistoryDuration)}</Text>
+                    <Text style={styles.historySummaryLabel}>Tổng thời gian</Text>
+                  </View>
+                  <View style={styles.historySummaryItem}>
+                    <Text style={styles.historySummaryValue}>{totalHistoryBuzzCalls}</Text>
+                    <Text style={styles.historySummaryLabel}>Buzz calls</Text>
+                  </View>
+                </View>
+              </View>
+
+              {/* Sessions List */}
+              <FlatList
+                data={allConnectionSessions}
+                renderItem={renderHistorySession}
+                keyExtractor={item => item.id}
+                style={styles.historySessionsList}
+                contentContainerStyle={styles.historySessionsContent}
+                showsVerticalScrollIndicator={false}
+              />
             </SafeAreaView>
           </Modal>
 
@@ -1003,6 +1199,151 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '500',
     color: '#888',
+  },
+  historyModal: {
+    flex: 1,
+    backgroundColor: '#000',
+  },
+  historyHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: '#333',
+  },
+  historyTitle: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#fff',
+  },
+  historySummaryCard: {
+    backgroundColor: '#111',
+    marginHorizontal: 20,
+    marginVertical: 20,
+    borderRadius: 16,
+    padding: 20,
+    borderWidth: 1,
+    borderColor: '#333',
+  },
+  historySummaryRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+  },
+  historySummaryItem: {
+    alignItems: 'center',
+  },
+  historySummaryValue: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#ff6b9d',
+    marginBottom: 4,
+  },
+  historySummaryLabel: {
+    fontSize: 12,
+    color: '#888',
+  },
+  historySessionsList: {
+    flex: 1,
+  },
+  historySessionsContent: {
+    paddingHorizontal: 20,
+    paddingBottom: 20,
+  },
+  historySwipeContainer: {
+    position: 'relative',
+    marginBottom: 12,
+  },
+  historySessionCard: {
+    backgroundColor: '#111',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#333',
+    overflow: 'hidden',
+  },
+  historySessionCardContent: {
+    padding: 16,
+  },
+  historySessionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  historySessionInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  historySessionRoomCode: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#fff',
+    fontFamily: 'monospace',
+  },
+  historySessionStatus: {
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+  },
+  historySessionStatusText: {
+    fontSize: 12,
+    color: '#fff',
+    fontWeight: '500',
+  },
+  historySessionDetails: {
+    gap: 8,
+  },
+  historySessionDetailRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  historySessionDate: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  historySessionDateText: {
+    fontSize: 13,
+    color: '#888',
+  },
+  historySessionDuration: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  historySessionDurationText: {
+    fontSize: 13,
+    color: '#ff6b9d',
+    fontWeight: '500',
+  },
+  historyBuzzCallsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  historyBuzzCallsText: {
+    fontSize: 13,
+    color: '#f59e0b',
+    fontWeight: '500',
+  },
+  historyDeleteButtonContainer: {
+    position: 'absolute',
+    right: 0,
+    top: 0,
+    bottom: 0,
+    width: 80,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  historySwipeDeleteButton: {
+    backgroundColor: '#ef4444',
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   quoteCard: {
     backgroundColor: '#111',
