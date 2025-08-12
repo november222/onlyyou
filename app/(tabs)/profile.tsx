@@ -460,10 +460,6 @@ export default function ProfileScreen() {
                     <Text style={styles.premiumFeatureText}>Xem chi tiết lịch sử kết nối</Text>
                   </View>
                   <View style={styles.premiumFeature}>
-                    <Trash2 size={20} color="#4ade80" strokeWidth={2} />
-                    <Text style={styles.premiumFeatureText}>Quản lý và xóa lịch sử</Text>
-                  </View>
-                  <View style={styles.premiumFeature}>
                     <Zap size={20} color="#4ade80" strokeWidth={2} />
                     <Text style={styles.premiumFeatureText}>Buzz Calls nâng cao</Text>
                   </View>
