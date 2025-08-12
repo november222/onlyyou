@@ -125,7 +125,7 @@ export default function ConnectionScreen() {
     );
   };
   return (
-    <SafeAreaView style={styles.container}>
+    <View style={styles.container}>
       <ScrollView 
         style={styles.content} 
         contentContainerStyle={styles.scrollContent}
@@ -286,7 +286,7 @@ export default function ConnectionScreen() {
           </Text>
         </View>
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 }
 

@@ -330,7 +330,7 @@ export default function ProfileScreen() {
 
   return (
     <>
-      <SafeAreaView style={styles.container}>
+      <View style={styles.container}>
         <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
           {/* Header */}
           <View style={styles.header}>
@@ -559,7 +559,7 @@ export default function ProfileScreen() {
           </View>
 
         </ScrollView>
-      </SafeAreaView>
+      </View>
     </>
   );
 }

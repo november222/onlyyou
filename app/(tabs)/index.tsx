@@ -119,7 +119,7 @@ export default function MessagesScreen() {
   );
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
+    <View style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
         <View style={styles.headerContent}>
@@ -211,7 +211,7 @@ export default function MessagesScreen() {
       >
         <CallScreen onEndCall={endCall} isVideoCall={isVideoCall} />
       </Modal>
-    </SafeAreaView>
+    </View>
   );
 }
 
