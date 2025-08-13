@@ -188,6 +188,7 @@ export default function ProfileScreen() {
         duration: realTimeTimer,
         roomCode: connectionState.roomCode,
         isActive: false,
+        buzzCallsCount: 0,
       };
       
       setConnectionSessions(prev => [newSession, ...prev]);

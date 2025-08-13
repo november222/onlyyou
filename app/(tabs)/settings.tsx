@@ -7,10 +7,11 @@ import {
   Switch,
   Alert,
   ScrollView,
+  Modal,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useEffect } from 'react';
-import { Bell, Moon, Shield, Trash2, Download, Upload, Info, Heart, ChevronRight, User, LogOut, UserX, TriangleAlert as AlertTriangle, Globe } from 'lucide-react-native';
+import { Bell, Moon, Shield, Trash2, Download, Upload, Info, Heart, ChevronRight, User, LogOut, UserX, TriangleAlert as AlertTriangle, Globe, X, Check } from 'lucide-react-native';
 import AuthService, { AuthState } from '@/services/AuthService';
 import { router } from 'expo-router';
 

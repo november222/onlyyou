@@ -44,6 +44,10 @@ interface ConnectionSession {
   buzzCallsCount: number;
 }
 
+type DragContext = {
+  startX: number;
+};
+
 // Swipeable Session Card Component
 const SwipeableSessionCard = ({ 
   item, 
@@ -63,7 +67,7 @@ const SwipeableSessionCard = ({
   const translateX = useSharedValue(0);
   const opacity = useSharedValue(1);
 
-  const gestureHandler = useAnimatedGestureHandler({
+  const gestureHandler = useAnimatedGestureHandler<PanGestureHandlerGestureEvent, DragContext>({
     onStart: (_, context) => {
       context.startX = translateX.value;
     },
