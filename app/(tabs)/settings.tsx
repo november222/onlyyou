@@ -65,7 +65,7 @@ export default function SettingsScreen() {
       const selectedLang = supportedLanguages.find(lang => lang.code === languageCode);
       Alert.alert(
         t('settings:languageChanged'),
-        t('settings:languageChangedDesc', { language: selectedLang?.name }),
+        t('settings:languageChangedDesc').replace('{language}', selectedLang?.name || ''),
         [{ text: t('common:ok') }]
       );
     } catch (error) {

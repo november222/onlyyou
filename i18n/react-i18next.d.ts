@@ -103,6 +103,35 @@ declare module 'react-i18next' {
         private: string;
         privateDesc: string;
       };
+      profile: {
+        title: string;
+        subtitle: string;
+        daysConnected: string;
+        since: string;
+        viewAllSessions: string;
+        currentlyConnected: string;
+        lastSession: string;
+        totalConnectedTime: string;
+        totalDisconnectedTime: string;
+        totalSessions: string;
+      };
+      connection: {
+        title: string;
+        subtitle: string;
+        connected: string;
+        connecting: string;
+        disconnected: string;
+        connectedDesc: string;
+        connectingDesc: string;
+        readyToConnect: string;
+      };
+      messages: {
+        notConnected: string;
+        pleaseConnect: string;
+        connectedEncrypted: string;
+        connecting: string;
+        typeMessage: string;
+      };
     };
   }
 }

@@ -1,0 +1,12 @@
+{
+  "title": "Perfil",
+  "subtitle": "Estadísticas de conexión",
+  "daysConnected": "días conectados",
+  "since": "Desde",
+  "viewAllSessions": "Ver Todas las Sesiones de Conexión",
+  "currentlyConnected": "Actualmente conectado",
+  "lastSession": "Última sesión",
+  "totalConnectedTime": "Tiempo total conectado",
+  "totalDisconnectedTime": "Tiempo total desconectado",
+  "totalSessions": "Total de sesiones"
+}

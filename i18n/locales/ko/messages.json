@@ -1,0 +1,7 @@
+{
+  "notConnected": "연결되지 않음",
+  "pleaseConnect": "먼저 파트너와 연결해주세요.",
+  "connectedEncrypted": "연결됨 • 종단간 암호화",
+  "connecting": "연결 중...",
+  "typeMessage": "메시지를 입력하세요..."
+}

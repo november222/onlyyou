@@ -1,0 +1,12 @@
+{
+  "title": "Trang Cá Nhân",
+  "subtitle": "Thống kê kết nối của bạn",
+  "daysConnected": "ngày đã kết nối",
+  "since": "Từ",
+  "viewAllSessions": "Xem Tất Cả Phiên Kết Nối",
+  "currentlyConnected": "Đang kết nối",
+  "lastSession": "Phiên gần nhất",
+  "totalConnectedTime": "Tổng thời gian kết nối",
+  "totalDisconnectedTime": "Thời gian ngắt kết nối",
+  "totalSessions": "Tổng số phiên"
+}

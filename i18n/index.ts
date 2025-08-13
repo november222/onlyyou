@@ -15,18 +15,27 @@ import viAuth from './locales/vi/auth.json';
 import viSettings from './locales/vi/settings.json';
 import viHistory from './locales/vi/history.json';
 import viOnboarding from './locales/vi/onboarding.json';
+import viProfile from './locales/vi/profile.json';
+import viConnection from './locales/vi/connection.json';
+import viMessages from './locales/vi/messages.json';
 
 import koCommon from './locales/ko/common.json';
 import koAuth from './locales/ko/auth.json';
 import koSettings from './locales/ko/settings.json';
 import koHistory from './locales/ko/history.json';
 import koOnboarding from './locales/ko/onboarding.json';
+import koProfile from './locales/ko/profile.json';
+import koConnection from './locales/ko/connection.json';
+import koMessages from './locales/ko/messages.json';
 
 import esCommon from './locales/es/common.json';
 import esAuth from './locales/es/auth.json';
 import esSettings from './locales/es/settings.json';
 import esHistory from './locales/es/history.json';
 import esOnboarding from './locales/es/onboarding.json';
+import esProfile from './locales/es/profile.json';
+import esConnection from './locales/es/connection.json';
+import esMessages from './locales/es/messages.json';
 
 // Supported languages configuration
 export const supportedLanguages = [
@@ -47,6 +56,9 @@ const resources = {
     settings: enSettings,
     history: enHistory,
     onboarding: enOnboarding,
+    profile: enProfile,
+    connection: enConnection,
+    messages: enMessages,
   },
   vi: {
     common: viCommon,
@@ -54,6 +66,9 @@ const resources = {
     settings: viSettings,
     history: viHistory,
     onboarding: viOnboarding,
+    profile: viProfile,
+    connection: viConnection,
+    messages: viMessages,
   },
   ko: {
     common: koCommon,
@@ -61,6 +76,9 @@ const resources = {
     settings: koSettings,
     history: koHistory,
     onboarding: koOnboarding,
+    profile: koProfile,
+    connection: koConnection,
+    messages: koMessages,
   },
   es: {
     common: esCommon,
@@ -68,6 +86,9 @@ const resources = {
     settings: esSettings,
     history: esHistory,
     onboarding: esOnboarding,
+    profile: esProfile,
+    connection: esConnection,
+    messages: esMessages,
   },
 };
 

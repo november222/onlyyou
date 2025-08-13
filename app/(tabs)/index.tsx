@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   View,
   Text,
@@ -17,6 +18,7 @@ import WebRTCService, { WebRTCMessage, ConnectionState } from '../../services/We
 import CallScreen from '../../components/CallScreen';
 
 export default function MessagesScreen() {
+  const { t } = useTranslation();
   const [messages, setMessages] = useState<WebRTCMessage[]>([]);
   const [inputText, setInputText] = useState('');
   const [connectionState, setConnectionState] = useState<ConnectionState>({
@@ -50,7 +52,7 @@ export default function MessagesScreen() {
     if (inputText.trim() === '') return;
     
     if (!connectionState.isConnected) {
-      Alert.alert('Not Connected', 'Please connect to your partner first.');
+      Alert.alert(t('messages:notConnected'), t('messages:pleaseConnect'));
       return;
     }
 
@@ -65,7 +67,7 @@ export default function MessagesScreen() {
 
   const startVoiceCall = async () => {
     if (!connectionState.isConnected) {
-      Alert.alert('Not Connected', 'Please connect to your partner first.');
+      Alert.alert(t('messages:notConnected'), t('messages:pleaseConnect'));
       return;
     }
     
@@ -75,7 +77,7 @@ export default function MessagesScreen() {
 
   const startVideoCall = async () => {
     if (!connectionState.isConnected) {
-      Alert.alert('Not Connected', 'Please connect to your partner first.');
+      Alert.alert(t('messages:notConnected'), t('messages:pleaseConnect'));
       return;
     }
     
@@ -155,10 +157,10 @@ export default function MessagesScreen() {
         </View>
         <Text style={styles.headerSubtitle}>
           {connectionState.isConnected 
-            ? 'Connected • End-to-end encrypted' 
+            ? t('messages:connectedEncrypted')
             : connectionState.isConnecting 
-              ? 'Connecting...' 
-              : connectionState.error || 'Not connected'
+              ? t('messages:connecting')
+              : connectionState.error || t('messages:notConnected')
           }
         </Text>
       </View>
@@ -185,7 +187,7 @@ export default function MessagesScreen() {
             style={styles.textInput}
             value={inputText}
             onChangeText={setInputText}
-            placeholder="Type your message..."
+            placeholder={t('messages:typeMessage')}
             placeholderTextColor="#666"
             multiline
             maxLength={1000}

@@ -1,0 +1,10 @@
+{
+  "title": "Only You",
+  "subtitle": "Private Connection",
+  "connected": "Connected",
+  "connecting": "Connecting...",
+  "disconnected": "Disconnected",
+  "connectedDesc": "You are securely connected to your partner",
+  "connectingDesc": "Establishing secure connection...",
+  "readyToConnect": "Ready to connect to your partner"
+}

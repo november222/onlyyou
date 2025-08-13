@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   View,
   Text,
@@ -14,6 +15,7 @@ import { Heart, Shield, Wifi, WifiOff, Copy, Key, Plus } from 'lucide-react-nati
 import WebRTCService, { ConnectionState } from '@/services/WebRTCService';
 
 export default function ConnectionScreen() {
+  const { t } = useTranslation();
   const [connectionState, setConnectionState] = useState<ConnectionState>({
     isConnected: false,
     isConnecting: false,
@@ -134,8 +136,8 @@ export default function ConnectionScreen() {
         {/* Header */}
         <View style={styles.header}>
           <Heart size={32} color="#ff6b9d" strokeWidth={2} fill="#ff6b9d" />
-          <Text style={styles.title}>Only You</Text>
-          <Text style={styles.subtitle}>Private Connection</Text>
+          <Text style={styles.title}>{t('connection:title')}</Text>
+          <Text style={styles.subtitle}>{t('connection:subtitle')}</Text>
         </View>
 
         {/* Connection Status */}
@@ -151,20 +153,20 @@ export default function ConnectionScreen() {
               { color: connectionState.isConnected ? '#4ade80' : '#ef4444' }
             ]}>
               {connectionState.isConnected 
-                ? 'Connected' 
+                ? t('connection:connected')
                 : connectionState.isConnecting 
-                  ? 'Connecting...' 
-                  : 'Disconnected'
+                  ? t('connection:connecting')
+                  : t('connection:disconnected')
               }
             </Text>
           </View>
           
           <Text style={styles.statusDescription}>
             {connectionState.isConnected 
-              ? 'You are securely connected to your partner'
+              ? t('connection:connectedDesc')
               : connectionState.isConnecting
-                ? 'Establishing secure connection...'
-                : connectionState.error || 'Ready to connect to your partner'
+                ? t('connection:connectingDesc')
+                : connectionState.error || t('connection:readyToConnect')
             }
           </Text>
 

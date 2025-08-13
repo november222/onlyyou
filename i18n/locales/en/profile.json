@@ -1,0 +1,12 @@
+{
+  "title": "Profile",
+  "subtitle": "Your connection statistics",
+  "daysConnected": "days connected",
+  "since": "Since",
+  "viewAllSessions": "View All Connection Sessions",
+  "currentlyConnected": "Currently connected",
+  "lastSession": "Last session",
+  "totalConnectedTime": "Total connected time",
+  "totalDisconnectedTime": "Total disconnected time",
+  "totalSessions": "Total sessions"
+}

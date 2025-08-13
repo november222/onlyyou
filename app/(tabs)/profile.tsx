@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   View,
   Text,
@@ -42,6 +43,7 @@ interface ConnectionSession {
 }
 
 export default function ProfileScreen() {
+  const { t } = useTranslation();
   const [currentConnectionStart, setCurrentConnectionStart] = useState<Date | null>(new Date(Date.now() - 86400000)); // Mock: started 1 day ago
   const [totalConnectedTime, setTotalConnectedTime] = useState(0);
   const [totalDisconnectedTime, setTotalDisconnectedTime] = useState(0);
@@ -334,8 +336,8 @@ export default function ProfileScreen() {
           {/* Header */}
           <View style={styles.header}>
             <Heart size={32} color="#ff6b9d" strokeWidth={2} fill="#ff6b9d" />
-            <Text style={styles.title}>Trang Cá Nhân</Text>
-            <Text style={styles.subtitle}>Thống kê kết nối của bạn</Text>
+            <Text style={styles.title}>{t('profile:title')}</Text>
+            <Text style={styles.subtitle}>{t('profile:subtitle')}</Text>
           </View>
 
           {/* Love Counter */}
@@ -350,9 +352,9 @@ export default function ProfileScreen() {
                 <Text style={styles.loveCounterNumber}>
                   {Math.floor((Date.now() - currentConnectionStart.getTime()) / (1000 * 60 * 60 * 24))}
                 </Text>
-                <Text style={styles.loveCounterLabel}>ngày đã kết nối</Text>
+                <Text style={styles.loveCounterLabel}>{t('profile:daysConnected')}</Text>
                 <Text style={styles.loveCounterSubtext}>
-                  Từ {formatDate(currentConnectionStart)}
+                  {t('profile:since')} {formatDate(currentConnectionStart)}
                 </Text>
               </View>
             )}
@@ -366,7 +368,7 @@ export default function ProfileScreen() {
             <View style={styles.totalSessionsHeader}>
               <View style={styles.totalSessionsLeft}>
                 <History size={24} color="#ff6b9d" strokeWidth={2} />
-                <Text style={styles.totalSessionsTitle}>Xem Tất Cả Phiên Kết Nối</Text>
+                <Text style={styles.totalSessionsTitle}>{t('profile:viewAllSessions')}</Text>
               </View>
               <ChevronRight size={20} color="#666" strokeWidth={2} />
             </View>
@@ -389,7 +391,7 @@ export default function ProfileScreen() {
                 }
               </Text>
               <Text style={styles.statLabel}>
-                {connectionState.isConnected ? 'Đang kết nối' : 'Phiên gần nhất'}
+                {connectionState.isConnected ? t('profile:currentlyConnected') : t('profile:lastSession')}
               </Text>
             </View>
 
@@ -400,7 +402,7 @@ export default function ProfileScreen() {
               <Text style={styles.statValue}>
                 {formatDuration(totalConnectedTime)}
               </Text>
-              <Text style={styles.statLabel}>Tổng thời gian kết nối</Text>
+              <Text style={styles.statLabel}>{t('profile:totalConnectedTime')}</Text>
             </View>
           </View>
 
@@ -412,7 +414,7 @@ export default function ProfileScreen() {
               <Text style={styles.statValue}>
                 {formatDuration(totalDisconnectedTime)}
               </Text>
-              <Text style={styles.statLabel}>Thời gian ngắt kết nối</Text>
+              <Text style={styles.statLabel}>{t('profile:totalDisconnectedTime')}</Text>
             </View>
 
             <View style={styles.statCard}>
@@ -422,7 +424,7 @@ export default function ProfileScreen() {
               <Text style={styles.statValue}>
                 {connectionSessions.length}
               </Text>
-              <Text style={styles.statLabel}>Tổng số phiên</Text>
+              <Text style={styles.statLabel}>{t('profile:totalSessions')}</Text>
             </View>
           </View>
 
