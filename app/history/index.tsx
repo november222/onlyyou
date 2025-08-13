@@ -10,6 +10,7 @@ import {
   ScrollView,
 } from 'react-native';
 import { PanGestureHandler } from 'react-native-gesture-handler';
+import type { PanGestureHandlerGestureEvent } from 'react-native-gesture-handler';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
