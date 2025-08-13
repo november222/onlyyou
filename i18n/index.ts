@@ -9,6 +9,9 @@ import enAuth from './locales/en/auth.json';
 import enSettings from './locales/en/settings.json';
 import enHistory from './locales/en/history.json';
 import enOnboarding from './locales/en/onboarding.json';
+import enProfile from './locales/en/profile.json';
+import enConnection from './locales/en/connection.json';
+import enMessages from './locales/en/messages.json';
 
 import viCommon from './locales/vi/common.json';
 import viAuth from './locales/vi/auth.json';
