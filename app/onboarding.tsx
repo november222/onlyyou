@@ -88,41 +88,41 @@ export default function OnboardingScreen() {
     {
       id: '1',
       icon: <Heart size={80} color="#ff6b9d" strokeWidth={1.5} fill="#ff6b9d" />,
-      title: t('auth.title'),
-      subtitle: t('onboarding.madeForTwo'),
-      description: t('onboarding.madeForTwoDesc'),
+      title: t('auth:title'),
+      subtitle: t('onboarding:madeForTwo'),
+      description: t('onboarding:madeForTwoDesc'),
       color: '#ff6b9d',
     },
     {
       id: '2',
       icon: <Shield size={80} color="#4ade80" strokeWidth={1.5} />,
-      title: t('onboarding.encrypted'),
+      title: t('onboarding:encrypted'),
       subtitle: 'Your Privacy Matters',
-      description: t('onboarding.encryptedDesc'),
+      description: t('onboarding:encryptedDesc'),
       color: '#4ade80',
     },
     {
       id: '3',
       icon: <MessageCircle size={80} color="#3b82f6" strokeWidth={1.5} />,
-      title: t('onboarding.messaging'),
+      title: t('onboarding:messaging'),
       subtitle: 'Stay Connected Always',
-      description: t('onboarding.messagingDesc'),
+      description: t('onboarding:messagingDesc'),
       color: '#3b82f6',
     },
     {
       id: '4',
       icon: <Phone size={80} color="#f59e0b" strokeWidth={1.5} />,
-      title: t('onboarding.calls'),
+      title: t('onboarding:calls'),
       subtitle: 'Hear Each Other\'s Voice',
-      description: t('onboarding.callsDesc'),
+      description: t('onboarding:callsDesc'),
       color: '#f59e0b',
     },
     {
       id: '5',
       icon: <Lock size={80} color="#8b5cf6" strokeWidth={1.5} />,
-      title: t('onboarding.private'),
+      title: t('onboarding:private'),
       subtitle: 'No Data Collection',
-      description: t('onboarding.privateDesc'),
+      description: t('onboarding:privateDesc'),
       color: '#8b5cf6',
     },
   ];
@@ -274,7 +274,7 @@ export default function OnboardingScreen() {
             onPress={handleNext}
           >
             <Text style={styles.nextButtonText}>
-              {currentIndex === slides.length - 1 ? t('common.getStarted') : t('common.next')}
+              {currentIndex === slides.length - 1 ? t('getStarted') : t('next')}
             </Text>
             {currentIndex === slides.length - 1 ? (
               <ArrowRight size={20} color="#fff" strokeWidth={2} />

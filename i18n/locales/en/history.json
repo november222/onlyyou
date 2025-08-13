@@ -1,0 +1,23 @@
+{
+  "title": "Connection History",
+  "totalSessions": "Total sessions",
+  "totalTime": "Total time",
+  "buzzCalls": "Buzz calls",
+  "sessionDetail": "Session Detail",
+  "deleteSession": "Delete Session?",
+  "deleteSessionDesc": "Are you sure you want to delete this session from history?",
+  "activeSession": "Active Session",
+  "activeSessionDesc": "Cannot view details of active connection session.",
+  "connected": "Connected",
+  "disconnected": "Disconnected",
+  "connectionTime": "Connection Time",
+  "started": "Started",
+  "ended": "Ended",
+  "exactDuration": "Exact duration",
+  "sessionStats": "Session Stats",
+  "messages": "Messages",
+  "calls": "Calls",
+  "videoCalls": "Video calls",
+  "reactions": "Reactions",
+  "inDevelopment": "In development"
+}

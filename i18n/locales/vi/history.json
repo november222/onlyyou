@@ -1,0 +1,23 @@
+{
+  "title": "Lịch sử kết nối",
+  "totalSessions": "Tổng phiên",
+  "totalTime": "Tổng thời gian",
+  "buzzCalls": "Buzz calls",
+  "sessionDetail": "Chi tiết phiên",
+  "deleteSession": "Xóa phiên kết nối?",
+  "deleteSessionDesc": "Bạn có chắc muốn xóa phiên kết nối này khỏi lịch sử?",
+  "activeSession": "Phiên đang hoạt động",
+  "activeSessionDesc": "Không thể xem chi tiết phiên đang kết nối.",
+  "connected": "Đang kết nối",
+  "disconnected": "Đã ngắt",
+  "connectionTime": "Thời gian kết nối",
+  "started": "Bắt đầu",
+  "ended": "Kết thúc",
+  "exactDuration": "Thời lượng chính xác",
+  "sessionStats": "Thống kê phiên",
+  "messages": "Tin nhắn",
+  "calls": "Cuộc gọi",
+  "videoCalls": "Video call",
+  "reactions": "Reactions",
+  "inDevelopment": "Đang phát triển"
+}

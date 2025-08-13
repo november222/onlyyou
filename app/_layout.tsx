@@ -6,7 +6,7 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { useFrameworkReady } from '@/hooks/useFrameworkReady';
 import AuthService from '@/services/AuthService';
 import { I18nextProvider } from 'react-i18next';
-import i18n from '@/i18n';
+import i18n, { initLanguage } from '@/i18n';
 
 // Only import crypto polyfill on native platforms
 if (Platform.OS !== 'web') {
@@ -19,6 +19,9 @@ export default function RootLayout() {
   useEffect(() => {
     // Initialize auth service
     AuthService.getAuthState();
+    
+    // Initialize language
+    initLanguage();
   }, []);
 
   return (

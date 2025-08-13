@@ -1,0 +1,12 @@
+{
+  "madeForTwo": "Được tạo cho hai trái tim",
+  "madeForTwoDesc": "Ứng dụng nhắn tin riêng tư được thiết kế dành riêng cho các cặp đôi. Không có nhóm, không có người lạ - chỉ có bạn và người đặc biệt của bạn.",
+  "encrypted": "Mã hóa đầu cuối",
+  "encryptedDesc": "Tất cả tin nhắn và cuộc gọi của bạn đều được mã hóa với bảo mật cấp quân sự. Chỉ bạn và đối tác mới có thể đọc được cuộc trò chuyện.",
+  "messaging": "Nhắn tin thời gian thực",
+  "messagingDesc": "Gửi tin nhắn ngay lập tức với hiệu ứng đẹp mắt và xác nhận đã đọc. Thể hiện tình yêu bằng emoji và lời ngọt ngào.",
+  "calls": "Gọi thoại & Video",
+  "callsDesc": "Cuộc gọi thoại và video chất lượng cao với người yêu. Cảm thấy gần gũi ngay cả khi xa cách.",
+  "private": "Hoàn toàn riêng tư",
+  "privateDesc": "Chúng tôi không lưu trữ tin nhắn hay dữ liệu cá nhân của bạn. Cuộc trò chuyện chỉ tồn tại giữa bạn và đối tác mãi mãi."
+}

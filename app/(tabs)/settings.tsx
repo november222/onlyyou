@@ -16,7 +16,7 @@ import AuthService, { AuthState } from '@/services/AuthService';
 import { router } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import i18n from '@/i18n';
+import i18n, { supportedLanguages } from '@/i18n';
 
 export default function SettingsScreen() {
   const [notifications, setNotifications] = useState(true);
@@ -44,17 +44,6 @@ export default function SettingsScreen() {
     setSelectedLanguage(i18n.language);
   }, []);
 
-  const languages = [
-    { code: 'vi', name: 'Tiếng Việt', flag: '🇻🇳' },
-    { code: 'en', name: 'English', flag: '🇺🇸' },
-    { code: 'ko', name: '한국어', flag: '🇰🇷' },
-    { code: 'ja', name: '日本語', flag: '🇯🇵' },
-    { code: 'zh', name: '中文', flag: '🇨🇳' },
-    { code: 'th', name: 'ไทย', flag: '🇹🇭' },
-    { code: 'es', name: 'Español', flag: '🇪🇸' },
-    { code: 'fr', name: 'Français', flag: '🇫🇷' },
-  ];
-
   const handleLanguageChange = async (languageCode: string) => {
     try {
       await i18n.changeLanguage(languageCode);
@@ -62,7 +51,7 @@ export default function SettingsScreen() {
       setSelectedLanguage(languageCode);
       setShowLanguageModal(false);
       
-      const selectedLang = languages.find(lang => lang.code === languageCode);
+      const selectedLang = supportedLanguages.find(lang => lang.code === languageCode);
       Alert.alert(
         t('settings.languageChanged'),
         t('settings.languageChangedDesc', { language: selectedLang?.name }),
@@ -71,17 +60,6 @@ export default function SettingsScreen() {
     } catch (error) {
       Alert.alert(t('common.error'), 'Failed to change language');
     }
-  };
-
-  const handleLanguageChangeOld = (languageCode: string) => {
-    setSelectedLanguage(languageCode);
-    setShowLanguageModal(false);
-    const selectedLang = languages.find(lang => lang.code === languageCode);
-    Alert.alert(
-      'Ngôn ngữ đã thay đổi',
-      `Đã chuyển sang ${selectedLang?.name}. Ứng dụng sẽ khởi động lại để áp dụng thay đổi.`,
-      [{ text: 'OK' }]
-    );
   };
 
   const handleClearMessages = () => {
@@ -267,7 +245,7 @@ export default function SettingsScreen() {
             <SettingItem
               icon={<Globe size={20} color="#ff6b9d" strokeWidth={2} />}
               title={t('settings.language')}
-              subtitle={languages.find(lang => lang.code === selectedLanguage)?.name || 'Tiếng Việt'}
+              subtitle={supportedLanguages.find(lang => lang.code === selectedLanguage)?.name || 'Tiếng Việt'}
               onPress={() => setShowLanguageModal(true)}
               showChevron
             />
@@ -402,7 +380,7 @@ export default function SettingsScreen() {
           </View>
           
           <ScrollView style={styles.languageList}>
-            {languages.map((language) => (
+            {supportedLanguages.map((language) => (
               <TouchableOpacity
                 key={language.code}
                 style={styles.languageItem}

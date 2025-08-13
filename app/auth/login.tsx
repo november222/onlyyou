@@ -50,8 +50,8 @@ export default function LoginScreen() {
           {/* Header */}
           <View style={styles.header}>
             <Heart size={48} color="#ff6b9d" strokeWidth={2} fill="#ff6b9d" />
-            <Text style={styles.title}>{t('auth.title')}</Text>
-            <Text style={styles.subtitle}>{t('auth.subtitle')}</Text>
+            <Text style={styles.title}>{t('auth:title')}</Text>
+            <Text style={styles.subtitle}>{t('auth:subtitle')}</Text>
           </View>
 
           {/* Login Buttons */}
@@ -66,7 +66,7 @@ export default function LoginScreen() {
               ) : (
                 <>
                   <Mail size={20} color="#fff" strokeWidth={2} />
-                  <Text style={styles.loginButtonText}>{t('auth.signInWithGoogle')}</Text>
+                  <Text style={styles.loginButtonText}>{t('auth:signInWithGoogle')}</Text>
                 </>
               )}
             </TouchableOpacity>
@@ -81,7 +81,7 @@ export default function LoginScreen() {
               ) : (
                 <>
                   <Text style={styles.appleIcon}></Text>
-                  <Text style={styles.loginButtonText}>{t('auth.signInWithApple')}</Text>
+                  <Text style={styles.loginButtonText}>{t('auth:signInWithApple')}</Text>
                 </>
               )}
             </TouchableOpacity>
@@ -90,7 +90,7 @@ export default function LoginScreen() {
           {/* Footer */}
           <View style={styles.footer}>
             <Text style={styles.footerText}>
-              {t('auth.termsText')}
+              {t('auth:termsText')}
             </Text>
           </View>
         </View>
