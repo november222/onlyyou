@@ -243,7 +243,6 @@ export default function ProfileScreen() {
         roomCode: 'BABY55',
         isActive: false,
         buzzCallsCount: 52,
-        buzzCallsCount: 52,
       },
       {
         id: '6',
@@ -252,7 +251,6 @@ export default function ProfileScreen() {
         duration: 86400, // 1 day so far
         roomCode: 'ABC123',
         isActive: true,
-        buzzCallsCount: 0,
         buzzCallsCount: 0,
       },
     ];
