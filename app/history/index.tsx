@@ -253,12 +253,12 @@ export default function HistoryScreen() {
     }
 
     Alert.alert(
-      t('history.deleteSession'),
-      t('history.deleteSessionDesc'),
+      t('history:deleteSession'),
+      t('history:deleteSessionDesc'),
       [
-        { text: t('common.cancel'), style: 'cancel' },
+        { text: t('cancel'), style: 'cancel' },
         {
-          text: t('common.delete'),
+          text: t('delete'),
           style: 'destructive',
           onPress: () => {
             setConnectionSessions(prev => prev.filter(session => session.id !== sessionId));
@@ -327,7 +327,7 @@ export default function HistoryScreen() {
           <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
             <ArrowLeft size={24} color="#fff" strokeWidth={2} />
           </TouchableOpacity>
-          <Text style={styles.title}>{t('history.title')}</Text>
+          <Text style={styles.title}>{t('history:title')}</Text>
           <View style={styles.headerRight} />
         </View>
 
@@ -336,15 +336,15 @@ export default function HistoryScreen() {
           <View style={styles.summaryRow}>
             <View style={styles.summaryItem}>
               <Text style={styles.summaryValue}>{connectionSessions.length}</Text>
-              <Text style={styles.summaryLabel}>{t('history.totalSessions')}</Text>
+              <Text style={styles.summaryLabel}>{t('history:totalSessions')}</Text>
             </View>
             <View style={styles.summaryItem}>
               <Text style={styles.summaryValue}>{formatDuration(totalDuration)}</Text>
-              <Text style={styles.summaryLabel}>{t('history.totalTime')}</Text>
+              <Text style={styles.summaryLabel}>{t('history:totalTime')}</Text>
             </View>
             <View style={styles.summaryItem}>
               <Text style={styles.summaryValue}>{totalBuzzCalls}</Text>
-              <Text style={styles.summaryLabel}>{t('history.buzzCalls')}</Text>
+              <Text style={styles.summaryLabel}>{t('history:buzzCalls')}</Text>
             </View>
           </View>
         </View>

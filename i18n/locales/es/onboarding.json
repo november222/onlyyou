@@ -1,0 +1,12 @@
+{
+  "madeForTwo": "Hecho para Dos Corazones",
+  "madeForTwoDesc": "Una aplicación de mensajería privada diseñada exclusivamente para parejas. Sin grupos, sin extraños - solo tú y tu persona especial.",
+  "encrypted": "Encriptado de Extremo a Extremo",
+  "encryptedDesc": "Todos tus mensajes y llamadas están encriptados con seguridad de grado militar. Solo tú y tu pareja pueden leer sus conversaciones.",
+  "messaging": "Mensajería en Tiempo Real",
+  "messagingDesc": "Envía mensajes instantáneamente con hermosas animaciones y confirmaciones de lectura. Expresa tu amor con emojis y palabras sinceras.",
+  "calls": "Llamadas de Voz y Video",
+  "callsDesc": "Llamadas de voz y video cristalinas con tu ser querido. Siéntete cerca incluso cuando estés separados.",
+  "private": "Completamente Privado",
+  "privateDesc": "No almacenamos tus mensajes o datos personales. Tus conversaciones permanecen entre tú y tu pareja para siempre."
+}

@@ -1,0 +1,23 @@
+{
+  "title": "Historial de Conexión",
+  "totalSessions": "Sesiones totales",
+  "totalTime": "Tiempo total",
+  "buzzCalls": "Buzz calls",
+  "sessionDetail": "Detalle de Sesión",
+  "deleteSession": "¿Eliminar Sesión?",
+  "deleteSessionDesc": "¿Estás seguro de que quieres eliminar esta sesión del historial?",
+  "activeSession": "Sesión Activa",
+  "activeSessionDesc": "No se pueden ver los detalles de la sesión de conexión activa.",
+  "connected": "Conectado",
+  "disconnected": "Desconectado",
+  "connectionTime": "Tiempo de Conexión",
+  "started": "Iniciado",
+  "ended": "Terminado",
+  "exactDuration": "Duración exacta",
+  "sessionStats": "Estadísticas de Sesión",
+  "messages": "Mensajes",
+  "calls": "Llamadas",
+  "videoCalls": "Videollamadas",
+  "reactions": "Reacciones",
+  "inDevelopment": "En desarrollo"
+}

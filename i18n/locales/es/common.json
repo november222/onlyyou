@@ -1,0 +1,18 @@
+{
+  "ok": "OK",
+  "cancel": "Cancelar",
+  "skip": "Omitir",
+  "next": "Siguiente",
+  "getStarted": "Comenzar",
+  "back": "Atrás",
+  "close": "Cerrar",
+  "delete": "Eliminar",
+  "confirm": "Confirmar",
+  "loading": "Cargando...",
+  "error": "Error",
+  "success": "Éxito",
+  "save": "Guardar",
+  "edit": "Editar",
+  "done": "Hecho",
+  "continue": "Continuar"
+}
