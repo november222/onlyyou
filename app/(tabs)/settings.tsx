@@ -26,7 +26,7 @@ export default function SettingsScreen() {
   const [selectedLanguage, setSelectedLanguage] = useState('vi');
   const [showLanguageModal, setShowLanguageModal] = useState(false);
   const [authState, setAuthState] = useState<AuthState>(AuthService.getAuthState());
-  const { t } = useTranslation();
+  const { t, i18n: i18nInstance } = useTranslation();
 
   useEffect(() => {
     // Listen for auth state changes
@@ -41,8 +41,19 @@ export default function SettingsScreen() {
 
   useEffect(() => {
     // Sync selected language with i18n current language
-    setSelectedLanguage(i18n.language);
-  }, []);
+    setSelectedLanguage(i18nInstance.language);
+    
+    // Listen for language changes
+    const handleLanguageChange = (lng: string) => {
+      setSelectedLanguage(lng);
+    };
+    
+    i18nInstance.on('languageChanged', handleLanguageChange);
+    
+    return () => {
+      i18nInstance.off('languageChanged', handleLanguageChange);
+    };
+  }, [i18nInstance]);
 
   const handleLanguageChange = async (languageCode: string) => {
     try {
@@ -53,12 +64,12 @@ export default function SettingsScreen() {
       
       const selectedLang = supportedLanguages.find(lang => lang.code === languageCode);
       Alert.alert(
-        t('settings.languageChanged'),
-        t('settings.languageChangedDesc', { language: selectedLang?.name }),
-        [{ text: t('common.ok') }]
+        t('settings:languageChanged'),
+        t('settings:languageChangedDesc', { language: selectedLang?.name }),
+        [{ text: t('common:ok') }]
       );
     } catch (error) {
-      Alert.alert(t('common.error'), 'Failed to change language');
+      Alert.alert(t('common:error'), 'Failed to change language');
     }
   };
 
@@ -87,19 +98,19 @@ export default function SettingsScreen() {
 
   const handleSignOut = () => {
     Alert.alert(
-      t('auth.signOut'),
-      t('auth.signOutConfirm'),
+      t('auth:signOut'),
+      t('auth:signOutConfirm'),
       [
-        { text: t('common.cancel'), style: 'cancel' },
+        { text: t('common:cancel'), style: 'cancel' },
         {
-          text: t('auth.signOut'),
+          text: t('auth:signOut'),
           style: 'destructive',
           onPress: async () => {
             try {
               await AuthService.signOut();
               router.replace('/auth/login');
             } catch (error) {
-              Alert.alert(t('common.error'), t('auth.signOutFailed'));
+              Alert.alert(t('common:error'), t('auth:signOutFailed'));
             }
           },
         },
@@ -194,13 +205,13 @@ export default function SettingsScreen() {
         {/* Header */}
         <View style={styles.header}>
           <Heart size={24} color="#ff6b9d" strokeWidth={2} fill="#ff6b9d" />
-          <Text style={styles.title}>{t('settings.title')}</Text>
+          <Text style={styles.title}>{t('settings:title')}</Text>
         </View>
 
         {/* Account Section */}
         {authState.user && (
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>{t('settings.account')}</Text>
+            <Text style={styles.sectionTitle}>{t('settings:account')}</Text>
             <View style={styles.sectionContent}>
               <SettingItem
                 icon={<User size={20} color="#ff6b9d" strokeWidth={2} />}
@@ -209,8 +220,8 @@ export default function SettingsScreen() {
               />
               <SettingItem
                 icon={<LogOut size={20} color="#ef4444" strokeWidth={2} />}
-                title={t('auth.signOut')}
-                subtitle={t('auth.signOutDescription')}
+                title={t('auth:signOut')}
+                subtitle={t('auth:signOutDescription')}
                 onPress={handleSignOut}
                 showChevron
               />
@@ -220,12 +231,12 @@ export default function SettingsScreen() {
 
         {/* Notifications Section */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>{t('settings.notifications')}</Text>
+          <Text style={styles.sectionTitle}>{t('settings:notifications')}</Text>
           <View style={styles.sectionContent}>
             <SettingItem
               icon={<Bell size={20} color="#ff6b9d" strokeWidth={2} />}
-              title={t('settings.pushNotifications')}
-              subtitle={t('settings.pushNotificationsDesc')}
+              title={t('settings:pushNotifications')}
+              subtitle={t('settings:pushNotificationsDesc')}
               rightElement={
                 <Switch
                   value={notifications}
@@ -240,19 +251,19 @@ export default function SettingsScreen() {
 
         {/* Appearance Section */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>{t('settings.appearance')}</Text>
+          <Text style={styles.sectionTitle}>{t('settings:appearance')}</Text>
           <View style={styles.sectionContent}>
             <SettingItem
               icon={<Globe size={20} color="#ff6b9d" strokeWidth={2} />}
-              title={t('settings.language')}
+              title={t('settings:language')}
               subtitle={supportedLanguages.find(lang => lang.code === selectedLanguage)?.name || 'Tiếng Việt'}
               onPress={() => setShowLanguageModal(true)}
               showChevron
             />
             <SettingItem
               icon={<Moon size={20} color="#ff6b9d" strokeWidth={2} />}
-              title={t('settings.darkMode')}
-              subtitle={t('settings.darkModeDesc')}
+              title={t('settings:darkMode')}
+              subtitle={t('settings:darkModeDesc')}
               rightElement={
                 <Switch
                   value={darkMode}
@@ -267,12 +278,12 @@ export default function SettingsScreen() {
 
         {/* Privacy Section */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>{t('settings.privacy')}</Text>
+          <Text style={styles.sectionTitle}>{t('settings:privacy')}</Text>
           <View style={styles.sectionContent}>
             <SettingItem
               icon={<Shield size={20} color="#ff6b9d" strokeWidth={2} />}
-              title={t('settings.readReceipts')}
-              subtitle={t('settings.readReceiptsDesc')}
+              title={t('settings:readReceipts')}
+              subtitle={t('settings:readReceiptsDesc')}
               rightElement={
                 <Switch
                   value={readReceipts}
@@ -287,12 +298,12 @@ export default function SettingsScreen() {
 
         {/* Data Section */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>{t('settings.dataStorage')}</Text>
+          <Text style={styles.sectionTitle}>{t('settings:dataStorage')}</Text>
           <View style={styles.sectionContent}>
             <SettingItem
               icon={<Upload size={20} color="#ff6b9d" strokeWidth={2} />}
-              title={t('settings.autoBackup')}
-              subtitle={t('settings.autoBackupDesc')}
+              title={t('settings:autoBackup')}
+              subtitle={t('settings:autoBackupDesc')}
               rightElement={
                 <Switch
                   value={autoBackup}
@@ -304,22 +315,22 @@ export default function SettingsScreen() {
             />
             <SettingItem
               icon={<Download size={20} color="#4ade80" strokeWidth={2} />}
-              title={t('settings.exportMessages')}
-              subtitle={t('settings.exportMessagesDesc')}
+              title={t('settings:exportMessages')}
+              subtitle={t('settings:exportMessagesDesc')}
               onPress={handleExportMessages}
               showChevron
             />
             <SettingItem
               icon={<Upload size={20} color="#3b82f6" strokeWidth={2} />}
-              title={t('settings.createBackup')}
-              subtitle={t('settings.createBackupDesc')}
+              title={t('settings:createBackup')}
+              subtitle={t('settings:createBackupDesc')}
               onPress={handleBackupMessages}
               showChevron
             />
             <SettingItem
               icon={<Trash2 size={20} color="#ef4444" strokeWidth={2} />}
-              title={t('settings.clearAllMessages')}
-              subtitle={t('settings.clearAllMessagesDesc')}
+              title={t('settings:clearAllMessages')}
+              subtitle={t('settings:clearAllMessagesDesc')}
               onPress={handleClearMessages}
               showChevron
             />
@@ -328,12 +339,12 @@ export default function SettingsScreen() {
 
         {/* Account Management Section */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>{t('settings.accountManagement')}</Text>
+          <Text style={styles.sectionTitle}>{t('settings:accountManagement')}</Text>
           <View style={styles.sectionContent}>
             <SettingItem
               icon={<UserX size={20} color="#ef4444" strokeWidth={2} />}
-              title={t('settings.deleteAccount')}
-              subtitle={t('settings.deleteAccountDesc')}
+              title={t('settings:deleteAccount')}
+              subtitle={t('settings:deleteAccountDesc')}
               onPress={handleDeleteAccount}
               showChevron
             />
@@ -342,12 +353,12 @@ export default function SettingsScreen() {
 
         {/* About Section */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>{t('settings.about')}</Text>
+          <Text style={styles.sectionTitle}>{t('settings:about')}</Text>
           <View style={styles.sectionContent}>
             <SettingItem
               icon={<Info size={20} color="#ff6b9d" strokeWidth={2} />}
-              title={t('settings.aboutApp')}
-              subtitle={t('settings.aboutAppDesc')}
+              title={t('settings:aboutApp')}
+              subtitle={t('settings:aboutAppDesc')}
               showChevron
             />
           </View>
@@ -356,7 +367,7 @@ export default function SettingsScreen() {
         {/* Footer */}
         <View style={styles.footer}>
           <Text style={styles.footerText}>
-            {t('settings.footerText')}
+            {t('settings:footerText')}
           </Text>
         </View>
       </ScrollView>
@@ -370,7 +381,7 @@ export default function SettingsScreen() {
       >
         <View style={styles.languageModal}>
           <View style={styles.languageHeader}>
-            <Text style={styles.languageTitle}>{t('settings.selectLanguage')}</Text>
+           <Text style={styles.languageTitle}>{t('settings:selectLanguage')}</Text>
             <TouchableOpacity
               style={styles.closeButton}
               onPress={() => setShowLanguageModal(false)}
