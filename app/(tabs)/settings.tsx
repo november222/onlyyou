@@ -14,6 +14,9 @@ import { useEffect } from 'react';
 import { Bell, Moon, Shield, Trash2, Download, Upload, Info, Heart, ChevronRight, User, LogOut, UserX, TriangleAlert as AlertTriangle, Globe, X, Check } from 'lucide-react-native';
 import AuthService, { AuthState } from '@/services/AuthService';
 import { router } from 'expo-router';
+import { useTranslation } from 'react-i18next';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import i18n from '@/i18n';
 
 export default function SettingsScreen() {
   const [notifications, setNotifications] = useState(true);
@@ -23,6 +26,7 @@ export default function SettingsScreen() {
   const [selectedLanguage, setSelectedLanguage] = useState('vi');
   const [showLanguageModal, setShowLanguageModal] = useState(false);
   const [authState, setAuthState] = useState<AuthState>(AuthService.getAuthState());
+  const { t } = useTranslation();
 
   useEffect(() => {
     // Listen for auth state changes
@@ -33,6 +37,11 @@ export default function SettingsScreen() {
     return () => {
       AuthService.onAuthStateChange = null;
     };
+  }, []);
+
+  useEffect(() => {
+    // Sync selected language with i18n current language
+    setSelectedLanguage(i18n.language);
   }, []);
 
   const languages = [
@@ -46,7 +55,25 @@ export default function SettingsScreen() {
     { code: 'fr', name: 'Français', flag: '🇫🇷' },
   ];
 
-  const handleLanguageChange = (languageCode: string) => {
+  const handleLanguageChange = async (languageCode: string) => {
+    try {
+      await i18n.changeLanguage(languageCode);
+      await AsyncStorage.setItem('lang', languageCode);
+      setSelectedLanguage(languageCode);
+      setShowLanguageModal(false);
+      
+      const selectedLang = languages.find(lang => lang.code === languageCode);
+      Alert.alert(
+        t('settings.languageChanged'),
+        t('settings.languageChangedDesc', { language: selectedLang?.name }),
+        [{ text: t('common.ok') }]
+      );
+    } catch (error) {
+      Alert.alert(t('common.error'), 'Failed to change language');
+    }
+  };
+
+  const handleLanguageChangeOld = (languageCode: string) => {
     setSelectedLanguage(languageCode);
     setShowLanguageModal(false);
     const selectedLang = languages.find(lang => lang.code === languageCode);
@@ -82,19 +109,19 @@ export default function SettingsScreen() {
 
   const handleSignOut = () => {
     Alert.alert(
-      'Đăng Xuất',
-      'Bạn có chắc muốn đăng xuất khỏi ứng dụng?',
+      t('auth.signOut'),
+      t('auth.signOutConfirm'),
       [
-        { text: 'Hủy', style: 'cancel' },
+        { text: t('common.cancel'), style: 'cancel' },
         {
-          text: 'Đăng Xuất',
+          text: t('auth.signOut'),
           style: 'destructive',
           onPress: async () => {
             try {
               await AuthService.signOut();
               router.replace('/auth/login');
             } catch (error) {
-              Alert.alert('Lỗi', 'Không thể đăng xuất. Vui lòng thử lại.');
+              Alert.alert(t('common.error'), t('auth.signOutFailed'));
             }
           },
         },
@@ -189,13 +216,13 @@ export default function SettingsScreen() {
         {/* Header */}
         <View style={styles.header}>
           <Heart size={24} color="#ff6b9d" strokeWidth={2} fill="#ff6b9d" />
-          <Text style={styles.title}>Settings</Text>
+          <Text style={styles.title}>{t('settings.title')}</Text>
         </View>
 
         {/* Account Section */}
         {authState.user && (
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Tài Khoản</Text>
+            <Text style={styles.sectionTitle}>{t('settings.account')}</Text>
             <View style={styles.sectionContent}>
               <SettingItem
                 icon={<User size={20} color="#ff6b9d" strokeWidth={2} />}
@@ -204,8 +231,8 @@ export default function SettingsScreen() {
               />
               <SettingItem
                 icon={<LogOut size={20} color="#ef4444" strokeWidth={2} />}
-                title="Đăng Xuất"
-                subtitle="Đăng xuất khỏi ứng dụng"
+                title={t('auth.signOut')}
+                subtitle={t('auth.signOutDescription')}
                 onPress={handleSignOut}
                 showChevron
               />
@@ -215,12 +242,12 @@ export default function SettingsScreen() {
 
         {/* Notifications Section */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Notifications</Text>
+          <Text style={styles.sectionTitle}>{t('settings.notifications')}</Text>
           <View style={styles.sectionContent}>
             <SettingItem
               icon={<Bell size={20} color="#ff6b9d" strokeWidth={2} />}
-              title="Push Notifications"
-              subtitle="Get notified when your partner sends a message"
+              title={t('settings.pushNotifications')}
+              subtitle={t('settings.pushNotificationsDesc')}
               rightElement={
                 <Switch
                   value={notifications}
@@ -235,19 +262,19 @@ export default function SettingsScreen() {
 
         {/* Appearance Section */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Giao Diện</Text>
+          <Text style={styles.sectionTitle}>{t('settings.appearance')}</Text>
           <View style={styles.sectionContent}>
             <SettingItem
               icon={<Globe size={20} color="#ff6b9d" strokeWidth={2} />}
-              title="Ngôn ngữ"
+              title={t('settings.language')}
               subtitle={languages.find(lang => lang.code === selectedLanguage)?.name || 'Tiếng Việt'}
               onPress={() => setShowLanguageModal(true)}
               showChevron
             />
             <SettingItem
               icon={<Moon size={20} color="#ff6b9d" strokeWidth={2} />}
-              title="Chế độ tối"
-              subtitle="Sử dụng giao diện tối để bảo vệ mắt"
+              title={t('settings.darkMode')}
+              subtitle={t('settings.darkModeDesc')}
               rightElement={
                 <Switch
                   value={darkMode}
@@ -262,12 +289,12 @@ export default function SettingsScreen() {
 
         {/* Privacy Section */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Riêng Tư & Bảo Mật</Text>
+          <Text style={styles.sectionTitle}>{t('settings.privacy')}</Text>
           <View style={styles.sectionContent}>
             <SettingItem
               icon={<Shield size={20} color="#ff6b9d" strokeWidth={2} />}
-              title="Xác nhận đã đọc"
-              subtitle="Cho đối tác biết khi bạn đã đọc tin nhắn"
+              title={t('settings.readReceipts')}
+              subtitle={t('settings.readReceiptsDesc')}
               rightElement={
                 <Switch
                   value={readReceipts}
@@ -282,12 +309,12 @@ export default function SettingsScreen() {
 
         {/* Data Section */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Dữ Liệu & Lưu Trữ</Text>
+          <Text style={styles.sectionTitle}>{t('settings.dataStorage')}</Text>
           <View style={styles.sectionContent}>
             <SettingItem
               icon={<Upload size={20} color="#ff6b9d" strokeWidth={2} />}
-              title="Sao lưu tự động"
-              subtitle="Tự động sao lưu tin nhắn của bạn"
+              title={t('settings.autoBackup')}
+              subtitle={t('settings.autoBackupDesc')}
               rightElement={
                 <Switch
                   value={autoBackup}
@@ -299,22 +326,22 @@ export default function SettingsScreen() {
             />
             <SettingItem
               icon={<Download size={20} color="#4ade80" strokeWidth={2} />}
-              title="Xuất tin nhắn"
-              subtitle="Tải xuống lịch sử trò chuyện"
+              title={t('settings.exportMessages')}
+              subtitle={t('settings.exportMessagesDesc')}
               onPress={handleExportMessages}
               showChevron
             />
             <SettingItem
               icon={<Upload size={20} color="#3b82f6" strokeWidth={2} />}
-              title="Tạo bản sao lưu"
-              subtitle="Sao lưu tin nhắn thủ công"
+              title={t('settings.createBackup')}
+              subtitle={t('settings.createBackupDesc')}
               onPress={handleBackupMessages}
               showChevron
             />
             <SettingItem
               icon={<Trash2 size={20} color="#ef4444" strokeWidth={2} />}
-              title="Xóa tất cả tin nhắn"
-              subtitle="Xóa vĩnh viễn tất cả tin nhắn"
+              title={t('settings.clearAllMessages')}
+              subtitle={t('settings.clearAllMessagesDesc')}
               onPress={handleClearMessages}
               showChevron
             />
@@ -323,12 +350,12 @@ export default function SettingsScreen() {
 
         {/* Account Management Section */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Quản Lý Tài Khoản</Text>
+          <Text style={styles.sectionTitle}>{t('settings.accountManagement')}</Text>
           <View style={styles.sectionContent}>
             <SettingItem
               icon={<UserX size={20} color="#ef4444" strokeWidth={2} />}
-              title="Xóa Tài Khoản Vĩnh Viễn"
-              subtitle="Xóa hoàn toàn tài khoản và tất cả dữ liệu"
+              title={t('settings.deleteAccount')}
+              subtitle={t('settings.deleteAccountDesc')}
               onPress={handleDeleteAccount}
               showChevron
             />
@@ -337,12 +364,12 @@ export default function SettingsScreen() {
 
         {/* About Section */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Thông Tin</Text>
+          <Text style={styles.sectionTitle}>{t('settings.about')}</Text>
           <View style={styles.sectionContent}>
             <SettingItem
               icon={<Info size={20} color="#ff6b9d" strokeWidth={2} />}
-              title="Về Only You"
-              subtitle="Phiên bản 1.0.0 • Được tạo với ❤️"
+              title={t('settings.aboutApp')}
+              subtitle={t('settings.aboutAppDesc')}
               showChevron
             />
           </View>
@@ -351,8 +378,7 @@ export default function SettingsScreen() {
         {/* Footer */}
         <View style={styles.footer}>
           <Text style={styles.footerText}>
-            Only You được thiết kế cho hai người muốn có sự riêng tư hoàn toàn trong giao tiếp.
-            Tin nhắn của bạn được mã hóa và chỉ lưu trữ trên thiết bị của bạn.
+            {t('settings.footerText')}
           </Text>
         </View>
       </ScrollView>
@@ -366,7 +392,7 @@ export default function SettingsScreen() {
       >
         <View style={styles.languageModal}>
           <View style={styles.languageHeader}>
-            <Text style={styles.languageTitle}>Chọn Ngôn Ngữ</Text>
+            <Text style={styles.languageTitle}>{t('settings.selectLanguage')}</Text>
             <TouchableOpacity
               style={styles.closeButton}
               onPress={() => setShowLanguageModal(false)}

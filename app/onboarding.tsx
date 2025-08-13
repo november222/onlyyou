@@ -22,6 +22,7 @@ import {
   ArrowRight 
 } from 'lucide-react-native';
 import AuthService from '@/services/AuthService';
+import { useTranslation } from 'react-i18next';
 
 const { width: screenWidth } = Dimensions.get('window');
 
@@ -81,6 +82,50 @@ export default function OnboardingScreen() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const flatListRef = useRef<FlatList>(null);
   const scrollX = useRef(new Animated.Value(0)).current;
+  const { t } = useTranslation();
+
+  const slides: OnboardingSlide[] = [
+    {
+      id: '1',
+      icon: <Heart size={80} color="#ff6b9d" strokeWidth={1.5} fill="#ff6b9d" />,
+      title: t('auth.title'),
+      subtitle: t('onboarding.madeForTwo'),
+      description: t('onboarding.madeForTwoDesc'),
+      color: '#ff6b9d',
+    },
+    {
+      id: '2',
+      icon: <Shield size={80} color="#4ade80" strokeWidth={1.5} />,
+      title: t('onboarding.encrypted'),
+      subtitle: 'Your Privacy Matters',
+      description: t('onboarding.encryptedDesc'),
+      color: '#4ade80',
+    },
+    {
+      id: '3',
+      icon: <MessageCircle size={80} color="#3b82f6" strokeWidth={1.5} />,
+      title: t('onboarding.messaging'),
+      subtitle: 'Stay Connected Always',
+      description: t('onboarding.messagingDesc'),
+      color: '#3b82f6',
+    },
+    {
+      id: '4',
+      icon: <Phone size={80} color="#f59e0b" strokeWidth={1.5} />,
+      title: t('onboarding.calls'),
+      subtitle: 'Hear Each Other\'s Voice',
+      description: t('onboarding.callsDesc'),
+      color: '#f59e0b',
+    },
+    {
+      id: '5',
+      icon: <Lock size={80} color="#8b5cf6" strokeWidth={1.5} />,
+      title: t('onboarding.private'),
+      subtitle: 'No Data Collection',
+      description: t('onboarding.privateDesc'),
+      color: '#8b5cf6',
+    },
+  ];
 
   const handleNext = () => {
     if (currentIndex < slides.length - 1) {
@@ -192,7 +237,7 @@ export default function OnboardingScreen() {
     <SafeAreaView style={styles.container}>
       {/* Skip Button */}
       <TouchableOpacity style={styles.skipButton} onPress={handleSkip}>
-        <Text style={styles.skipText}>Skip</Text>
+        <Text style={styles.skipText}>{t('common.skip')}</Text>
       </TouchableOpacity>
 
       {/* Slides */}
@@ -229,7 +274,7 @@ export default function OnboardingScreen() {
             onPress={handleNext}
           >
             <Text style={styles.nextButtonText}>
-              {currentIndex === slides.length - 1 ? 'Get Started' : 'Next'}
+              {currentIndex === slides.length - 1 ? t('common.getStarted') : t('common.next')}
             </Text>
             {currentIndex === slides.length - 1 ? (
               <ArrowRight size={20} color="#fff" strokeWidth={2} />

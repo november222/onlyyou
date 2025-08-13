@@ -34,6 +34,7 @@ import {
   History,
   Shield
 } from 'lucide-react-native';
+import { useTranslation } from 'react-i18next';
 
 interface ConnectionSession {
   id: string;
@@ -186,6 +187,7 @@ export default function HistoryScreen() {
   const [connectionSessions, setConnectionSessions] = useState<ConnectionSession[]>([]);
   const [isPremium, setIsPremium] = useState(false);
   const [showPremiumModal, setShowPremiumModal] = useState(false);
+  const { t } = useTranslation();
 
   useEffect(() => {
     loadConnectionHistory();
@@ -251,12 +253,12 @@ export default function HistoryScreen() {
     }
 
     Alert.alert(
-      'Xóa Phiên Kết Nối?',
-      'Bạn có chắc muốn xóa phiên kết nối này khỏi lịch sử?',
+      t('history.deleteSession'),
+      t('history.deleteSessionDesc'),
       [
-        { text: 'Hủy', style: 'cancel' },
+        { text: t('common.cancel'), style: 'cancel' },
         {
-          text: 'Xóa',
+          text: t('common.delete'),
           style: 'destructive',
           onPress: () => {
             setConnectionSessions(prev => prev.filter(session => session.id !== sessionId));
@@ -273,7 +275,7 @@ export default function HistoryScreen() {
     }
 
     if (session.isActive) {
-      Alert.alert('Phiên Đang Hoạt Động', 'Không thể xem chi tiết phiên đang kết nối.');
+      Alert.alert(t('history.activeSession'), t('history.activeSessionDesc'));
       return;
     }
     
@@ -325,7 +327,7 @@ export default function HistoryScreen() {
           <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
             <ArrowLeft size={24} color="#fff" strokeWidth={2} />
           </TouchableOpacity>
-          <Text style={styles.title}>Lịch Sử Kết Nối</Text>
+          <Text style={styles.title}>{t('history.title')}</Text>
           <View style={styles.headerRight} />
         </View>
 
@@ -334,15 +336,15 @@ export default function HistoryScreen() {
           <View style={styles.summaryRow}>
             <View style={styles.summaryItem}>
               <Text style={styles.summaryValue}>{connectionSessions.length}</Text>
-              <Text style={styles.summaryLabel}>Tổng phiên</Text>
+              <Text style={styles.summaryLabel}>{t('history.totalSessions')}</Text>
             </View>
             <View style={styles.summaryItem}>
               <Text style={styles.summaryValue}>{formatDuration(totalDuration)}</Text>
-              <Text style={styles.summaryLabel}>Tổng thời gian</Text>
+              <Text style={styles.summaryLabel}>{t('history.totalTime')}</Text>
             </View>
             <View style={styles.summaryItem}>
               <Text style={styles.summaryValue}>{totalBuzzCalls}</Text>
-              <Text style={styles.summaryLabel}>Buzz calls</Text>
+              <Text style={styles.summaryLabel}>{t('history.buzzCalls')}</Text>
             </View>
           </View>
         </View>

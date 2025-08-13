@@ -12,9 +12,11 @@ import { router } from 'expo-router';
 import { Stack } from 'expo-router';
 import { Heart, Mail } from 'lucide-react-native';
 import AuthService from '@/services/AuthService';
+import { useTranslation } from 'react-i18next';
 
 export default function LoginScreen() {
   const [isLoading, setIsLoading] = useState(false);
+  const { t } = useTranslation();
 
   const handleGoogleSignIn = async () => {
     try {
@@ -22,7 +24,7 @@ export default function LoginScreen() {
       await AuthService.signInWithGoogle();
       router.replace('/(tabs)/profile');
     } catch (error) {
-      Alert.alert('Đăng nhập thất bại', error instanceof Error ? error.message : 'Có lỗi xảy ra');
+      Alert.alert(t('auth.signInFailed'), error instanceof Error ? error.message : t('common.error'));
     } finally {
       setIsLoading(false);
     }
@@ -34,7 +36,7 @@ export default function LoginScreen() {
       await AuthService.signInWithApple();
       router.replace('/(tabs)/profile');
     } catch (error) {
-      Alert.alert('Đăng nhập thất bại', error instanceof Error ? error.message : 'Có lỗi xảy ra');
+      Alert.alert(t('auth.signInFailed'), error instanceof Error ? error.message : t('common.error'));
     } finally {
       setIsLoading(false);
     }
@@ -48,8 +50,8 @@ export default function LoginScreen() {
           {/* Header */}
           <View style={styles.header}>
             <Heart size={48} color="#ff6b9d" strokeWidth={2} fill="#ff6b9d" />
-            <Text style={styles.title}>Only You</Text>
-            <Text style={styles.subtitle}>Đăng nhập để kết nối với người yêu</Text>
+            <Text style={styles.title}>{t('auth.title')}</Text>
+            <Text style={styles.subtitle}>{t('auth.subtitle')}</Text>
           </View>
 
           {/* Login Buttons */}
@@ -64,7 +66,7 @@ export default function LoginScreen() {
               ) : (
                 <>
                   <Mail size={20} color="#fff" strokeWidth={2} />
-                  <Text style={styles.loginButtonText}>Đăng nhập với Google</Text>
+                  <Text style={styles.loginButtonText}>{t('auth.signInWithGoogle')}</Text>
                 </>
               )}
             </TouchableOpacity>
@@ -79,7 +81,7 @@ export default function LoginScreen() {
               ) : (
                 <>
                   <Text style={styles.appleIcon}></Text>
-                  <Text style={styles.loginButtonText}>Đăng nhập với Apple</Text>
+                  <Text style={styles.loginButtonText}>{t('auth.signInWithApple')}</Text>
                 </>
               )}
             </TouchableOpacity>
@@ -88,7 +90,7 @@ export default function LoginScreen() {
           {/* Footer */}
           <View style={styles.footer}>
             <Text style={styles.footerText}>
-              Bằng cách đăng nhập, bạn đồng ý với Điều khoản Dịch vụ và Chính sách Bảo mật của chúng tôi
+              {t('auth.termsText')}
             </Text>
           </View>
         </View>
