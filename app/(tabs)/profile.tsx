@@ -344,7 +344,7 @@ export default function ProfileScreen() {
           <View style={styles.loveCounterCard}>
             <View style={styles.loveCounterHeader}>
               <Sparkles size={24} color="#ff6b9d" strokeWidth={2} />
-              <Text style={styles.loveCounterTitle}>Đếm Ngày Yêu Nhau</Text>
+              <Text style={styles.loveCounterTitle}>L-day</Text>
             </View>
             
             {currentConnectionStart && (
