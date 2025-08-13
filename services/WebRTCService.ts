@@ -59,7 +59,7 @@ class WebRTCService {
   };
 
   private savedConnection: SavedConnection | null = null;
-  private reconnectTimer: NodeJS.Timeout | null = null;
+  private reconnectTimer: ReturnType<typeof setTimeout> | null = null;
   private isAutoReconnecting = false;
 
   // Event callbacks

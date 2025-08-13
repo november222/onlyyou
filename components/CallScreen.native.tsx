@@ -7,7 +7,7 @@ import {
   Alert,
   Platform,
 } from 'react-native';
-import { Phone, PhoneOff, Video, VideoOff, Mic, MicOff, Speaker, Speaker as SpeakerOff } from 'lucide-react-native';
+import { Phone, PhoneOff, Video, VideoOff, Mic, MicOff, Speaker, VolumeX } from 'lucide-react-native';
 import WebRTCService from '../services/WebRTCService';
 
 // Dynamic import for RTCView only on native platforms
@@ -200,7 +200,7 @@ export default function CallScreen({ onEndCall, isVideoCall }: CallScreenProps) 
               {isSpeakerOn ? (
                 <Speaker size={24} color="#fff" strokeWidth={2} />
               ) : (
-                <SpeakerOff size={24} color="#fff" strokeWidth={2} />
+                <VolumeX size={24} color="#fff" strokeWidth={2} />
               )}
             </TouchableOpacity>
           )}
