@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { 
   Heart, 
   Shield, 
@@ -91,24 +92,42 @@ export default function OnboardingScreen() {
     }
   };
 
-  const handleGetStarted = () => {
-    // Check if user is authenticated
-    const authState = AuthService.getAuthState();
-    
-    if (authState.isAuthenticated) {
-      router.replace('/(tabs)/profile');
-    } else {
+  const handleGetStarted = async () => {
+    try {
+      // Mark onboarding as seen
+      await AsyncStorage.setItem('hasSeenOnboarding', 'true');
+      
+      // Check if user is authenticated
+      const authState = AuthService.getAuthState();
+      
+      if (authState.isAuthenticated) {
+        router.replace('/(tabs)/profile');
+      } else {
+        router.replace('/auth/login');
+      }
+    } catch (error) {
+      console.error('Error saving onboarding status:', error);
+      // Fallback to login
       router.replace('/auth/login');
     }
   };
 
-  const handleSkip = () => {
-    // Check if user is authenticated
-    const authState = AuthService.getAuthState();
-    
-    if (authState.isAuthenticated) {
-      router.replace('/(tabs)/profile');
-    } else {
+  const handleSkip = async () => {
+    try {
+      // Mark onboarding as seen
+      await AsyncStorage.setItem('hasSeenOnboarding', 'true');
+      
+      // Check if user is authenticated
+      const authState = AuthService.getAuthState();
+      
+      if (authState.isAuthenticated) {
+        router.replace('/(tabs)/profile');
+      } else {
+        router.replace('/auth/login');
+      }
+    } catch (error) {
+      console.error('Error saving onboarding status:', error);
+      // Fallback to login
       router.replace('/auth/login');
     }
   };
