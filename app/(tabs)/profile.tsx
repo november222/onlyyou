@@ -32,6 +32,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import WebRTCService, { ConnectionState } from '@/services/WebRTCService';
 import { router } from 'expo-router';
 import AuthService, { AuthState } from '@/services/AuthService';
+import { usePremium } from '@/providers/PremiumProvider';
 
 interface ConnectionSession {
   id: string;
@@ -59,14 +60,14 @@ export default function ProfileScreen() {
   });
   const [realTimeTimer, setRealTimeTimer] = useState(0);
   const [showPremiumModal, setShowPremiumModal] = useState(false);
-  const [isPremium, setIsPremium] = useState(false);
   const [showHistoryModal, setShowHistoryModal] = useState(false);
   const [showPremiumDetailsModal, setShowPremiumDetailsModal] = useState(false);
   const [allConnectionSessions, setAllConnectionSessions] = useState<ConnectionSession[]>([]);
   const [authState, setAuthState] = useState<AuthState>(AuthService.getAuthState());
+  const { isPremium } = usePremium();
 
   // Mock Premier status - in real app this would come from user data/API
-  const [isPremierUser, setIsPremierUser] = useState(false);
+  const isPremierUser = isPremium;
 
   const showPremiumAlert = () => {
     setShowPremiumModal(true);
@@ -505,12 +506,7 @@ export default function ProfileScreen() {
                     style={styles.upgradeButton}
                     onPress={() => {
                       setShowPremiumModal(false);
-                      setTimeout(() => {
-                        // Mock: Simulate successful upgrade
-                        setIsPremierUser(true);
-                        setIsPremium(true);
-                        router.push('/premium');
-                      }, 100);
+                      router.push('/premium?openPayment=1');
                     }}
                   >
                     <Crown size={20} color="#fff" strokeWidth={2} />

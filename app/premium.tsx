@@ -9,7 +9,7 @@ import {
   Modal,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { router, Stack } from 'expo-router';
+import { router, Stack, useLocalSearchParams } from 'expo-router';
 import { 
   Crown,
   ArrowLeft,
@@ -24,6 +24,8 @@ import {
   Lock,
   X
 } from 'lucide-react-native';
+import { PurchaseService, Plan } from '@/services/PurchaseService';
+import { usePremium } from '@/providers/PremiumProvider';
 
 interface PremiumFeature {
   icon: React.ReactNode;
@@ -74,6 +76,18 @@ const premiumFeatures: PremiumFeature[] = [
 export default function PremiumScreen() {
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState<'monthly' | 'yearly'>('yearly');
+  const [isProcessing, setIsProcessing] = useState(false);
+  const { isPremium } = usePremium();
+  const params = useLocalSearchParams();
+
+  // Auto-open payment modal if openPayment param is present
+  useEffect(() => {
+    if (params.openPayment === '1') {
+      requestAnimationFrame(() => {
+        setShowPaymentModal(true);
+      });
+    }
+  }, [params.openPayment]);
 
   const handleUpgrade = () => {
     // Show payment options directly
@@ -90,22 +104,85 @@ export default function PremiumScreen() {
     );
   };
 
-  const handlePurchase = () => {
-    // Mock purchase process
-    Alert.alert(
-      'Mua Thành Công! 🎉',
-      'Chúc mừng! Bạn đã nâng cấp thành công lên gói Premier. Tất cả tính năng premium đã được mở khóa.',
-      [
-        {
-          text: 'Tuyệt Vời!',
-          onPress: () => {
-            setShowPaymentModal(false);
-            // In real app, this would update user's premium status in backend
-            router.back();
-          },
-        },
-      ]
-    );
+  const handlePurchase = async () => {
+    if (isProcessing) return;
+    
+    try {
+      setIsProcessing(true);
+      
+      const plan: Plan = selectedPlan;
+      const result = await PurchaseService.purchase(plan);
+      
+      if (result.success) {
+        Alert.alert(
+          'Mua Thành Công! 🎉',
+          'Chúc mừng! Bạn đã nâng cấp thành công lên gói Premier. Tất cả tính năng premium đã được mở khóa.',
+          [
+            {
+              text: 'Tuyệt Vời!',
+              onPress: () => {
+                setShowPaymentModal(false);
+                router.back();
+              },
+            },
+          ]
+        );
+      } else {
+        Alert.alert(
+          'Thanh Toán Thất Bại',
+          result.error || 'Có lỗi xảy ra trong quá trình thanh toán. Vui lòng thử lại.',
+          [{ text: 'OK' }]
+        );
+      }
+    } catch (error) {
+      Alert.alert(
+        'Lỗi',
+        'Có lỗi xảy ra trong quá trình thanh toán. Vui lòng thử lại.',
+        [{ text: 'OK' }]
+      );
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const handleRestore = async () => {
+    if (isProcessing) return;
+    
+    try {
+      setIsProcessing(true);
+      
+      const result = await PurchaseService.restore();
+      
+      if (result.success) {
+        Alert.alert(
+          'Khôi Phục Thành Công! 🎉',
+          'Gói Premier của bạn đã được khôi phục thành công.',
+          [
+            {
+              text: 'Tuyệt Vời!',
+              onPress: () => {
+                setShowPaymentModal(false);
+                router.back();
+              },
+            },
+          ]
+        );
+      } else {
+        Alert.alert(
+          'Khôi Phục Thất Bại',
+          result.error || 'Không tìm thấy gói Premium nào để khôi phục.',
+          [{ text: 'OK' }]
+        );
+      }
+    } catch (error) {
+      Alert.alert(
+        'Lỗi',
+        'Có lỗi xảy ra trong quá trình khôi phục. Vui lòng thử lại.',
+        [{ text: 'OK' }]
+      );
+    } finally {
+      setIsProcessing(false);
+    }
   };
 
   const PremiumFeatureCard = ({ feature }: { feature: PremiumFeature }) => (
@@ -294,7 +371,19 @@ export default function PremiumScreen() {
             
             <TouchableOpacity style={styles.purchaseButton} onPress={handlePurchase}>
               <Lock size={20} color="#fff" strokeWidth={2} />
-              <Text style={styles.purchaseButtonText}>Thanh Toán Bảo Mật</Text>
+              <Text style={styles.purchaseButtonText}>
+                {isProcessing ? 'Đang xử lý...' : 'Thanh Toán Bảo Mật'}
+              </Text>
+            </TouchableOpacity>
+            
+            <TouchableOpacity 
+              style={styles.restoreButton} 
+              onPress={handleRestore}
+              disabled={isProcessing}
+            >
+              <Text style={styles.restoreButtonText}>
+                {isProcessing ? 'Đang khôi phục...' : 'Khôi Phục Mua Hàng'}
+              </Text>
             </TouchableOpacity>
             
             <Text style={styles.paymentNote}>
@@ -667,11 +756,26 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: 8,
     marginBottom: 16,
+    opacity: 1,
   },
   purchaseButtonText: {
     fontSize: 16,
     fontWeight: '600',
     color: '#fff',
+  },
+  restoreButton: {
+    backgroundColor: 'transparent',
+    borderRadius: 12,
+    padding: 16,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#333',
+    marginBottom: 16,
+  },
+  restoreButtonText: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: '#888',
   },
   paymentNote: {
     fontSize: 12,
