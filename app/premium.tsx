@@ -100,6 +100,7 @@ export default function PremiumScreen() {
           text: 'Tuyệt Vời!',
           onPress: () => {
             setShowPaymentModal(false);
+            // In real app, this would update user's premium status in backend
             router.back();
           },
         },

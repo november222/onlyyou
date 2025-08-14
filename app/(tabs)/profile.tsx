@@ -63,6 +63,9 @@ export default function ProfileScreen() {
   const [showPremiumDetailsModal, setShowPremiumDetailsModal] = useState(false);
   const [allConnectionSessions, setAllConnectionSessions] = useState<ConnectionSession[]>([]);
 
+  // Mock Premier status - in real app this would come from user data/API
+  const [isPremierUser, setIsPremierUser] = useState(false);
+
   const showPremiumAlert = () => {
     setShowPremiumModal(true);
   };
@@ -336,7 +339,15 @@ export default function ProfileScreen() {
           {/* Header */}
           <View style={styles.header}>
             <Heart size={32} color="#ff6b9d" strokeWidth={2} fill="#ff6b9d" />
-            <Text style={styles.title}>{t('profile:title')}</Text>
+            <View style={styles.titleContainer}>
+              <Text style={styles.title}>{t('profile:title')}</Text>
+              {isPremierUser && (
+                <View style={styles.premierBadge}>
+                  <Crown size={16} color="#fff" strokeWidth={2} fill="#f59e0b" />
+                  <Text style={styles.premierBadgeText}>Premier</Text>
+                </View>
+              )}
+            </View>
             <Text style={styles.subtitle}>{t('profile:subtitle')}</Text>
           </View>
 
@@ -485,7 +496,12 @@ export default function ProfileScreen() {
                     style={styles.upgradeButton}
                     onPress={() => {
                       setShowPremiumModal(false);
-                      setTimeout(() => router.push('/premium'), 100);
+                      setTimeout(() => {
+                        // Mock: Simulate successful upgrade
+                        setIsPremierUser(true);
+                        setIsPremium(true);
+                        router.push('/premium');
+                      }, 100);
                     }}
                   >
                     <Crown size={20} color="#fff" strokeWidth={2} />
@@ -578,12 +594,31 @@ const styles = StyleSheet.create({
     padding: 20,
     paddingBottom: 10,
   },
+  titleContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    marginTop: 12,
+    marginBottom: 4,
+  },
   title: {
     fontSize: 24,
     fontWeight: '700',
     color: '#fff',
-    marginTop: 12,
-    marginBottom: 4,
+  },
+  premierBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#f59e0b',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+    gap: 4,
+  },
+  premierBadgeText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#fff',
   },
   subtitle: {
     fontSize: 14,
