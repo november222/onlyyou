@@ -28,7 +28,7 @@ export default function RootLayout() {
     <GestureHandlerRootView style={{ flex: 1 }}>
       <I18nextProvider i18n={i18n}>
         <>
-          <Stack>
+          <Stack screenOptions={{ headerShown: false, header: () => null }}>
             <Stack.Screen name="index" options={{ headerShown: false }} />
             <Stack.Screen name="auth/login" options={{ headerShown: false }} />
             <Stack.Screen name="onboarding" options={{ headerShown: false }} />

@@ -9,7 +9,7 @@ import {
   Modal,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { router } from 'expo-router';
+import { router, Stack } from 'expo-router';
 import { 
   Crown,
   ArrowLeft,
@@ -124,6 +124,7 @@ export default function PremiumScreen() {
 
   return (
     <>
+      <Stack.Screen options={{ headerShown: false, header: () => null }} />
       <SafeAreaView style={styles.container}>
         <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
           {/* Header */}
