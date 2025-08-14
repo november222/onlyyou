@@ -31,6 +31,7 @@ import {
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import WebRTCService, { ConnectionState } from '@/services/WebRTCService';
 import { router } from 'expo-router';
+import AuthService, { AuthState } from '@/services/AuthService';
 
 interface ConnectionSession {
   id: string;
@@ -62,6 +63,7 @@ export default function ProfileScreen() {
   const [showHistoryModal, setShowHistoryModal] = useState(false);
   const [showPremiumDetailsModal, setShowPremiumDetailsModal] = useState(false);
   const [allConnectionSessions, setAllConnectionSessions] = useState<ConnectionSession[]>([]);
+  const [authState, setAuthState] = useState<AuthState>(AuthService.getAuthState());
 
   // Mock Premier status - in real app this would come from user data/API
   const [isPremierUser, setIsPremierUser] = useState(false);
@@ -149,6 +151,11 @@ export default function ProfileScreen() {
     // Get current connection state
     const currentState = WebRTCService.getConnectionState();
     setConnectionState(currentState);
+    
+    // Listen for auth state changes
+    AuthService.onAuthStateChange = (state) => {
+      setAuthState(state);
+    };
     
     // Listen for connection state changes
     WebRTCService.onConnectionStateChange = (state) => {
@@ -340,7 +347,9 @@ export default function ProfileScreen() {
           <View style={styles.header}>
             <Heart size={32} color="#ff6b9d" strokeWidth={2} fill="#ff6b9d" />
             <View style={styles.titleContainer}>
-              <Text style={styles.title}>{t('profile:title')}</Text>
+              <Text style={styles.title}>
+                {authState.user?.name || t('profile:title')}
+              </Text>
               {isPremierUser && (
                 <View style={styles.premierBadge}>
                   <Crown size={16} color="#fff" strokeWidth={2} fill="#f59e0b" />
