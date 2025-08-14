@@ -485,7 +485,7 @@ export default function ProfileScreen() {
                     style={styles.upgradeButton}
                     onPress={() => {
                       setShowPremiumModal(false);
-                      router.push({ pathname: '/premium', params: { openPayment: '1', plan: 'yearly' } });
+                      setTimeout(() => setShowPremiumDetailsModal(true), 100);
                     }}
                   >
                     <Crown size={20} color="#fff" strokeWidth={2} />
