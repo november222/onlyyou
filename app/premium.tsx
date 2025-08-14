@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -9,7 +9,7 @@ import {
   Modal,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { router, useLocalSearchParams } from 'expo-router';
+import { router } from 'expo-router';
 import { 
   Crown,
   ArrowLeft,
@@ -74,17 +74,6 @@ const premiumFeatures: PremiumFeature[] = [
 export default function PremiumScreen() {
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState<'monthly' | 'yearly'>('yearly');
-  const params = useLocalSearchParams<{ openPayment?: string; plan?: string }>();
-
-  useEffect(() => {
-    if (params?.plan === 'monthly' || params?.plan === 'yearly') {
-      setSelectedPlan(params.plan as 'monthly' | 'yearly');
-    }
-    if (params?.openPayment) {
-      // mở modal sau 1 tick để chắc chắn view đã mount
-      requestAnimationFrame(() => setShowPaymentModal(true));
-    }
-  }, [params]);
 
   const handleUpgrade = () => {
     setShowPaymentModal(true);
