@@ -485,11 +485,11 @@ export default function ProfileScreen() {
                     style={styles.upgradeButton}
                     onPress={() => {
                       setShowPremiumModal(false);
-                      setTimeout(() => setShowPremiumDetailsModal(true), 100);
+                      setTimeout(() => router.push('/premium'), 100);
                     }}
                   >
                     <Crown size={20} color="#fff" strokeWidth={2} />
-                    <Text style={styles.upgradeButtonText}>Xem Chi Tiết Gói</Text>
+                    <Text style={styles.upgradeButtonText}>Nâng Cấp Ngay</Text>
                   </TouchableOpacity>
                   
                   <TouchableOpacity

@@ -76,7 +76,18 @@ export default function PremiumScreen() {
   const [selectedPlan, setSelectedPlan] = useState<'monthly' | 'yearly'>('yearly');
 
   const handleUpgrade = () => {
-    setShowPaymentModal(true);
+    // Show payment options directly
+    Alert.alert(
+      'Chọn Phương Thức Thanh Toán',
+      'Chọn cách bạn muốn thanh toán cho gói Premier',
+      [
+        { text: 'Hủy', style: 'cancel' },
+        { 
+          text: 'Thanh Toán', 
+          onPress: () => setShowPaymentModal(true)
+        }
+      ]
+    );
   };
 
   const handlePurchase = () => {
