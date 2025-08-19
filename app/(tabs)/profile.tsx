@@ -453,38 +453,6 @@ export default function ProfileScreen() {
             </View>
           </TouchableOpacity>
 
-          {/* Daily Ping Card */}
-          {isFeatureEnabled('dailyPing') && todaysQuestion && (
-            <TouchableOpacity 
-              style={[styles.dailyPingCard, hasAnsweredToday && styles.dailyPingCardCompleted]}
-              onPress={() => !hasAnsweredToday && setShowDailyPingModal(true)}
-              disabled={hasAnsweredToday}
-            >
-              <View style={styles.dailyPingHeader}>
-                <View style={styles.dailyPingLeft}>
-                  <Text style={styles.dailyPingEmoji}>💭</Text>
-                  <View style={styles.dailyPingInfo}>
-                    <Text style={styles.dailyPingTitle}>Daily Ping</Text>
-                    <Text style={styles.dailyPingStreak}>🔥 {pingStreak} ngày liên tiếp</Text>
-                  </View>
-                </View>
-                {!hasAnsweredToday && (
-                  <View style={styles.dailyPingBadge}>
-                    <Text style={styles.dailyPingBadgeText}>Mới</Text>
-                  </View>
-                )}
-              </View>
-              
-              <Text style={styles.dailyPingQuestion}>
-                {todaysQuestion.question}
-              </Text>
-              
-              <Text style={styles.dailyPingStatus}>
-                {hasAnsweredToday ? '✅ Đã trả lời hôm nay' : '👆 Nhấn để trả lời'}
-              </Text>
-            </TouchableOpacity>
-          )}
-
           {/* Current Session Stats */}
           <View style={styles.statsGrid}>
             <View style={styles.statCard}>
@@ -1315,6 +1283,145 @@ const styles = StyleSheet.create({
     color: '#ff6b9d',
     fontWeight: '500',
   },
+  dailyPingCard: {
+    backgroundColor: '#111',
+    marginHorizontal: 20,
+    marginBottom: 20,
+    borderRadius: 16,
+    padding: 20,
+    borderWidth: 1,
+    borderColor: '#333',
+  },
+  dailyPingCardCompleted: {
+    borderColor: '#4ade80',
+    backgroundColor: 'rgba(74, 222, 128, 0.05)',
+  },
+  dailyPingHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  dailyPingLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+  },
+  dailyPingEmoji: {
+    fontSize: 24,
+    marginRight: 12,
+  },
+  dailyPingInfo: {
+    flex: 1,
+  },
+  dailyPingTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#fff',
+    marginBottom: 2,
+  },
+  dailyPingStreak: {
+    fontSize: 12,
+    color: '#f59e0b',
+    fontWeight: '500',
+  },
+  dailyPingBadge: {
+    backgroundColor: '#ff6b9d',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 8,
+  },
+  dailyPingBadgeText: {
+    fontSize: 12,
+    color: '#fff',
+    fontWeight: '600',
+  },
+  dailyPingQuestion: {
+    fontSize: 15,
+    color: '#fff',
+    lineHeight: 22,
+    marginBottom: 12,
+    fontStyle: 'italic',
+  },
+  dailyPingStatus: {
+    fontSize: 13,
+    color: '#888',
+    fontWeight: '500',
+  },
+  dailyPingModal: {
+    flex: 1,
+    backgroundColor: '#000',
+  },
+  dailyPingModalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: '#333',
+  },
+  dailyPingModalTitle: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#fff',
+  },
+  dailyPingModalContent: {
+    flex: 1,
+    padding: 20,
+  },
+  dailyPingQuestionContainer: {
+    marginBottom: 32,
+    alignItems: 'center',
+  },
+  dailyPingModalQuestion: {
+    fontSize: 20,
+    fontWeight: '600',
+    color: '#fff',
+    textAlign: 'center',
+    lineHeight: 28,
+    marginBottom: 12,
+  },
+  dailyPingModalSubtext: {
+    fontSize: 14,
+    color: '#888',
+    textAlign: 'center',
+  },
+  dailyPingAnswerContainer: {
+    marginBottom: 32,
+  },
+  dailyPingAnswerInput: {
+    backgroundColor: '#111',
+    borderRadius: 12,
+    padding: 16,
+    color: '#fff',
+    fontSize: 16,
+    minHeight: 120,
+    borderWidth: 1,
+    borderColor: '#333',
+    marginBottom: 8,
+  },
+  dailyPingCharCount: {
+    fontSize: 12,
+    color: '#666',
+    textAlign: 'right',
+  },
+  dailyPingSubmitButton: {
+    backgroundColor: '#ff6b9d',
+    borderRadius: 12,
+    padding: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+  },
+  dailyPingSubmitButtonDisabled: {
+    opacity: 0.5,
+  },
+  dailyPingSubmitButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#fff',
+  },
   totalSessionsCard: {
     backgroundColor: '#111',
     marginHorizontal: 20,
@@ -1346,68 +1453,5 @@ const styles = StyleSheet.create({
   },
   chevronIcon: {
     marginLeft: 4,
-  },
-  dailyPingCard: {
-    backgroundColor: '#111',
-    marginHorizontal: 20,
-    marginBottom: 20,
-    borderRadius: 16,
-    padding: 20,
-    borderWidth: 1,
-    borderColor: '#333',
-  },
-  dailyPingCardCompleted: {
-    borderColor: '#4ade80',
-    backgroundColor: 'rgba(74, 222, 128, 0.05)',
-  },
-  dailyPingHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  dailyPingLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-  },
-  dailyPingEmoji: {
-    fontSize: 24,
-  },
-  dailyPingInfo: {
-    flex: 1,
-  },
-  dailyPingTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#fff',
-    marginBottom: 2,
-  },
-  dailyPingStreak: {
-    fontSize: 12,
-    color: '#f59e0b',
-    fontWeight: '500',
-  },
-  dailyPingBadge: {
-    backgroundColor: '#ff6b9d',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 12,
-  },
-  dailyPingBadgeText: {
-    fontSize: 12,
-    color: '#fff',
-    fontWeight: '600',
-  },
-  dailyPingQuestion: {
-    fontSize: 14,
-    color: '#fff',
-    lineHeight: 20,
-    marginBottom: 12,
-  },
-  dailyPingStatus: {
-    fontSize: 12,
-    color: '#888',
-    fontWeight: '500',
   },
 });
