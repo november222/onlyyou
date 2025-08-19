@@ -16,7 +16,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Send, Lock, Heart, Phone, Video, Wifi, WifiOff } from 'lucide-react-native';
 import WebRTCService, { WebRTCMessage, ConnectionState } from '../../services/WebRTCService';
 import CallScreen from '../../components/CallScreen';
-import { isFeatureEnabled } from '@/config/features';
+import { isFeatureEnabled } from '../../config/features';
 import BuzzService, { BuzzType } from '@/services/BuzzService';
 
 export default function MessagesScreen() {

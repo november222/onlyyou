@@ -14,3 +14,5 @@ export type FeatureKey = keyof typeof features;
 export const isFeatureEnabled = (feature: FeatureKey): boolean => {
   return features[feature];
 };
+
+export default features;
