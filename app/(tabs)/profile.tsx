@@ -33,6 +33,8 @@ import WebRTCService, { ConnectionState } from '@/services/WebRTCService';
 import { router } from 'expo-router';
 import AuthService, { AuthState } from '@/services/AuthService';
 import { usePremium } from '@/providers/PremiumProvider';
+import PingService, { PingQuestion } from '@/services/PingService';
+import { isFeatureEnabled } from '@/config/features';
 
 interface ConnectionSession {
   id: string;
@@ -64,6 +66,12 @@ export default function ProfileScreen() {
   const [showPremiumDetailsModal, setShowPremiumDetailsModal] = useState(false);
   const [allConnectionSessions, setAllConnectionSessions] = useState<ConnectionSession[]>([]);
   const [authState, setAuthState] = useState<AuthState>(AuthService.getAuthState());
+  const [todaysQuestion, setTodaysQuestion] = useState<PingQuestion | null>(null);
+  const [hasAnsweredToday, setHasAnsweredToday] = useState(false);
+  const [pingStreak, setPingStreak] = useState(0);
+  const [showDailyPingModal, setShowDailyPingModal] = useState(false);
+  const [pingAnswer, setPingAnswer] = useState('');
+  const [isSubmittingPing, setIsSubmittingPing] = useState(false);
   const { isPremium } = usePremium();
 
   // Mock Premier status - in real app this would come from user data/API
@@ -189,8 +197,58 @@ export default function ProfileScreen() {
       }
     }, 1000);
 
+    // Load daily ping data
+    if (isFeatureEnabled('dailyPing')) {
+      loadDailyPingData();
+    }
     return () => clearInterval(timer);
   }, [connectionState.isConnected, currentConnectionStart]);
+
+  const loadDailyPingData = async () => {
+    try {
+      const question = PingService.getTodaysQuestion();
+      const answered = await PingService.hasAnsweredToday();
+      const streak = await PingService.getPingStreak();
+      
+      setTodaysQuestion(question);
+      setHasAnsweredToday(answered);
+      setPingStreak(streak);
+    } catch (error) {
+      console.error('Failed to load daily ping data:', error);
+    }
+  };
+
+  const handleSubmitPing = async () => {
+    if (!pingAnswer.trim()) {
+      Alert.alert('Lỗi', 'Vui lòng nhập câu trả lời');
+      return;
+    }
+
+    setIsSubmittingPing(true);
+    
+    try {
+      const result = await PingService.answerTodaysPing(pingAnswer);
+      
+      if (result.success) {
+        Alert.alert('Thành công! 🎉', 'Cảm ơn bạn đã chia sẻ!', [
+          {
+            text: 'OK',
+            onPress: () => {
+              setShowDailyPingModal(false);
+              setPingAnswer('');
+              loadDailyPingData(); // Refresh data
+            },
+          },
+        ]);
+      } else {
+        Alert.alert('Lỗi', result.error || 'Không thể lưu câu trả lời');
+      }
+    } catch (error) {
+      Alert.alert('Lỗi', 'Có lỗi xảy ra. Vui lòng thử lại.');
+    } finally {
+      setIsSubmittingPing(false);
+    }
+  };
 
   const saveCurrentSession = async () => {
     if (currentConnectionStart && connectionState.roomCode) {

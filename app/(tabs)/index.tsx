@@ -16,6 +16,9 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Send, Lock, Heart, Phone, Video, Wifi, WifiOff } from 'lucide-react-native';
 import WebRTCService, { WebRTCMessage, ConnectionState } from '../../services/WebRTCService';
 import CallScreen from '../../components/CallScreen';
+import { Linking, Platform, Alert } from 'react-native';
+import { isFeatureEnabled } from '@/config/features';
+import BuzzService, { BuzzType } from '@/services/BuzzService';
 
 export default function MessagesScreen() {
   const { t } = useTranslation();
@@ -30,6 +33,11 @@ export default function MessagesScreen() {
   });
   const [isInCall, setIsInCall] = useState(false);
   const [isVideoCall, setIsVideoCall] = useState(false);
+  const [buzzCooldowns, setBuzzCooldowns] = useState<Record<BuzzType, { canSend: boolean; remainingTime: number }>>({
+    ping: { canSend: true, remainingTime: 0 },
+    love: { canSend: true, remainingTime: 0 },
+    miss: { canSend: true, remainingTime: 0 },
+  });
   const flatListRef = useRef<FlatList>(null);
 
   useEffect(() => {
@@ -42,11 +50,37 @@ export default function MessagesScreen() {
       setMessages(prev => [...prev, message]);
     };
 
+    // Load buzz cooldown status
+    loadBuzzCooldowns();
+    
+    // Update cooldowns every second
+    const cooldownTimer = setInterval(loadBuzzCooldowns, 1000);
     return () => {
       WebRTCService.onConnectionStateChange = null;
       WebRTCService.onMessageReceived = null;
+      clearInterval(cooldownTimer);
     };
   }, []);
+
+  const loadBuzzCooldowns = async () => {
+    if (isFeatureEnabled('buzz')) {
+      const status = await BuzzService.getCooldownStatus();
+      setBuzzCooldowns(status);
+    }
+  };
+
+  const sendBuzz = async (type: BuzzType) => {
+    if (!isFeatureEnabled('buzz')) return;
+    
+    const result = await BuzzService.sendBuzz(type);
+    
+    if (result.success) {
+      Alert.alert('Buzz Sent! 💕', `Đã gửi ${type} đến người yêu của bạn`);
+      loadBuzzCooldowns(); // Refresh cooldown status
+    } else {
+      Alert.alert('Không thể gửi', result.error || 'Vui lòng thử lại');
+    }
+  };
 
   const sendMessage = () => {
     if (inputText.trim() === '') return;
@@ -71,8 +105,29 @@ export default function MessagesScreen() {
       return;
     }
     
-    setIsVideoCall(false);
-    setIsInCall(true);
+    if (isFeatureEnabled('simpleCallLink')) {
+      // Use system calling instead of WebRTC
+      Alert.alert(
+        'Gọi Điện Thoại',
+        'Mở ứng dụng gọi điện của hệ thống?',
+        [
+          { text: 'Hủy', style: 'cancel' },
+          {
+            text: 'Gọi',
+            onPress: () => {
+              const phoneNumber = '+1234567890'; // Mock partner number
+              const url = Platform.OS === 'ios' ? `telprompt:${phoneNumber}` : `tel:${phoneNumber}`;
+              Linking.openURL(url).catch(() => {
+                Alert.alert('Lỗi', 'Không thể mở ứng dụng gọi điện');
+              });
+            },
+          },
+        ]
+      );
+    } else {
+      setIsVideoCall(false);
+      setIsInCall(true);
+    }
   };
 
   const startVideoCall = async () => {
@@ -81,8 +136,36 @@ export default function MessagesScreen() {
       return;
     }
     
-    setIsVideoCall(true);
-    setIsInCall(true);
+    if (isFeatureEnabled('simpleCallLink')) {
+      // Use FaceTime for iOS, fallback to regular call for Android
+      Alert.alert(
+        'Video Call',
+        Platform.OS === 'ios' ? 'Mở FaceTime?' : 'Mở ứng dụng gọi điện?',
+        [
+          { text: 'Hủy', style: 'cancel' },
+          {
+            text: Platform.OS === 'ios' ? 'FaceTime' : 'Gọi',
+            onPress: () => {
+              const phoneNumber = '+1234567890'; // Mock partner number
+              let url: string;
+              
+              if (Platform.OS === 'ios') {
+                url = `facetime:${phoneNumber}`;
+              } else {
+                url = `tel:${phoneNumber}`;
+              }
+              
+              Linking.openURL(url).catch(() => {
+                Alert.alert('Lỗi', 'Không thể mở ứng dụng gọi');
+              });
+            },
+          },
+        ]
+      );
+    } else {
+      setIsVideoCall(true);
+      setIsInCall(true);
+    }
   };
 
   const endCall = () => {
@@ -164,6 +247,50 @@ export default function MessagesScreen() {
           }
         </Text>
       </View>
+
+      {/* Buzz Buttons */}
+      {isFeatureEnabled('buzz') && (
+        <View style={styles.buzzContainer}>
+          <Text style={styles.buzzTitle}>Quick Buzz 💕</Text>
+          <View style={styles.buzzButtons}>
+            <TouchableOpacity
+              style={[styles.buzzButton, !buzzCooldowns.ping.canSend && styles.buzzButtonDisabled]}
+              onPress={() => sendBuzz('ping')}
+              disabled={!buzzCooldowns.ping.canSend}
+            >
+              <Text style={styles.buzzButtonText}>👋</Text>
+              <Text style={styles.buzzButtonLabel}>Ping</Text>
+              {!buzzCooldowns.ping.canSend && (
+                <Text style={styles.buzzCooldown}>{Math.ceil(buzzCooldowns.ping.remainingTime / 1000)}s</Text>
+              )}
+            </TouchableOpacity>
+            
+            <TouchableOpacity
+              style={[styles.buzzButton, !buzzCooldowns.love.canSend && styles.buzzButtonDisabled]}
+              onPress={() => sendBuzz('love')}
+              disabled={!buzzCooldowns.love.canSend}
+            >
+              <Text style={styles.buzzButtonText}>❤️</Text>
+              <Text style={styles.buzzButtonLabel}>Love</Text>
+              {!buzzCooldowns.love.canSend && (
+                <Text style={styles.buzzCooldown}>{Math.ceil(buzzCooldowns.love.remainingTime / 1000)}s</Text>
+              )}
+            </TouchableOpacity>
+            
+            <TouchableOpacity
+              style={[styles.buzzButton, !buzzCooldowns.miss.canSend && styles.buzzButtonDisabled]}
+              onPress={() => sendBuzz('miss')}
+              disabled={!buzzCooldowns.miss.canSend}
+            >
+              <Text style={styles.buzzButtonText}>🥺</Text>
+              <Text style={styles.buzzButtonLabel}>Miss</Text>
+              {!buzzCooldowns.miss.canSend && (
+                <Text style={styles.buzzCooldown}>{Math.ceil(buzzCooldowns.miss.remainingTime / 1000)}s</Text>
+              )}
+            </TouchableOpacity>
+          </View>
+        </View>
+      )}
 
       {/* Messages */}
       <FlatList
@@ -348,5 +475,50 @@ const styles = StyleSheet.create({
     borderRadius: 22,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  buzzContainer: {
+    backgroundColor: '#111',
+    borderBottomWidth: 1,
+    borderBottomColor: '#333',
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+  },
+  buzzTitle: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#ff6b9d',
+    marginBottom: 12,
+    textAlign: 'center',
+  },
+  buzzButtons: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    alignItems: 'center',
+  },
+  buzzButton: {
+    alignItems: 'center',
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 12,
+    backgroundColor: 'rgba(255, 107, 157, 0.1)',
+    minWidth: 60,
+  },
+  buzzButtonDisabled: {
+    opacity: 0.5,
+    backgroundColor: '#333',
+  },
+  buzzButtonText: {
+    fontSize: 24,
+    marginBottom: 4,
+  },
+  buzzButtonLabel: {
+    fontSize: 12,
+    color: '#fff',
+    fontWeight: '500',
+  },
+  buzzCooldown: {
+    fontSize: 10,
+    color: '#888',
+    marginTop: 2,
   },
 });

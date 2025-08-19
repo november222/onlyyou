@@ -1,5 +1,6 @@
 import { Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { isFeatureEnabled } from '@/config/features';
 
 export interface WebRTCMessage {
   id: string;
@@ -269,12 +270,17 @@ class WebRTCService {
 
   // Mock: Start audio/video call
   public async startCall(video: boolean = false): Promise<void> {
-    console.log(`Mock: Starting ${video ? 'video' : 'audio'} call...`);
-    
-    // Simulate call setup delay
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    console.log(`Mock: ${video ? 'Video' : 'Audio'} call started`);
+    if (isFeatureEnabled('simpleCallLink')) {
+      console.log(`Mock: System call feature enabled, skipping WebRTC call setup`);
+      return;
+    } else {
+      console.log(`Mock: Starting ${video ? 'video' : 'audio'} call...`);
+      
+      // Simulate call setup delay
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      console.log(`Mock: ${video ? 'Video' : 'Audio'} call started`);
+    }
   }
 
   // Mock: End call

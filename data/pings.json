@@ -1,0 +1,102 @@
+[
+  {
+    "id": "ping_001",
+    "question": "Điều gì khiến bạn mỉm cười hôm nay?",
+    "category": "mood"
+  },
+  {
+    "id": "ping_002", 
+    "question": "Bạn đang mong chờ điều gì nhất tuần này?",
+    "category": "future"
+  },
+  {
+    "id": "ping_003",
+    "question": "Món ăn nào bạn muốn thử cùng người yêu?",
+    "category": "food"
+  },
+  {
+    "id": "ping_004",
+    "question": "Nếu có thể du lịch bất cứ đâu, bạn sẽ chọn nơi nào?",
+    "category": "travel"
+  },
+  {
+    "id": "ping_005",
+    "question": "Kỷ niệm đẹp nhất của bạn trong tuần qua là gì?",
+    "category": "memory"
+  },
+  {
+    "id": "ping_006",
+    "question": "Bài hát nào đang làm bạn cảm thấy hạnh phúc?",
+    "category": "music"
+  },
+  {
+    "id": "ping_007",
+    "question": "Bạn muốn học kỹ năng gì mới?",
+    "category": "growth"
+  },
+  {
+    "id": "ping_008",
+    "question": "Điều nhỏ nhặt nào khiến bạn biết ơn hôm nay?",
+    "category": "gratitude"
+  },
+  {
+    "id": "ping_009",
+    "question": "Nếu có một ngày hoàn hảo, bạn sẽ làm gì?",
+    "category": "dream"
+  },
+  {
+    "id": "ping_010",
+    "question": "Màu sắc nào đang khiến bạn cảm thấy yên bình?",
+    "category": "color"
+  },
+  {
+    "id": "ping_011",
+    "question": "Bạn muốn nói điều gì với bản thân của 5 năm trước?",
+    "category": "reflection"
+  },
+  {
+    "id": "ping_012",
+    "question": "Hoạt động nào khiến bạn quên hết thời gian?",
+    "category": "passion"
+  },
+  {
+    "id": "ping_013",
+    "question": "Nơi nào trong nhà khiến bạn cảm thấy thoải mái nhất?",
+    "category": "comfort"
+  },
+  {
+    "id": "ping_014",
+    "question": "Bạn muốn thay đổi điều gì trong cuộc sống?",
+    "category": "change"
+  },
+  {
+    "id": "ping_015",
+    "question": "Món quà ý nghĩa nhất bạn từng nhận là gì?",
+    "category": "gift"
+  },
+  {
+    "id": "ping_016",
+    "question": "Thời tiết như thế nào khiến bạn cảm thấy tuyệt vời?",
+    "category": "weather"
+  },
+  {
+    "id": "ping_017",
+    "question": "Bạn muốn dành thời gian cho ai nhiều hơn?",
+    "category": "relationship"
+  },
+  {
+    "id": "ping_018",
+    "question": "Điều gì khiến bạn cảm thấy tự hào về bản thân?",
+    "category": "pride"
+  },
+  {
+    "id": "ping_019",
+    "question": "Nếu có thể gửi tin nhắn cho tương lai, bạn sẽ viết gì?",
+    "category": "future"
+  },
+  {
+    "id": "ping_020",
+    "question": "Khoảnh khắc nào trong ngày khiến bạn cảm thấy bình yên?",
+    "category": "peace"
+  }
+]
