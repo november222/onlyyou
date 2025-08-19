@@ -32,9 +32,15 @@ import {
   Zap,
   X,
   History,
-  Shield
+  Shield,
+  MessageCircle,
+  Heart,
+  Camera,
+  FileText
 } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
+import TimelineService, { Event, EventType } from '@/services/TimelineService';
+import { isFeatureEnabled } from '../../config/features';
 
 interface ConnectionSession {
   id: string;
@@ -48,6 +54,87 @@ interface ConnectionSession {
 
 type DragContext = {
   startX: number;
+};
+
+// Timeline Event Card Component
+const TimelineEventCard = ({ event }: { event: Event }) => {
+  const formatTime = (timestamp: number) => {
+    return new Date(timestamp).toLocaleString('vi-VN', {
+      day: '2-digit',
+      month: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+  };
+
+  const getEventIcon = (type: EventType) => {
+    switch (type) {
+      case 'buzz':
+        return <Zap size={20} color="#f59e0b" strokeWidth={2} />;
+      case 'ping':
+        return <MessageCircle size={20} color="#3b82f6" strokeWidth={2} />;
+      case 'photo':
+        return <Camera size={20} color="#10b981" strokeWidth={2} />;
+      case 'note':
+        return <FileText size={20} color="#8b5cf6" strokeWidth={2} />;
+      default:
+        return <Heart size={20} color="#ff6b9d" strokeWidth={2} />;
+    }
+  };
+
+  const getEventTitle = (event: Event) => {
+    switch (event.type) {
+      case 'buzz':
+        const buzzData = event.data;
+        return `Buzz: ${buzzData.buzzType}`;
+      case 'ping':
+        return 'Daily Ping';
+      case 'photo':
+        return 'Ảnh mới';
+      case 'note':
+        return event.data.title || 'Ghi chú';
+      default:
+        return 'Event';
+    }
+  };
+
+  const getEventDescription = (event: Event) => {
+    switch (event.type) {
+      case 'buzz':
+        const buzzData = event.data;
+        return buzzData.note || `Đã gửi ${buzzData.buzzType}`;
+      case 'ping':
+        const pingData = event.data;
+        return `"${pingData.question}" → "${pingData.answer}"`;
+      case 'photo':
+        const photoData = event.data;
+        return photoData.caption || 'Đã thêm ảnh mới';
+      case 'note':
+        const noteData = event.data;
+        return noteData.content.substring(0, 100) + (noteData.content.length > 100 ? '...' : '');
+      default:
+        return 'Event data';
+    }
+  };
+
+  return (
+    <View style={styles.timelineEventCard}>
+      <View style={styles.timelineEventHeader}>
+        <View style={styles.timelineEventLeft}>
+          <View style={styles.timelineEventIcon}>
+            {getEventIcon(event.type)}
+          </View>
+          <View style={styles.timelineEventInfo}>
+            <Text style={styles.timelineEventTitle}>{getEventTitle(event)}</Text>
+            <Text style={styles.timelineEventTime}>{formatTime(event.timestamp)}</Text>
+          </View>
+        </View>
+      </View>
+      <Text style={styles.timelineEventDescription}>
+        {getEventDescription(event)}
+      </Text>
+    </View>
+  );
 };
 
 // Swipeable Session Card Component
@@ -185,13 +272,27 @@ const SwipeableSessionCard = ({
 
 export default function HistoryScreen() {
   const [connectionSessions, setConnectionSessions] = useState<ConnectionSession[]>([]);
+  const [timelineEvents, setTimelineEvents] = useState<Event[]>([]);
   const [isPremium, setIsPremium] = useState(false);
   const [showPremiumModal, setShowPremiumModal] = useState(false);
+  const [activeTab, setActiveTab] = useState<'sessions' | 'timeline'>('sessions');
   const { t } = useTranslation();
 
   useEffect(() => {
     loadConnectionHistory();
+    if (isFeatureEnabled('timeline')) {
+      loadTimelineEvents();
+    }
   }, []);
+
+  const loadTimelineEvents = async () => {
+    try {
+      const events = await TimelineService.listEvents();
+      setTimelineEvents(events);
+    } catch (error) {
+      console.error('Failed to load timeline events:', error);
+    }
+  };
 
   const loadConnectionHistory = () => {
     // Mock data with buzz calls count
@@ -316,6 +417,10 @@ export default function HistoryScreen() {
     />
   );
 
+  const renderTimelineEvent = ({ item }: { item: Event }) => (
+    <TimelineEventCard event={item} />
+  );
+
   const totalDuration = connectionSessions.reduce((sum, session) => sum + session.duration, 0);
   const totalBuzzCalls = connectionSessions.reduce((sum, session) => sum + session.buzzCallsCount, 0);
 
@@ -331,33 +436,91 @@ export default function HistoryScreen() {
           <View style={styles.headerRight} />
         </View>
 
+        {/* Tab Navigation */}
+        {isFeatureEnabled('timeline') && (
+          <View style={styles.tabNavigation}>
+            <TouchableOpacity
+              style={[styles.tabButton, activeTab === 'sessions' && styles.activeTabButton]}
+              onPress={() => setActiveTab('sessions')}
+            >
+              <Text style={[styles.tabButtonText, activeTab === 'sessions' && styles.activeTabButtonText]}>
+                Sessions
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.tabButton, activeTab === 'timeline' && styles.activeTabButton]}
+              onPress={() => setActiveTab('timeline')}
+            >
+              <Text style={[styles.tabButtonText, activeTab === 'timeline' && styles.activeTabButtonText]}>
+                Timeline
+              </Text>
+            </TouchableOpacity>
+          </View>
+        )}
+
         {/* Summary Stats */}
-        <View style={styles.summaryCard}>
-          <View style={styles.summaryRow}>
-            <View style={styles.summaryItem}>
-              <Text style={styles.summaryValue}>{connectionSessions.length}</Text>
-              <Text style={styles.summaryLabel}>{t('history:totalSessions')}</Text>
-            </View>
-            <View style={styles.summaryItem}>
-              <Text style={styles.summaryValue}>{formatDuration(totalDuration)}</Text>
-              <Text style={styles.summaryLabel}>{t('history:totalTime')}</Text>
-            </View>
-            <View style={styles.summaryItem}>
-              <Text style={styles.summaryValue}>{totalBuzzCalls}</Text>
-              <Text style={styles.summaryLabel}>{t('history:buzzCalls')}</Text>
+        {activeTab === 'sessions' && (
+          <View style={styles.summaryCard}>
+            <View style={styles.summaryRow}>
+              <View style={styles.summaryItem}>
+                <Text style={styles.summaryValue}>{connectionSessions.length}</Text>
+                <Text style={styles.summaryLabel}>{t('history:totalSessions')}</Text>
+              </View>
+              <View style={styles.summaryItem}>
+                <Text style={styles.summaryValue}>{formatDuration(totalDuration)}</Text>
+                <Text style={styles.summaryLabel}>{t('history:totalTime')}</Text>
+              </View>
+              <View style={styles.summaryItem}>
+                <Text style={styles.summaryValue}>{totalBuzzCalls}</Text>
+                <Text style={styles.summaryLabel}>{t('history:buzzCalls')}</Text>
+              </View>
             </View>
           </View>
-        </View>
+        )}
 
-        {/* Sessions List */}
-        <FlatList
-          data={connectionSessions}
-          renderItem={renderConnectionSession}
-          keyExtractor={item => item.id}
-          style={styles.sessionsList}
-          contentContainerStyle={styles.sessionsContent}
-          showsVerticalScrollIndicator={false}
-        />
+        {activeTab === 'timeline' && (
+          <View style={styles.summaryCard}>
+            <View style={styles.summaryRow}>
+              <View style={styles.summaryItem}>
+                <Text style={styles.summaryValue}>{timelineEvents.length}</Text>
+                <Text style={styles.summaryLabel}>Tổng sự kiện</Text>
+              </View>
+              <View style={styles.summaryItem}>
+                <Text style={styles.summaryValue}>
+                  {timelineEvents.filter(e => e.type === 'buzz').length}
+                </Text>
+                <Text style={styles.summaryLabel}>Buzz</Text>
+              </View>
+              <View style={styles.summaryItem}>
+                <Text style={styles.summaryValue}>
+                  {timelineEvents.filter(e => e.type === 'ping').length}
+                </Text>
+                <Text style={styles.summaryLabel}>Ping</Text>
+              </View>
+            </View>
+          </View>
+        )}
+
+        {/* Content Lists */}
+        {activeTab === 'sessions' ? (
+          <FlatList
+            data={connectionSessions}
+            renderItem={renderConnectionSession}
+            keyExtractor={item => item.id}
+            style={styles.sessionsList}
+            contentContainerStyle={styles.sessionsContent}
+            showsVerticalScrollIndicator={false}
+          />
+        ) : (
+          <FlatList
+            data={timelineEvents}
+            renderItem={renderTimelineEvent}
+            keyExtractor={item => item.id}
+            style={styles.sessionsList}
+            contentContainerStyle={styles.sessionsContent}
+            showsVerticalScrollIndicator={false}
+          />
+        )}
       </SafeAreaView>
 
       {/* Premium Modal */}
@@ -462,6 +625,32 @@ const styles = StyleSheet.create({
   headerRight: {
     width: 40,
   },
+  tabNavigation: {
+    flexDirection: 'row',
+    marginHorizontal: 20,
+    marginBottom: 20,
+    backgroundColor: '#111',
+    borderRadius: 12,
+    padding: 4,
+  },
+  tabButton: {
+    flex: 1,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  activeTabButton: {
+    backgroundColor: '#ff6b9d',
+  },
+  tabButtonText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#888',
+  },
+  activeTabButtonText: {
+    color: '#fff',
+  },
   summaryCard: {
     backgroundColor: '#111',
     marginHorizontal: 20,
@@ -494,6 +683,52 @@ const styles = StyleSheet.create({
   sessionsContent: {
     paddingHorizontal: 20,
     paddingBottom: 20,
+  },
+  timelineEventCard: {
+    backgroundColor: '#111',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#333',
+    marginBottom: 12,
+    padding: 16,
+  },
+  timelineEventHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  timelineEventLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+  },
+  timelineEventIcon: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: 'rgba(255, 107, 157, 0.1)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 12,
+  },
+  timelineEventInfo: {
+    flex: 1,
+  },
+  timelineEventTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#fff',
+    marginBottom: 2,
+  },
+  timelineEventTime: {
+    fontSize: 12,
+    color: '#888',
+  },
+  timelineEventDescription: {
+    fontSize: 14,
+    color: '#ccc',
+    lineHeight: 20,
   },
   swipeContainer: {
     position: 'relative',

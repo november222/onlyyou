@@ -26,7 +26,9 @@ import {
   X,
   Shield,
   ChevronRight,
-  Zap
+  Zap,
+  Camera,
+  Plus
 } from 'lucide-react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import WebRTCService, { ConnectionState } from '@/services/WebRTCService';
@@ -34,7 +36,8 @@ import { router } from 'expo-router';
 import AuthService, { AuthState } from '@/services/AuthService';
 import { usePremium } from '@/providers/PremiumProvider';
 import PingService, { PingQuestion } from '@/services/PingService';
-import { isFeatureEnabled } from '@/config/features';
+import { isFeatureEnabled } from '../../config/features';
+import PhotoService from '@/services/PhotoService';
 
 interface ConnectionSession {
   id: string;
@@ -72,6 +75,7 @@ export default function ProfileScreen() {
   const [showDailyPingModal, setShowDailyPingModal] = useState(false);
   const [pingAnswer, setPingAnswer] = useState('');
   const [isSubmittingPing, setIsSubmittingPing] = useState(false);
+  const [photosCount, setPhotosCount] = useState(0);
   const { isPremium } = usePremium();
 
   // Mock Premier status - in real app this would come from user data/API
@@ -79,6 +83,61 @@ export default function ProfileScreen() {
 
   const showPremiumAlert = () => {
     setShowPremiumModal(true);
+  };
+
+  const handleAddPhoto = async () => {
+    if (!isFeatureEnabled('album')) return;
+    
+    Alert.alert(
+      'Thêm Ảnh',
+      'Chọn cách thêm ảnh vào album',
+      [
+        { text: 'Hủy', style: 'cancel' },
+        { text: 'Chụp Ảnh', onPress: () => takePhoto() },
+        { text: 'Chọn Từ Thư Viện', onPress: () => pickPhoto() },
+      ]
+    );
+  };
+
+  const takePhoto = async () => {
+    try {
+      const result = await PhotoService.takePhoto();
+      
+      if (result.success) {
+        Alert.alert('Thành công! 📸', 'Ảnh đã được thêm vào album và timeline');
+        loadPhotosCount(); // Refresh count
+      } else {
+        Alert.alert('Lỗi', result.error || 'Không thể chụp ảnh');
+      }
+    } catch (error) {
+      Alert.alert('Lỗi', 'Có lỗi xảy ra khi chụp ảnh');
+    }
+  };
+
+  const pickPhoto = async () => {
+    try {
+      const result = await PhotoService.pickAndSave();
+      
+      if (result.success) {
+        Alert.alert('Thành công! 📸', 'Ảnh đã được thêm vào album và timeline');
+        loadPhotosCount(); // Refresh count
+      } else {
+        Alert.alert('Lỗi', result.error || 'Không thể chọn ảnh');
+      }
+    } catch (error) {
+      Alert.alert('Lỗi', 'Có lỗi xảy ra khi chọn ảnh');
+    }
+  };
+
+  const loadPhotosCount = async () => {
+    if (isFeatureEnabled('album')) {
+      try {
+        const count = await PhotoService.getPhotosCount();
+        setPhotosCount(count);
+      } catch (error) {
+        console.error('Failed to load photos count:', error);
+      }
+    }
   };
 
   const HistorySessionCard = ({ 
@@ -182,6 +241,7 @@ export default function ProfileScreen() {
     };
 
     loadConnectionData();
+    loadPhotosCount();
     
     // Real-time timer that updates every second
     const timer = setInterval(() => {
@@ -453,6 +513,28 @@ export default function ProfileScreen() {
             </View>
           </TouchableOpacity>
 
+          {/* Album Card */}
+          {isFeatureEnabled('album') && (
+            <TouchableOpacity 
+              style={styles.albumCard}
+              onPress={handleAddPhoto}
+            >
+              <View style={styles.albumHeader}>
+                <View style={styles.albumLeft}>
+                  <Camera size={24} color="#10b981" strokeWidth={2} />
+                  <Text style={styles.albumTitle}>Album Ảnh</Text>
+                </View>
+                <View style={styles.albumRight}>
+                  <Text style={styles.albumCount}>{photosCount}</Text>
+                  <Plus size={20} color="#666" strokeWidth={2} />
+                </View>
+              </View>
+              <Text style={styles.albumSubtitle}>
+                Thêm ảnh vào album và timeline
+              </Text>
+            </TouchableOpacity>
+          )}
+
           {/* Current Session Stats */}
           <View style={styles.statsGrid}>
             <View style={styles.statCard}>
@@ -723,6 +805,45 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   loveCounterSubtext: {
+    fontSize: 14,
+    color: '#888',
+  },
+  albumCard: {
+    backgroundColor: '#111',
+    marginHorizontal: 20,
+    marginBottom: 20,
+    borderRadius: 16,
+    padding: 20,
+    borderWidth: 1,
+    borderColor: '#333',
+  },
+  albumHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  albumLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  albumTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#fff',
+    marginLeft: 12,
+  },
+  albumRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  albumCount: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#10b981',
+  },
+  albumSubtitle: {
     fontSize: 14,
     color: '#888',
   },

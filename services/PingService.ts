@@ -1,5 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import pingsData from '@/data/pings.json';
+import TimelineService from './TimelineService';
 
 export interface PingQuestion {
   id: string;
@@ -107,6 +108,19 @@ class PingService {
 
       // Save to events timeline
       await this.saveToTimeline(pingEvent);
+
+      // Add to timeline service
+      await TimelineService.addEvent({
+        id: pingEvent.id,
+        type: 'ping',
+        timestamp: pingEvent.timestamp,
+        data: {
+          questionId: pingEvent.questionId,
+          question: pingEvent.question,
+          answer: pingEvent.answer,
+        },
+        userId: pingEvent.userId,
+      });
 
       console.log('Daily ping answered:', todaysQuestion.question, '→', answer);
 

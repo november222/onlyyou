@@ -1,4 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import TimelineService from './TimelineService';
 
 export type BuzzType = 'ping' | 'love' | 'miss';
 
@@ -44,6 +45,18 @@ class BuzzService {
 
       // Save event to storage
       await this.saveEvent(event);
+
+      // Add to timeline
+      await TimelineService.addEvent({
+        id: event.id,
+        type: 'buzz',
+        timestamp: event.timestamp,
+        data: {
+          buzzType: event.type,
+          note: event.note,
+        },
+        userId: event.userId,
+      });
 
       // Set cooldown
       await this.setCooldown(type);
