@@ -13,6 +13,7 @@ import {
   Modal,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Send, Lock, Heart, Phone, Video, Wifi, WifiOff } from 'lucide-react-native';
 import WebRTCService, { WebRTCMessage, ConnectionState } from '../../services/WebRTCService';
 import CallScreen from '../../components/CallScreen';
@@ -21,6 +22,7 @@ import BuzzService, { BuzzType } from '@/services/BuzzService';
 
 export default function MessagesScreen() {
   const { t } = useTranslation();
+  const insets = useSafeAreaInsets();
   const [messages, setMessages] = useState<WebRTCMessage[]>([]);
   const [inputText, setInputText] = useState('');
   const [connectionState, setConnectionState] = useState<ConnectionState>({
@@ -306,6 +308,7 @@ export default function MessagesScreen() {
       {/* Input */}
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        keyboardVerticalOffset={insets.bottom}
         style={styles.inputContainer}
       >
         <View style={styles.inputWrapper}>

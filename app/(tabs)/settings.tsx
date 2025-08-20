@@ -280,6 +280,21 @@ export default function SettingsScreen() {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>{t('settings:privacy')}</Text>
           <View style={styles.sectionContent}>
+            {isFeatureEnabled('privacyLock') && (
+              <SettingItem
+                icon={<Shield size={20} color="#ff6b9d" strokeWidth={2} />}
+                title="Khóa Ứng Dụng"
+                subtitle="Sử dụng sinh trắc học để bảo vệ ứng dụng"
+                rightElement={
+                  <Switch
+                    value={isLockEnabled}
+                    onValueChange={setLockEnabled}
+                    trackColor={{ false: '#333', true: '#ff6b9d' }}
+                    thumbColor="#fff"
+                  />
+                }
+              />
+            )}
             <SettingItem
               icon={<Shield size={20} color="#ff6b9d" strokeWidth={2} />}
               title={t('settings:readReceipts')}

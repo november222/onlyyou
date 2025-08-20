@@ -371,6 +371,21 @@ export default function HistoryScreen() {
 
   const handleSessionPress = (session: ConnectionSession) => {
     if (!isPremium) {
+      Alert.alert(
+        'Tính Năng Premier 👑',
+        'Xem chi tiết lịch sử kết nối là tính năng Premier. Nâng cấp để mở khóa!',
+        [
+          { text: 'Để Sau', style: 'cancel' },
+          { 
+            text: 'Nâng Cấp', 
+            onPress: () => router.push('/premium?openPayment=1')
+          },
+        ]
+      );
+      return;
+    }
+
+    if (!isPremium) {
       setShowPremiumModal(true);
       return;
     }

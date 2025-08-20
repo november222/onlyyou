@@ -9,13 +9,16 @@ import {
   TextInput,
   ActivityIndicator,
   ScrollView,
+  KeyboardAvoidingView,
+  Platform,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Heart, Shield, Wifi, WifiOff, Copy, Key, Plus } from 'lucide-react-native';
 import WebRTCService, { ConnectionState } from '@/services/WebRTCService';
 
 export default function ConnectionScreen() {
   const { t } = useTranslation();
+  const insets = useSafeAreaInsets();
   const [connectionState, setConnectionState] = useState<ConnectionState>({
     isConnected: false,
     isConnecting: false,
@@ -127,18 +130,23 @@ export default function ConnectionScreen() {
     );
   };
   return (
-    <View style={styles.container}>
-      <ScrollView 
-        style={styles.content} 
-        contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}
+    <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        keyboardVerticalOffset={insets.bottom}
+        style={{ flex: 1 }}
       >
-        {/* Header */}
-        <View style={styles.header}>
-          <Heart size={32} color="#ff6b9d" strokeWidth={2} fill="#ff6b9d" />
-          <Text style={styles.title}>{t('connection:title')}</Text>
-          <Text style={styles.subtitle}>{t('connection:subtitle')}</Text>
-        </View>
+        <ScrollView 
+          keyboardShouldPersistTaps="handled"
+          contentContainerStyle={[styles.scrollContent, { paddingBottom: insets.bottom + 24 }]}
+          showsVerticalScrollIndicator={false}
+        >
+          {/* Header */}
+          <View style={styles.header}>
+            <Heart size={32} color="#ff6b9d" strokeWidth={2} fill="#ff6b9d" />
+            <Text style={styles.title}>{t('connection:title')}</Text>
+            <Text style={styles.subtitle}>{t('connection:subtitle')}</Text>
+          </View>
 
         {/* Connection Status */}
         <View style={styles.statusCard}>
@@ -287,8 +295,9 @@ export default function ConnectionScreen() {
             just you and your special person. 💕
           </Text>
         </View>
-      </ScrollView>
-    </View>
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </SafeAreaView>
   );
 }
 
