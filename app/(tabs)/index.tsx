@@ -9,9 +9,10 @@ import {
   Modal,
   Linking,
   Platform,
+  ScrollView,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Lock, Heart, Phone, Video, Wifi, WifiOff } from 'lucide-react-native';
+import { Heart, Wifi, WifiOff } from 'lucide-react-native';
 import { router } from 'expo-router';
 import WebRTCService, { WebRTCMessage, ConnectionState } from '../../services/WebRTCService';
 import CallScreen from '../../components/CallScreen';
@@ -148,7 +149,12 @@ export default function TouchScreen() {
   };
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
+      <ScrollView 
+        style={styles.scrollView}
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
       {/* Header */}
       <View style={styles.header}>
         <View style={styles.headerContent}>
@@ -157,24 +163,14 @@ export default function TouchScreen() {
               styles.statusDot,
               { backgroundColor: connectionState.isConnected ? '#4ade80' : '#ef4444' }
             ]} />
-            <Text style={styles.headerTitle}>Touch</Text>
+            <View style={styles.connectionInfo}>
+              <Text style={styles.headerTitle}>Touch</Text>
+              {connectionState.isConnected && connectionState.roomCode && (
+                <Text style={styles.partnerName}>Connected to: {connectionState.roomCode}</Text>
+              )}
+            </View>
           </View>
-          <View style={styles.headerIcons}>
-            <TouchableOpacity onPress={startVoiceCall} disabled={!connectionState.isConnected}>
-              <Phone 
-                size={20} 
-                color={connectionState.isConnected ? "#ff6b9d" : "#666"} 
-                strokeWidth={2} 
-              />
-            </TouchableOpacity>
-            <TouchableOpacity onPress={startVideoCall} disabled={!connectionState.isConnected}>
-              <Video 
-                size={20} 
-                color={connectionState.isConnected ? "#ff6b9d" : "#666"} 
-                strokeWidth={2} 
-              />
-            </TouchableOpacity>
-            <Lock size={20} color="#ff6b9d" strokeWidth={2} />
+          <View style={styles.connectionStatusIcon}>
             {connectionState.isConnected ? (
               <Wifi size={20} color="#4ade80" strokeWidth={2} />
             ) : (
@@ -184,10 +180,10 @@ export default function TouchScreen() {
         </View>
         <Text style={styles.headerSubtitle}>
           {connectionState.isConnected 
-            ? 'Connected • Touch interface active'
+            ? 'Connected • End-to-end encrypted'
             : connectionState.isConnecting 
               ? 'Connecting...'
-              : connectionState.error || 'Ready for touch interactions'
+              : connectionState.error || 'Connect to enable touch features'
           }
         </Text>
       </View>
@@ -267,6 +263,7 @@ export default function TouchScreen() {
           </TouchableOpacity>
         </View>
       </View>
+      </ScrollView>
 
       {/* Call Modal */}
       <Modal
@@ -276,7 +273,7 @@ export default function TouchScreen() {
       >
         <CallScreen onEndCall={endCall} isVideoCall={isVideoCall} />
       </Modal>
-    </View>
+    </SafeAreaView>
   );
 }
 
@@ -284,6 +281,12 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#000',
+  },
+  scrollView: {
+    flex: 1,
+  },
+  scrollContent: {
+    flexGrow: 1,
   },
   header: {
     padding: 20,
@@ -300,6 +303,7 @@ const styles = StyleSheet.create({
   connectionStatus: {
     flexDirection: 'row',
     alignItems: 'center',
+    flex: 1,
   },
   statusDot: {
     width: 8,
@@ -307,19 +311,25 @@ const styles = StyleSheet.create({
     borderRadius: 4,
     marginRight: 8,
   },
+  connectionInfo: {
+    flex: 1,
+  },
   headerTitle: {
     fontSize: 20,
     fontWeight: '700',
     color: '#fff',
   },
-  headerIcons: {
-    flexDirection: 'row',
-    gap: 16,
+  partnerName: {
+    fontSize: 12,
+    color: '#888',
+    marginTop: 2,
+  },
+  connectionStatusIcon: {
+    marginLeft: 12,
   },
   headerSubtitle: {
     fontSize: 14,
     color: '#888',
-    marginLeft: 16,
   },
   touchNavigation: {
     flex: 1,
