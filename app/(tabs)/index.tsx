@@ -7,6 +7,8 @@ import {
   StyleSheet,
   Alert,
   Modal,
+  Linking,
+  Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Lock, Heart, Phone, Video, Wifi, WifiOff } from 'lucide-react-native';

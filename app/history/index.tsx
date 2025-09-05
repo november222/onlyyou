@@ -41,6 +41,7 @@ import {
 import { useTranslation } from 'react-i18next';
 import TimelineService, { Event, EventType } from '@/services/TimelineService';
 import { isFeatureEnabled } from '../../config/features';
+import PremiumGate from '../../components/PremiumGate';
 
 interface ConnectionSession {
   id: string;
