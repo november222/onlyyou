@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { AppState, AppStateStatus } from 'react-native';
+import { AppState, AppStateStatus, Platform } from 'react-native';
 import * as LocalAuthentication from 'expo-local-authentication';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
@@ -76,6 +76,12 @@ export function PrivacyProvider({ children }: PrivacyProviderProps) {
 
   const authenticate = async (): Promise<boolean> => {
     try {
+      // Skip authentication on web platform
+      if (Platform.OS === 'web') {
+        setIsLocked(false);
+        return true;
+      }
+
       // Check if biometric authentication is available
       const hasHardware = await LocalAuthentication.hasHardwareAsync();
       const isEnrolled = await LocalAuthentication.isEnrolledAsync();
@@ -91,6 +97,7 @@ export function PrivacyProvider({ children }: PrivacyProviderProps) {
         promptMessage: 'Xác thực để mở Only You',
         cancelLabel: 'Hủy',
         fallbackLabel: 'Sử dụng mật khẩu',
+        disableDeviceFallback: false,
       });
 
       if (result.success) {

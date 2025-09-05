@@ -12,7 +12,8 @@
       "supportsTablet": true,
       "infoPlist": {
         "NSCameraUsageDescription": "This app uses the camera for video calls.",
-        "NSMicrophoneUsageDescription": "This app uses the microphone for voice and video calls."
+        "NSMicrophoneUsageDescription": "This app uses the microphone for voice and video calls.",
+        "NSFaceIDUsageDescription": "OnlyYou uses Face ID to unlock your private content."
       }
     },
     "android": {
