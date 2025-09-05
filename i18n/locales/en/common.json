@@ -14,5 +14,22 @@
   "save": "Save",
   "edit": "Edit",
   "done": "Done",
-  "continue": "Continue"
+  "continue": "Continue",
+  "touch": "Touch",
+  "buzzCall": "Buzz Call",
+  "calendar": "Calendar",
+  "sharedGallery": "Shared Gallery",
+  "addPhoto": "Add Photo",
+  "takePhoto": "Take Photo",
+  "pickFromLibrary": "Pick from Library",
+  "deletePhoto": "Delete Photo",
+  "event": "Event",
+  "addEvent": "Add Event",
+  "editEvent": "Edit Event",
+  "deleteEvent": "Delete Event",
+  "call": "Call",
+  "systemCall": "System Call",
+  "sendBuzz": "Send Buzz",
+  "success": "Success",
+  "failed": "Failed"
 }

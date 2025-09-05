@@ -1,4 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Linking, Platform } from 'react-native';
 import TimelineService from './TimelineService';
 
 export type BuzzType = 'ping' | 'love' | 'miss';
@@ -20,7 +21,7 @@ export interface BuzzResult {
 class BuzzService {
   private readonly STORAGE_KEY = 'onlyyou_events';
   private readonly COOLDOWN_KEY = 'onlyyou_buzz_cooldown';
-  private readonly COOLDOWN_DURATION = 30000; // 30 seconds
+  private readonly COOLDOWN_DURATION = 15000; // 15 seconds
 
   // Send a buzz with cooldown protection
   public async sendBuzz(type: BuzzType, note?: string): Promise<BuzzResult> {
@@ -162,6 +163,43 @@ class BuzzService {
     }
     
     return status;
+  }
+
+  // System call (no VoIP)
+  public async makeSystemCall(phoneNumber: string = '+1234567890'): Promise<void> {
+    try {
+      const url = Platform.OS === 'ios' 
+        ? `telprompt:${phoneNumber}` 
+        : `tel:${phoneNumber}`;
+      
+      const canOpen = await Linking.canOpenURL(url);
+      if (canOpen) {
+        await Linking.openURL(url);
+      } else {
+        throw new Error('Cannot open phone app');
+      }
+    } catch (error) {
+      console.error('Failed to make system call:', error);
+      throw error;
+    }
+  }
+
+  // List recent buzz events
+  public async listRecentBuzz(limit: number = 10): Promise<BuzzEvent[]> {
+    try {
+      const eventsData = await AsyncStorage.getItem(this.STORAGE_KEY);
+      if (!eventsData) return [];
+      
+      const allEvents = JSON.parse(eventsData);
+      const buzzEvents = allEvents
+        .filter((event: any) => event.type && ['ping', 'love', 'miss'].includes(event.type))
+        .slice(0, limit);
+      
+      return buzzEvents;
+    } catch (error) {
+      console.error('Failed to list recent buzz:', error);
+      return [];
+    }
   }
 }
 

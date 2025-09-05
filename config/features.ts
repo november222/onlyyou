@@ -1,5 +1,9 @@
 export const features = {
+  chat: false,
+  touch: true,
   buzz: true,
+  calendar: true,
+  sharedGallery: true,
   dailyPing: true,
   timeline: true,
   album: true,

@@ -52,11 +52,19 @@ class PhotoService {
 
       const asset = result.assets[0];
       const timestamp = Date.now();
+      const filename = `photo_${timestamp}.jpg`;
+      const localUri = `${this.PHOTOS_DIR}${filename}`;
+
+      // Copy file to local directory
+      await FileSystem.copyAsync({
+        from: asset.uri,
+        to: localUri,
+      });
 
       // Create photo object
       const photo: Photo = {
         id: `photo_${timestamp}_${Math.random().toString(36).substr(2, 9)}`,
-        uri: asset.uri,
+        uri: localUri,
         width: asset.width,
         height: asset.height,
         timestamp,
@@ -125,11 +133,19 @@ class PhotoService {
 
       const asset = result.assets[0];
       const timestamp = Date.now();
+      const filename = `photo_${timestamp}.jpg`;
+      const localUri = `${this.PHOTOS_DIR}${filename}`;
+
+      // Copy file to local directory
+      await FileSystem.copyAsync({
+        from: asset.uri,
+        to: localUri,
+      });
 
       // Create photo object
       const photo: Photo = {
         id: `photo_${timestamp}_${Math.random().toString(36).substr(2, 9)}`,
-        uri: asset.uri,
+        uri: localUri,
         width: asset.width,
         height: asset.height,
         timestamp,
@@ -190,9 +206,20 @@ class PhotoService {
       if (!photosData) return;
       
       const photos = JSON.parse(photosData);
+      const photoToDelete = photos.find((photo: Photo) => photo.id === photoId);
       const filteredPhotos = photos.filter((photo: Photo) => photo.id !== photoId);
       
       await AsyncStorage.setItem(this.STORAGE_KEY, JSON.stringify(filteredPhotos));
+      
+      // Delete physical file
+      if (photoToDelete && photoToDelete.uri.startsWith(this.PHOTOS_DIR)) {
+        try {
+          await FileSystem.deleteAsync(photoToDelete.uri);
+          console.log('Photo file deleted:', photoToDelete.uri);
+        } catch (error) {
+          console.error('Failed to delete photo file:', error);
+        }
+      }
       
       // Also remove from timeline
       await TimelineService.deleteEvent(photoId);

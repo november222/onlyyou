@@ -14,5 +14,22 @@
   "save": "Lưu",
   "edit": "Chỉnh sửa",
   "done": "Hoàn thành",
-  "continue": "Tiếp tục"
+  "continue": "Tiếp tục",
+  "touch": "Touch",
+  "buzzCall": "Buzz Call",
+  "calendar": "Lịch",
+  "sharedGallery": "Thư viện chung",
+  "addPhoto": "Thêm ảnh",
+  "takePhoto": "Chụp ảnh",
+  "pickFromLibrary": "Chọn từ thư viện",
+  "deletePhoto": "Xóa ảnh",
+  "event": "Sự kiện",
+  "addEvent": "Thêm sự kiện",
+  "editEvent": "Sửa sự kiện",
+  "deleteEvent": "Xóa sự kiện",
+  "call": "Gọi",
+  "systemCall": "Gọi hệ thống",
+  "sendBuzz": "Gửi buzz",
+  "success": "Thành công",
+  "failed": "Thất bại"
 }

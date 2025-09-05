@@ -3,28 +3,21 @@ import { useTranslation } from 'react-i18next';
 import {
   View,
   Text,
-  TextInput,
   TouchableOpacity,
-  FlatList,
   StyleSheet,
-  KeyboardAvoidingView,
-  Platform,
   Alert,
   Modal,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Send, Lock, Heart, Phone, Video, Wifi, WifiOff } from 'lucide-react-native';
+import { Lock, Heart, Phone, Video, Wifi, WifiOff } from 'lucide-react-native';
+import { router } from 'expo-router';
 import WebRTCService, { WebRTCMessage, ConnectionState } from '../../services/WebRTCService';
 import CallScreen from '../../components/CallScreen';
 import { isFeatureEnabled } from '../../config/features';
 import BuzzService, { BuzzType } from '@/services/BuzzService';
 
-export default function MessagesScreen() {
+export default function TouchScreen() {
   const { t } = useTranslation();
-  const insets = useSafeAreaInsets();
-  const [messages, setMessages] = useState<WebRTCMessage[]>([]);
-  const [inputText, setInputText] = useState('');
   const [connectionState, setConnectionState] = useState<ConnectionState>({
     isConnected: false,
     isConnecting: false,
@@ -39,16 +32,12 @@ export default function MessagesScreen() {
     love: { canSend: true, remainingTime: 0 },
     miss: { canSend: true, remainingTime: 0 },
   });
-  const flatListRef = useRef<FlatList>(null);
 
+  // Remove unused refs and state
   useEffect(() => {
     // Set up WebRTC event listeners
     WebRTCService.onConnectionStateChange = (state) => {
       setConnectionState(state);
-    };
-
-    WebRTCService.onMessageReceived = (message) => {
-      setMessages(prev => [...prev, message]);
     };
 
     // Load buzz cooldown status
@@ -58,7 +47,6 @@ export default function MessagesScreen() {
     const cooldownTimer = setInterval(loadBuzzCooldowns, 1000);
     return () => {
       WebRTCService.onConnectionStateChange = null;
-      WebRTCService.onMessageReceived = null;
       clearInterval(cooldownTimer);
     };
   }, []);
@@ -80,23 +68,6 @@ export default function MessagesScreen() {
       loadBuzzCooldowns(); // Refresh cooldown status
     } else {
       Alert.alert('Không thể gửi', result.error || 'Vui lòng thử lại');
-    }
-  };
-
-  const sendMessage = () => {
-    if (inputText.trim() === '') return;
-    
-    if (!connectionState.isConnected) {
-      Alert.alert(t('messages:notConnected'), t('messages:pleaseConnect'));
-      return;
-    }
-
-    const message = WebRTCService.sendMessage(inputText.trim());
-    if (message) {
-      setMessages(prev => [...prev, message]);
-      setInputText('');
-    } else {
-      Alert.alert('Send Failed', 'Unable to send message. Please check your connection.');
     }
   };
 
@@ -174,36 +145,6 @@ export default function MessagesScreen() {
     setIsVideoCall(false);
   };
 
-  const renderMessage = ({ item }: { item: WebRTCMessage }) => (
-    <View style={[
-      styles.messageContainer,
-      item.isOwn ? styles.ownMessage : styles.partnerMessage
-    ]}>
-      <View style={[
-        styles.messageBubble,
-        item.isOwn ? styles.ownBubble : styles.partnerBubble
-      ]}>
-        <Text style={[
-          styles.messageText,
-          item.isOwn ? styles.ownMessageText : styles.partnerMessageText
-        ]}>
-          {item.text}
-        </Text>
-        <View style={styles.messageFooter}>
-          <Text style={[
-            styles.timestamp,
-            item.isOwn ? styles.ownTimestamp : styles.partnerTimestamp
-          ]}>
-            {item.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-          </Text>
-          {item.isOwn && (
-            <Text style={styles.messageStatus}>💕</Text>
-          )}
-        </View>
-      </View>
-    </View>
-  );
-
   return (
     <View style={styles.container}>
       {/* Header */}
@@ -214,7 +155,7 @@ export default function MessagesScreen() {
               styles.statusDot,
               { backgroundColor: connectionState.isConnected ? '#4ade80' : '#ef4444' }
             ]} />
-            <Text style={styles.headerTitle}>My Love</Text>
+            <Text style={styles.headerTitle}>Touch</Text>
           </View>
           <View style={styles.headerIcons}>
             <TouchableOpacity onPress={startVoiceCall} disabled={!connectionState.isConnected}>
@@ -241,10 +182,10 @@ export default function MessagesScreen() {
         </View>
         <Text style={styles.headerSubtitle}>
           {connectionState.isConnected 
-            ? t('messages:connectedEncrypted')
+            ? 'Connected • Touch interface active'
             : connectionState.isConnecting 
-              ? t('messages:connecting')
-              : connectionState.error || t('messages:notConnected')
+              ? 'Connecting...'
+              : connectionState.error || 'Ready for touch interactions'
           }
         </Text>
       </View>
@@ -293,46 +234,37 @@ export default function MessagesScreen() {
         </View>
       )}
 
-      {/* Messages */}
-      <FlatList
-        ref={flatListRef}
-        data={messages}
-        renderItem={renderMessage}
-        keyExtractor={item => item.id}
-        style={styles.messagesList}
-        contentContainerStyle={styles.messagesContent}
-        onContentSizeChange={() => flatListRef.current?.scrollToEnd()}
-        showsVerticalScrollIndicator={false}
-      />
-
-      {/* Input */}
-      <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        keyboardVerticalOffset={insets.bottom}
-        style={styles.inputContainer}
-      >
-        <View style={styles.inputWrapper}>
-          <TextInput
-            style={styles.textInput}
-            value={inputText}
-            onChangeText={setInputText}
-            placeholder={t('messages:typeMessage')}
-            placeholderTextColor="#666"
-            multiline
-            maxLength={1000}
-          />
-          <TouchableOpacity
-            style={[
-              styles.sendButton,
-              { opacity: inputText.trim() ? 1 : 0.5 }
-            ]}
-            onPress={sendMessage}
-            disabled={!inputText.trim()}
+      {/* Touch Navigation */}
+      <View style={styles.touchNavigation}>
+        <Text style={styles.touchTitle}>Touch Interface</Text>
+        <Text style={styles.touchSubtitle}>Choose your interaction</Text>
+        
+        <View style={styles.touchButtons}>
+          <TouchableOpacity 
+            style={styles.touchButton}
+            onPress={() => router.push('/touch/buzz-call')}
           >
-            <Send size={20} color="#fff" strokeWidth={2} />
+            <Text style={styles.touchButtonIcon}>⚡</Text>
+            <Text style={styles.touchButtonText}>Buzz Call</Text>
+          </TouchableOpacity>
+          
+          <TouchableOpacity 
+            style={styles.touchButton}
+            onPress={() => router.push('/touch/calendar')}
+          >
+            <Text style={styles.touchButtonIcon}>📅</Text>
+            <Text style={styles.touchButtonText}>Calendar</Text>
+          </TouchableOpacity>
+          
+          <TouchableOpacity 
+            style={styles.touchButton}
+            onPress={() => router.push('/touch/shared-gallery')}
+          >
+            <Text style={styles.touchButtonIcon}>📸</Text>
+            <Text style={styles.touchButtonText}>Gallery</Text>
           </TouchableOpacity>
         </View>
-      </KeyboardAvoidingView>
+      </View>
 
       {/* Call Modal */}
       <Modal
@@ -387,96 +319,45 @@ const styles = StyleSheet.create({
     color: '#888',
     marginLeft: 16,
   },
-  messagesList: {
+  touchNavigation: {
     flex: 1,
-  },
-  messagesContent: {
     padding: 20,
-    paddingBottom: 10,
-  },
-  messageContainer: {
-    marginBottom: 16,
-  },
-  ownMessage: {
-    alignItems: 'flex-end',
-  },
-  partnerMessage: {
-    alignItems: 'flex-start',
-  },
-  messageBubble: {
-    maxWidth: '80%',
-    borderRadius: 20,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-  },
-  ownBubble: {
-    backgroundColor: '#ff6b9d',
-    borderBottomRightRadius: 6,
-  },
-  partnerBubble: {
-    backgroundColor: '#333',
-    borderBottomLeftRadius: 6,
-  },
-  messageText: {
-    fontSize: 16,
-    lineHeight: 22,
-  },
-  ownMessageText: {
-    color: '#fff',
-  },
-  partnerMessageText: {
-    color: '#fff',
-  },
-  messageFooter: {
-    flexDirection: 'row',
+    justifyContent: 'center',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    marginTop: 4,
   },
-  timestamp: {
-    fontSize: 12,
-    marginTop: 4,
-  },
-  ownTimestamp: {
-    color: 'rgba(255, 255, 255, 0.7)',
-  },
-  partnerTimestamp: {
-    color: '#888',
-  },
-  messageStatus: {
-    fontSize: 12,
-    marginLeft: 8,
-  },
-  inputContainer: {
-    borderTopWidth: 1,
-    borderTopColor: '#333',
-    backgroundColor: '#111',
-  },
-  inputWrapper: {
-    flexDirection: 'row',
-    alignItems: 'flex-end',
-    padding: 16,
-    gap: 12,
-  },
-  textInput: {
-    flex: 1,
-    backgroundColor: '#222',
-    borderRadius: 20,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
+  touchTitle: {
+    fontSize: 24,
+    fontWeight: '700',
     color: '#fff',
+    marginBottom: 8,
+    textAlign: 'center',
+  },
+  touchSubtitle: {
     fontSize: 16,
-    maxHeight: 100,
+    color: '#888',
+    marginBottom: 40,
+    textAlign: 'center',
+  },
+  touchButtons: {
+    width: '100%',
+    gap: 20,
+  },
+  touchButton: {
+    backgroundColor: '#111',
+    borderRadius: 16,
+    padding: 24,
+    alignItems: 'center',
     borderWidth: 1,
     borderColor: '#333',
   },
-  sendButton: {
-    backgroundColor: '#ff6b9d',
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    alignItems: 'center',
-    justifyContent: 'center',
+  touchButtonIcon: {
+    fontSize: 32,
+    marginBottom: 8,
+  },
+  touchButtonText: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#fff',
   },
   buzzContainer: {
     backgroundColor: '#111',
