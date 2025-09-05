@@ -17,6 +17,8 @@ import { router } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import i18n, { supportedLanguages } from '@/i18n';
+import { isFeatureEnabled } from '../../config/features';
+import { usePrivacy } from '@/providers/PrivacyProvider';
 
 export default function SettingsScreen() {
   const [notifications, setNotifications] = useState(true);
@@ -27,6 +29,7 @@ export default function SettingsScreen() {
   const [showLanguageModal, setShowLanguageModal] = useState(false);
   const [authState, setAuthState] = useState<AuthState>(AuthService.getAuthState());
   const { t, i18n: i18nInstance } = useTranslation();
+  const { isLockEnabled, setLockEnabled } = usePrivacy();
 
   useEffect(() => {
     // Listen for auth state changes

@@ -9,6 +9,11 @@ export const features = {
 } as const;
 
 export type FeatureKey = keyof typeof features;
+export function isFeatureEnabled(key: FeatureKey) {
+  return Boolean(features[key]);
+}
+
+export type FeatureKey = keyof typeof features;
 
 // Helper function to check if feature is enabled
 export const isFeatureEnabled = (feature: FeatureKey): boolean => {
