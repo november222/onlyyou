@@ -263,7 +263,6 @@ export default function TouchScreen() {
           </TouchableOpacity>
         </View>
       </View>
-      </ScrollView>
 
       {/* Call Modal */}
       <Modal
@@ -273,6 +272,7 @@ export default function TouchScreen() {
       >
         <CallScreen onEndCall={endCall} isVideoCall={isVideoCall} />
       </Modal>
+      </ScrollView>
     </SafeAreaView>
   );
 }
@@ -303,7 +303,6 @@ const styles = StyleSheet.create({
   connectionStatus: {
     flexDirection: 'row',
     alignItems: 'center',
-    flex: 1,
   },
   statusDot: {
     width: 8,
@@ -312,7 +311,7 @@ const styles = StyleSheet.create({
     marginRight: 8,
   },
   connectionInfo: {
-    flex: 1,
+    flexDirection: 'column',
   },
   headerTitle: {
     fontSize: 20,
@@ -322,14 +321,19 @@ const styles = StyleSheet.create({
   partnerName: {
     fontSize: 12,
     color: '#888',
-    marginTop: 2,
   },
   connectionStatusIcon: {
-    marginLeft: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  headerIcons: {
+    flexDirection: 'row',
+    gap: 16,
   },
   headerSubtitle: {
     fontSize: 14,
     color: '#888',
+    marginLeft: 16,
   },
   touchNavigation: {
     flex: 1,
