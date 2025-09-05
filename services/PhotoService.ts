@@ -1,4 +1,5 @@
 import * as ImagePicker from 'expo-image-picker';
+import * as FileSystem from 'expo-file-system';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import TimelineService from './TimelineService';
 
@@ -20,6 +21,23 @@ export interface PhotoResult {
 
 class PhotoService {
   private readonly STORAGE_KEY = 'onlyyou_photos';
+  private readonly PHOTOS_DIR = `${FileSystem.documentDirectory}onlyyou/photos/`;
+
+  constructor() {
+    // Ensure photos directory exists
+    this.ensurePhotosDirectory();
+  }
+
+  private async ensurePhotosDirectory(): Promise<void> {
+    try {
+      const dirInfo = await FileSystem.getInfoAsync(this.PHOTOS_DIR);
+      if (!dirInfo.exists) {
+        await FileSystem.makeDirectoryAsync(this.PHOTOS_DIR, { intermediates: true });
+      }
+    } catch (error) {
+      console.error('Failed to create photos directory:', error);
+    }
+  }
 
   // Pick and save photo
   public async pickAndSave(caption?: string): Promise<PhotoResult> {

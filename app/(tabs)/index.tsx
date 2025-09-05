@@ -273,6 +273,7 @@ export default function TouchScreen() {
         <CallScreen onEndCall={endCall} isVideoCall={isVideoCall} />
       </Modal>
       </ScrollView>
+      </ScrollView>
     </SafeAreaView>
   );
 }
