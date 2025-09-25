@@ -24,6 +24,8 @@ export interface SavedConnection {
   connectionDate: string;
   lastConnected: string;
   buzzCallsCount?: number;
+  currentSessionStart?: string;
+  totalConnectedTime?: number;
 }
 class WebRTCService {
   // Mock data for frontend development
@@ -62,6 +64,9 @@ class WebRTCService {
   private savedConnection: SavedConnection | null = null;
   private reconnectTimer: ReturnType<typeof setTimeout> | null = null;
   private isAutoReconnecting = false;
+  private connectionStartTime: number | null = null;
+  private backgroundTime: number | null = null;
+  private totalConnectedTime: number = 0;
 
   // Event callbacks
   public onConnectionStateChange: ((state: ConnectionState) => void) | null = null;
@@ -74,6 +79,9 @@ class WebRTCService {
     
     // Load saved connection and try to auto-reconnect
     this.loadSavedConnection();
+    
+    // Load total connected time
+    this.loadTotalConnectedTime();
   }
 
   // Load saved connection from storage
@@ -83,6 +91,20 @@ class WebRTCService {
       if (saved) {
         this.savedConnection = JSON.parse(saved);
         console.log('Loaded saved connection:', this.savedConnection?.roomCode);
+        
+        // If there was an active session, calculate time spent while app was closed
+        if (this.savedConnection?.currentSessionStart) {
+          const sessionStart = new Date(this.savedConnection.currentSessionStart).getTime();
+          const now = Date.now();
+          const timeWhileClosed = Math.floor((now - sessionStart) / 1000);
+          
+          // Add time spent while app was closed to total
+          this.totalConnectedTime = (this.savedConnection.totalConnectedTime || 0) + timeWhileClosed;
+          
+          console.log(`Added ${timeWhileClosed}s from background time`);
+        } else {
+          this.totalConnectedTime = this.savedConnection?.totalConnectedTime || 0;
+        }
         
         // Auto-reconnect to saved room
         if (this.savedConnection?.roomCode) {
@@ -94,6 +116,27 @@ class WebRTCService {
     }
   }
 
+  // Load total connected time
+  private async loadTotalConnectedTime(): Promise<void> {
+    try {
+      const saved = await AsyncStorage.getItem('totalConnectedTime');
+      if (saved) {
+        this.totalConnectedTime = parseInt(saved, 10) || 0;
+      }
+    } catch (error) {
+      console.error('Failed to load total connected time:', error);
+    }
+  }
+
+  // Save total connected time
+  private async saveTotalConnectedTime(): Promise<void> {
+    try {
+      await AsyncStorage.setItem('totalConnectedTime', this.totalConnectedTime.toString());
+    } catch (error) {
+      console.error('Failed to save total connected time:', error);
+    }
+  }
+
   // Save connection to storage
   private async saveConnection(roomCode: string): Promise<void> {
     try {
@@ -102,6 +145,7 @@ class WebRTCService {
         partnerName: 'My Love',
         connectionDate: new Date().toISOString(),
         lastConnected: new Date().toISOString(),
+        totalConnectedTime: this.totalConnectedTime,
       };
       
       await AsyncStorage.setItem('savedConnection', JSON.stringify(connection));
@@ -217,6 +261,9 @@ class WebRTCService {
       throw new Error('Mã phòng không hợp lệ');
     }
     
+    // Start connection timer
+    this.startConnectionTimer();
+    
     // Save this connection for future auto-reconnect
     await this.saveConnection(roomCode);
     
@@ -231,10 +278,67 @@ class WebRTCService {
     // Update last connected time
     if (this.savedConnection) {
       this.savedConnection.lastConnected = new Date().toISOString();
+      this.savedConnection.currentSessionStart = new Date().toISOString();
+      this.savedConnection.totalConnectedTime = this.totalConnectedTime;
       await AsyncStorage.setItem('savedConnection', JSON.stringify(this.savedConnection));
     }
     
     console.log(`Mock: Successfully joined room ${roomCode}`);
+  }
+
+  // Start connection timer
+  private startConnectionTimer(): void {
+    this.connectionStartTime = Date.now();
+    console.log('Connection timer started');
+  }
+
+  // Stop connection timer and save total time
+  private async stopConnectionTimer(): Promise<void> {
+    if (this.connectionStartTime) {
+      const sessionDuration = Math.floor((Date.now() - this.connectionStartTime) / 1000);
+      this.totalConnectedTime += sessionDuration;
+      
+      console.log(`Session ended: ${sessionDuration}s, Total: ${this.totalConnectedTime}s`);
+      
+      // Save updated total time
+      await this.saveTotalConnectedTime();
+      
+      // Update saved connection
+      if (this.savedConnection) {
+        this.savedConnection.totalConnectedTime = this.totalConnectedTime;
+        delete this.savedConnection.currentSessionStart; // Clear active session marker
+        await AsyncStorage.setItem('savedConnection', JSON.stringify(this.savedConnection));
+      }
+      
+      this.connectionStartTime = null;
+    }
+  }
+
+  // Get current session duration (in seconds)
+  public getCurrentSessionDuration(): number {
+    if (!this.connectionStartTime || !this.connectionState.isConnected) {
+      return 0;
+    }
+    return Math.floor((Date.now() - this.connectionStartTime) / 1000);
+  }
+
+  // Get total connected time (in seconds)
+  public getTotalConnectedTime(): number {
+    return this.totalConnectedTime;
+  }
+
+  // Handle app going to background
+  public handleAppStateChange(nextAppState: string): void {
+    if (nextAppState === 'background' || nextAppState === 'inactive') {
+      // App going to background - save current state
+      this.backgroundTime = Date.now();
+      console.log('App went to background, connection continues...');
+    } else if (nextAppState === 'active' && this.backgroundTime) {
+      // App coming back to foreground
+      const timeInBackground = Date.now() - this.backgroundTime;
+      console.log(`App returned from background after ${Math.floor(timeInBackground / 1000)}s`);
+      this.backgroundTime = null;
+    }
   }
 
   // Mock: Send text message
@@ -316,6 +420,9 @@ class WebRTCService {
   public disconnect(): void {
     console.log('Mock: Disconnecting...');
     
+    // Stop connection timer
+    this.stopConnectionTimer();
+    
     // Clear reconnect timer
     if (this.reconnectTimer) {
       clearTimeout(this.reconnectTimer);
@@ -359,8 +466,13 @@ class WebRTCService {
   // Clear saved connection (for forget functionality)
   public async clearSavedConnection(): Promise<void> {
     try {
+      // Stop timer if running
+      await this.stopConnectionTimer();
+      
       await AsyncStorage.removeItem('savedConnection');
+      await AsyncStorage.removeItem('totalConnectedTime');
       this.savedConnection = null;
+      this.totalConnectedTime = 0;
       
       if (this.reconnectTimer) {
         clearTimeout(this.reconnectTimer);

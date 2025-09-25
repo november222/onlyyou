@@ -1,10 +1,11 @@
 import { useEffect } from 'react';
 import { Stack } from 'expo-router/stack';
 import { StatusBar } from 'expo-status-bar';
-import { Platform } from 'react-native';
+import { Platform, AppState } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { useFrameworkReady } from '@/hooks/useFrameworkReady';
 import AuthService from '@/services/AuthService';
+import WebRTCService from '@/services/WebRTCService';
 import { I18nextProvider } from 'react-i18next';
 import i18n, { initLanguage } from '@/i18n';
 import { PremiumProvider } from '@/providers/PremiumProvider';
@@ -51,6 +52,17 @@ export default function RootLayout() {
     
     // Initialize language
     initLanguage();
+    
+    // Handle app state changes for connection timer
+    const handleAppStateChange = (nextAppState: string) => {
+      WebRTCService.handleAppStateChange(nextAppState);
+    };
+    
+    const subscription = AppState.addEventListener('change', handleAppStateChange);
+    
+    return () => {
+      subscription?.remove();
+    };
   }, []);
 
   return (

@@ -51,11 +51,11 @@ interface ConnectionSession {
 
 export default function ProfileScreen() {
   const { t } = useTranslation();
-  const [currentConnectionStart, setCurrentConnectionStart] = useState<Date | null>(new Date(Date.now() - 86400000)); // Mock: started 1 day ago
+  const [currentConnectionStart, setCurrentConnectionStart] = useState<Date | null>(null);
   const [totalConnectedTime, setTotalConnectedTime] = useState(0);
   const [totalDisconnectedTime, setTotalDisconnectedTime] = useState(0);
   const [connectionSessions, setConnectionSessions] = useState<ConnectionSession[]>([]);
-  const [currentSessionDuration, setCurrentSessionDuration] = useState(86400); // Mock: 1 day
+  const [currentSessionDuration, setCurrentSessionDuration] = useState(0);
   const [connectionState, setConnectionState] = useState<ConnectionState>({
     isConnected: false,
     isConnecting: false,
@@ -63,7 +63,6 @@ export default function ProfileScreen() {
     partnerConnected: false,
     error: null,
   });
-  const [realTimeTimer, setRealTimeTimer] = useState(0);
   const [showPremiumModal, setShowPremiumModal] = useState(false);
   const [showHistoryModal, setShowHistoryModal] = useState(false);
   const [showPremiumDetailsModal, setShowPremiumDetailsModal] = useState(false);
@@ -220,6 +219,22 @@ export default function ProfileScreen() {
     const currentState = WebRTCService.getConnectionState();
     setConnectionState(currentState);
     
+    // Load initial data
+    loadConnectionData();
+    loadPhotosCount();
+    
+    // Get total connected time from service
+    const totalTime = WebRTCService.getTotalConnectedTime();
+    setTotalConnectedTime(totalTime);
+    
+    // Set connection start time if connected
+    if (currentState.isConnected) {
+      const savedConnection = WebRTCService.getSavedConnection();
+      if (savedConnection?.currentSessionStart) {
+        setCurrentConnectionStart(new Date(savedConnection.currentSessionStart));
+      }
+    }
+    
     // Listen for auth state changes
     AuthService.onAuthStateChange = (state) => {
       setAuthState(state);
@@ -229,31 +244,31 @@ export default function ProfileScreen() {
     WebRTCService.onConnectionStateChange = (state) => {
       setConnectionState(state);
       
-      // Reset timer when connection state changes
-      if (state.isConnected && !connectionState.isConnected) {
-        // Just connected - start new timer
-        setRealTimeTimer(0);
-        setCurrentConnectionStart(new Date());
-      } else if (!state.isConnected && connectionState.isConnected) {
-        // Just disconnected - save session
-        saveCurrentSession();
+      if (state.isConnected) {
+        // Connected - get session start time
+        const savedConnection = WebRTCService.getSavedConnection();
+        if (savedConnection?.currentSessionStart) {
+          setCurrentConnectionStart(new Date(savedConnection.currentSessionStart));
+        }
+      } else {
+        // Disconnected - clear session start time
+        setCurrentConnectionStart(null);
+        // Reload total time after disconnection
+        const totalTime = WebRTCService.getTotalConnectedTime();
+        setTotalConnectedTime(totalTime);
       }
     };
 
-    loadConnectionData();
-    loadPhotosCount();
-    
     // Real-time timer that updates every second
     const timer = setInterval(() => {
       if (connectionState.isConnected) {
-        setRealTimeTimer(prev => prev + 1);
+        // Update current session duration from WebRTC service
+        const duration = WebRTCService.getCurrentSessionDuration();
+        setCurrentSessionDuration(duration);
         
-        // Also update current session duration for display
-        if (currentConnectionStart) {
-          const now = new Date();
-          const duration = Math.floor((now.getTime() - currentConnectionStart.getTime()) / 1000);
-          setCurrentSessionDuration(duration);
-        }
+        // Update total connected time (current total + current session)
+        const totalTime = WebRTCService.getTotalConnectedTime();
+        setTotalConnectedTime(totalTime + duration);
       }
     }, 1000);
 
@@ -262,7 +277,7 @@ export default function ProfileScreen() {
       loadDailyPingData();
     }
     return () => clearInterval(timer);
-  }, [connectionState.isConnected, currentConnectionStart]);
+  }, [connectionState.isConnected]);
 
   const loadDailyPingData = async () => {
     try {
@@ -311,20 +326,18 @@ export default function ProfileScreen() {
   };
 
   const saveCurrentSession = async () => {
-    if (currentConnectionStart && connectionState.roomCode) {
+    if (currentConnectionStart && connectionState.roomCode && currentSessionDuration > 0) {
       const newSession: ConnectionSession = {
         id: Date.now().toString(),
         startDate: currentConnectionStart,
         endDate: new Date(),
-        duration: realTimeTimer,
+        duration: currentSessionDuration,
         roomCode: connectionState.roomCode,
         isActive: false,
         buzzCallsCount: 0,
       };
       
       setConnectionSessions(prev => [newSession, ...prev]);
-      setTotalConnectedTime(prev => prev + realTimeTimer);
-      setRealTimeTimer(0);
     }
   };
 
@@ -593,7 +606,7 @@ export default function ProfileScreen() {
               <Text style={styles.statValue}>
                 {formatDuration(totalDisconnectedTime)}
               </Text>
-              <Text style={styles.statLabel}>{t('profile:totalDisconnectedTime')}</Text>
+                ? formatDuration(currentSessionDuration) 
             </View>
 
             <View style={styles.statCard}>
