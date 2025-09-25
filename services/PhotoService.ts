@@ -1,5 +1,6 @@
 import * as ImagePicker from 'expo-image-picker';
 import * as FileSystem from 'expo-file-system';
+import { Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import TimelineService from './TimelineService';
 
@@ -25,10 +26,16 @@ class PhotoService {
 
   constructor() {
     // Ensure photos directory exists
-    this.ensurePhotosDirectory();
+    if (Platform.OS !== 'web') {
+      this.ensurePhotosDirectory();
+    }
   }
 
   private async ensurePhotosDirectory(): Promise<void> {
+    if (Platform.OS === 'web') {
+      return; // Skip directory creation on web
+    }
+    
     try {
       const dirInfo = await FileSystem.getInfoAsync(this.PHOTOS_DIR);
       if (!dirInfo.exists) {
@@ -41,6 +48,13 @@ class PhotoService {
 
   // Pick and save photo
   public async pickAndSave(caption?: string): Promise<PhotoResult> {
+    if (Platform.OS === 'web') {
+      return {
+        success: false,
+        error: 'Chức năng chọn ảnh không khả dụng trên web',
+      };
+    }
+
     try {
       // Request permissions
       const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -124,6 +138,13 @@ class PhotoService {
 
   // Take photo with camera
   public async takePhoto(caption?: string): Promise<PhotoResult> {
+    if (Platform.OS === 'web') {
+      return {
+        success: false,
+        error: 'Chức năng chụp ảnh không khả dụng trên web',
+      };
+    }
+
     try {
       // Request camera permissions
       const permissionResult = await ImagePicker.requestCameraPermissionsAsync();
