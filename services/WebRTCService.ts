@@ -417,11 +417,11 @@ class WebRTCService {
   }
 
   // Mock: Disconnect
-  public disconnect(): void {
+  public async disconnect(): Promise<void> {
     console.log('Mock: Disconnecting...');
     
     // Stop connection timer
-    this.stopConnectionTimer();
+    await this.stopConnectionTimer();
     
     // Clear reconnect timer
     if (this.reconnectTimer) {
@@ -438,6 +438,11 @@ class WebRTCService {
     });
     
     console.log('Mock: Disconnected');
+    
+    // Show success message after state update
+    setTimeout(() => {
+      // This will be handled by the UI component
+    }, 100);
   }
 
   // Permanently remove saved connection

@@ -169,8 +169,8 @@ export default function ConnectionScreen() {
         {
           text: 'Ngắt kết nối',
           style: 'destructive',
-          onPress: () => {
-            WebRTCService.disconnect();
+          onPress: async () => {
+            await WebRTCService.disconnect();
             Alert.alert('Đã ngắt kết nối', 'Bạn có thể kết nối lại bất cứ lúc nào.');
           },
         },
