@@ -21,8 +21,14 @@ export default function TabLayout() {
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
-      {/* Top Navigation Bar */}
-      <View style={styles.topNavBar}>
+
+      {/* Content */}
+      <View style={styles.content}>
+        <ActiveComponent />
+      </View>
+
+      {/* Bottom Navigation Bar */}
+      <View style={styles.bottomNavBar}>
         <View style={styles.navContainer}>
           {tabs.map((tab) => {
             const Icon = tab.icon;
@@ -50,11 +56,6 @@ export default function TabLayout() {
           })}
         </View>
       </View>
-
-      {/* Content */}
-      <View style={styles.content}>
-        <ActiveComponent />
-      </View>
     </SafeAreaView>
   );
 }
@@ -64,10 +65,10 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#000',
   },
-  topNavBar: {
+  bottomNavBar: {
     backgroundColor: '#111',
-    borderBottomWidth: 1,
-    borderBottomColor: '#333',
+    borderTopWidth: 1,
+    borderTopColor: '#333',
     paddingHorizontal: 20,
     paddingVertical: 12,
   },
