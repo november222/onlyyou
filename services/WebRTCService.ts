@@ -117,7 +117,7 @@ class WebRTCService {
     if (this.isAutoReconnecting || !this.savedConnection?.roomCode) return;
     
     this.isAutoReconnecting = true;
-    console.log('Auto-reconnecting to saved room...');
+    console.log('Auto-reconnecting to saved room:', this.savedConnection.roomCode);
     
     this.updateConnectionState({ 
       isConnecting: true, 
@@ -161,6 +161,7 @@ class WebRTCService {
     
     this.reconnectTimer = setTimeout(() => {
       if (!this.connectionState.isConnected && this.savedConnection) {
+        console.log('Scheduled reconnect attempt...');
         this.autoReconnect();
       }
     }, 10000); // Retry every 10 seconds
@@ -179,6 +180,7 @@ class WebRTCService {
       
       // Try to reconnect after 3 seconds
       setTimeout(() => {
+        console.log('Attempting to reconnect after network issue...');
         this.autoReconnect();
       }, 3000);
     }
@@ -187,6 +189,7 @@ class WebRTCService {
   // Update connection state
   private updateConnectionState(updates: Partial<ConnectionState>) {
     this.connectionState = { ...this.connectionState, ...updates };
+    console.log('Connection state updated:', this.connectionState);
     this.onConnectionStateChange?.(this.connectionState);
   }
 
@@ -208,6 +211,11 @@ class WebRTCService {
     
     // Simulate connection delay
     await new Promise(resolve => setTimeout(resolve, 2000));
+    
+    // Validate room code format (basic validation)
+    if (roomCode.length < 4 || roomCode.length > 8) {
+      throw new Error('Mã phòng không hợp lệ');
+    }
     
     // Save this connection for future auto-reconnect
     await this.saveConnection(roomCode);
@@ -231,6 +239,11 @@ class WebRTCService {
 
   // Mock: Send text message
   public sendMessage(text: string): WebRTCMessage | null {
+    if (!this.connectionState.isConnected) {
+      console.warn('Cannot send message: not connected');
+      return null;
+    }
+    
     console.log(`Mock: Sending message: ${text}`);
     
     const message: WebRTCMessage = {
@@ -243,6 +256,8 @@ class WebRTCService {
 
     // Simulate partner response after delay
     setTimeout(() => {
+      if (!this.connectionState.isConnected) return; // Don't send response if disconnected
+      
       const responses = [
         'I love you too! 💕',
         'That sounds amazing! 😍',
@@ -270,6 +285,10 @@ class WebRTCService {
 
   // Mock: Start audio/video call
   public async startCall(video: boolean = false): Promise<void> {
+    if (!this.connectionState.isConnected) {
+      throw new Error('Không thể gọi: chưa kết nối');
+    }
+    
     if (isFeatureEnabled('simpleCallLink')) {
       console.log(`Mock: System call feature enabled, skipping WebRTC call setup`);
       return;
@@ -362,10 +381,32 @@ class WebRTCService {
     // Simulate API delay
     await new Promise(resolve => setTimeout(resolve, 500));
     
-    const roomCode = Math.random().toString(36).substring(2, 8).toUpperCase();
+    // Generate a more readable room code
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+    let roomCode = '';
+    for (let i = 0; i < 6; i++) {
+      roomCode += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    
     console.log(`Mock: Generated room code: ${roomCode}`);
     
     return roomCode;
+  }
+
+  // Check if connected
+  public isConnected(): boolean {
+    return this.connectionState.isConnected;
+  }
+
+  // Get partner info
+  public getPartnerInfo(): { name?: string; roomCode?: string } | null {
+    if (this.connectionState.isConnected && this.connectionState.roomCode) {
+      return {
+        name: 'My Love', // Mock partner name
+        roomCode: this.connectionState.roomCode,
+      };
+    }
+    return null;
   }
 }
 

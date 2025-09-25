@@ -48,6 +48,11 @@ export default function TouchScreen() {
     
     // Update cooldowns every second
     const cooldownTimer = setInterval(loadBuzzCooldowns, 1000);
+    
+    // Get initial connection state
+    const currentState = WebRTCService.getConnectionState();
+    setConnectionState(currentState);
+    
     return () => {
       WebRTCService.onConnectionStateChange = null;
       clearInterval(cooldownTimer);
@@ -63,6 +68,11 @@ export default function TouchScreen() {
 
   const sendBuzz = async (type: BuzzType) => {
     if (!isFeatureEnabled('buzz')) return;
+    
+    if (!connectionState.isConnected) {
+      Alert.alert('Chưa kết nối', 'Vui lòng kết nối với người yêu trước khi gửi buzz');
+      return;
+    }
     
     const result = await BuzzService.sendBuzz(type);
     
@@ -148,6 +158,12 @@ export default function TouchScreen() {
     setIsVideoCall(false);
   };
 
+  const getPartnerDisplayName = () => {
+    if (connectionState.isConnected && connectionState.roomCode) {
+      return `Room: ${connectionState.roomCode}`;
+    }
+    return 'Chưa kết nối';
+  };
   return (
     <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
       <ScrollView 
@@ -165,9 +181,7 @@ export default function TouchScreen() {
             ]} />
             <View style={styles.connectionInfo}>
               <Text style={styles.headerTitle}>Touch</Text>
-              {connectionState.isConnected && connectionState.roomCode && (
-                <Text style={styles.partnerName}>Connected to: {connectionState.roomCode}</Text>
-              )}
+              <Text style={styles.partnerName}>{getPartnerDisplayName()}</Text>
             </View>
           </View>
           <View style={styles.connectionStatusIcon}>
@@ -180,10 +194,10 @@ export default function TouchScreen() {
         </View>
         <Text style={styles.headerSubtitle}>
           {connectionState.isConnected 
-            ? 'Connected • End-to-end encrypted'
+            ? 'Đã kết nối • Mã hóa đầu cuối'
             : connectionState.isConnecting 
-              ? 'Connecting...'
-              : connectionState.error || 'Connect to enable touch features'
+              ? 'Đang kết nối...'
+              : connectionState.error || 'Kết nối để sử dụng tính năng touch'
           }
         </Text>
       </View>
@@ -235,31 +249,42 @@ export default function TouchScreen() {
       {/* Touch Navigation */}
       <View style={styles.touchNavigation}>
         <Text style={styles.touchTitle}>Touch Interface</Text>
-        <Text style={styles.touchSubtitle}>Choose your interaction</Text>
+        <Text style={styles.touchSubtitle}>
+          {connectionState.isConnected 
+            ? 'Chọn cách tương tác với người yêu' 
+            : 'Kết nối để mở khóa các tính năng'
+          }
+        </Text>
         
         <View style={styles.touchButtons}>
           <TouchableOpacity 
-            style={styles.touchButton}
+            style={[styles.touchButton, !connectionState.isConnected && styles.touchButtonDisabled]}
             onPress={() => router.push('/touch/buzz-call')}
+            disabled={!connectionState.isConnected}
           >
             <Text style={styles.touchButtonIcon}>⚡</Text>
             <Text style={styles.touchButtonText}>Buzz Call</Text>
+            {!connectionState.isConnected && <Text style={styles.touchButtonDisabledText}>Cần kết nối</Text>}
           </TouchableOpacity>
           
           <TouchableOpacity 
-            style={styles.touchButton}
+            style={[styles.touchButton, !connectionState.isConnected && styles.touchButtonDisabled]}
             onPress={() => router.push('/touch/calendar')}
+            disabled={!connectionState.isConnected}
           >
             <Text style={styles.touchButtonIcon}>📅</Text>
             <Text style={styles.touchButtonText}>Calendar</Text>
+            {!connectionState.isConnected && <Text style={styles.touchButtonDisabledText}>Cần kết nối</Text>}
           </TouchableOpacity>
           
           <TouchableOpacity 
-            style={styles.touchButton}
+            style={[styles.touchButton, !connectionState.isConnected && styles.touchButtonDisabled]}
             onPress={() => router.push('/touch/shared-gallery')}
+            disabled={!connectionState.isConnected}
           >
             <Text style={styles.touchButtonIcon}>📸</Text>
             <Text style={styles.touchButtonText}>Gallery</Text>
+            {!connectionState.isConnected && <Text style={styles.touchButtonDisabledText}>Cần kết nối</Text>}
           </TouchableOpacity>
         </View>
       </View>
@@ -366,6 +391,10 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#333',
   },
+  touchButtonDisabled: {
+    opacity: 0.5,
+    backgroundColor: '#0a0a0a',
+  },
   touchButtonIcon: {
     fontSize: 32,
     marginBottom: 8,
@@ -374,6 +403,11 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: '600',
     color: '#fff',
+  },
+  touchButtonDisabledText: {
+    fontSize: 12,
+    color: '#666',
+    marginTop: 4,
   },
   buzzContainer: {
     backgroundColor: '#111',
