@@ -557,11 +557,11 @@ export default function ProfileScreen() {
                 </View>
                 <View style={styles.albumRight}>
                   <Text style={styles.albumCount}>{photosCount}</Text>
-                  <Plus size={20} color="#666" strokeWidth={2} />
+                {Math.floor((totalConnectedTime + currentSessionDuration) / (60 * 60 * 24))}
                 </View>
               </View>
               <Text style={styles.albumSubtitle}>
-                Thêm ảnh vào album và timeline
+                Tổng thời gian kết nối: {formatDuration(totalConnectedTime + currentSessionDuration)}
               </Text>
             </TouchableOpacity>
           )}
