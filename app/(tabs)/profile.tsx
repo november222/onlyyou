@@ -578,7 +578,7 @@ export default function ProfileScreen() {
               </View>
               <Text style={styles.statValue}>
                 {connectionState.isConnected 
-                  ? formatDuration(realTimeTimer) 
+                  ? formatDuration(currentSessionDuration) 
                   : formatDuration(currentSessionDuration)
                 }
               </Text>
@@ -606,7 +606,6 @@ export default function ProfileScreen() {
               <Text style={styles.statValue}>
                 {formatDuration(totalDisconnectedTime)}
               </Text>
-                ? formatDuration(currentSessionDuration) 
             </View>
 
             <View style={styles.statCard}>
