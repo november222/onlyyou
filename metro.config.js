@@ -1,13 +1,13 @@
-// metro.config.js
-const path = require('path');
 const { getDefaultConfig } = require('expo/metro-config');
 
 const config = getDefaultConfig(__dirname);
 
-// Add project root to resolver paths
+// Ensure proper resolver configuration
 config.resolver.nodeModulesPaths = [
   path.resolve(__dirname, 'node_modules'),
-  path.resolve(__dirname)
 ];
+
+// Add source extensions
+config.resolver.sourceExts.push('cjs');
 
 module.exports = config;
