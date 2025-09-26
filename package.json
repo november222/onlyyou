@@ -50,7 +50,6 @@
     "react-native-svg": "15.11.2",
     "react-native-url-polyfill": "^2.0.0",
     "react-native-web": "^0.20.0",
-    "react-native-webrtc": "^124.0.6",
     "react-native-webview": "13.13.5",
     "socket.io-client": "^4.8.1"
   },
