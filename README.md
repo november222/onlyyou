@@ -9,16 +9,6 @@ A secure, peer-to-peer messaging and calling app designed exclusively for two pe
 - Room-based pairing system (max 2 users per room)
 - No groups, no strangers - just you and your partner
 
-### 💬 **Real-time P2P Communication**
-- End-to-end encrypted messaging using WebRTC data channels
-- Direct peer-to-peer communication (no server relay)
-- Message encryption using AES with ECDH key exchange
-
-### 📞 **Audio & Video Calling**
-- WebRTC-based voice and video calls
-- Direct P2P connection for calls
-- Call controls (mute, video toggle, speaker)
-
 ### 🛡️ **Privacy & Security**
 - End-to-end encryption for all communications
 - No data stored on servers
