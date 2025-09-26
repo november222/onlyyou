@@ -33,7 +33,7 @@ function AppContent() {
     <>
       <Stack screenOptions={{ headerShown: false, header: () => null }}>
         <Stack.Screen name="index" options={{ headerShown: false }} />
-        <Stack.Screen name="auth/login" options={{ headerShown: false }} />
+        <Stack.Screen name="auth" options={{ headerShown: false }} />
         <Stack.Screen name="onboarding" options={{ headerShown: false }} />
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen name="+not-found" />
