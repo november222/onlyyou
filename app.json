@@ -8,10 +8,8 @@
     "scheme": "myapp",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
-    "packagerOpts": {
-      "dev": true,
-      "strict": false,
-      "minify": false
+    "developer": {
+      "tool": "expo-cli"
     },
     "assetBundlePatterns": [
       "**/*"
