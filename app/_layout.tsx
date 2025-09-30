@@ -1,3 +1,8 @@
+// Only import crypto polyfill on native platforms - MUST be first
+if (require('react-native').Platform.OS !== 'web') {
+  require('react-native-get-random-values');
+}
+
 import { useEffect } from 'react';
 import { Stack } from 'expo-router/stack';
 import { StatusBar } from 'expo-status-bar';
@@ -13,10 +18,6 @@ import { PrivacyProvider, usePrivacy } from '@/providers/PrivacyProvider';
 import LockScreen from '@/components/LockScreen';
 import { isFeatureEnabled } from '@/config/features';
 
-// Only import crypto polyfill on native platforms
-if (Platform.OS !== 'web') {
-  require('react-native-get-random-values');
-}
 
 function AppContent() {
   const { isLocked, isLoading } = usePrivacy();
