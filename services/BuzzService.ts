@@ -19,6 +19,7 @@ export interface BuzzEvent {
   receiverId: string;
   text: string;
   timestamp: number;
+  note?: string;
 }
 
 export interface BuzzResult {
@@ -36,9 +37,9 @@ class BuzzService {
 
   // Default buzz templates for free users
   private readonly DEFAULT_TEMPLATES: BuzzTemplate[] = [
-    { id: 'default_1', text: 'Thinking of you', type: 'default', emoji: '💭' },
-    { id: 'default_2', text: 'Miss you', type: 'default', emoji: '🥺' },
-    { id: 'default_3', text: 'Love you', type: 'default', emoji: '❤️' },
+    { id: 'ping', text: 'Ping', type: 'default', emoji: '👋' },
+    { id: 'love', text: 'Love you', type: 'default', emoji: '❤️' },
+    { id: 'miss', text: 'Miss you', type: 'default', emoji: '🥺' },
     { id: 'default_4', text: 'Good morning', type: 'default', emoji: '🌅' },
     { id: 'default_5', text: 'Good night', type: 'default', emoji: '🌙' },
   ];
@@ -148,7 +149,7 @@ class BuzzService {
   }
 
   // Send buzz using template
-  public async sendBuzz(templateId: string, receiverId: string = 'partner_user'): Promise<BuzzResult> {
+  public async sendBuzz(templateId: string, note?: string, receiverId: string = 'partner_user'): Promise<BuzzResult> {
     try {
       // Check cooldown
       const cooldownCheck = await this.checkCooldown();
@@ -178,6 +179,7 @@ class BuzzService {
         receiverId,
         text: template.text,
         timestamp: Date.now(),
+        note,
       };
 
       // Save event to storage
@@ -192,6 +194,7 @@ class BuzzService {
           buzzId: templateId,
           text: template.text,
           emoji: template.emoji,
+          note,
         },
         userId: buzzEvent.senderId,
       });

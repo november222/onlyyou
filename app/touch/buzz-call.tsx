@@ -14,54 +14,65 @@ import {
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { ArrowLeft, Phone, Zap, Heart, MessageCircle, X } from 'lucide-react-native';
-import BuzzService, { BuzzType, BuzzEvent } from '@/services/BuzzService';
+import BuzzService, { BuzzEvent, BuzzTemplate } from '@/services/BuzzService';
 import { isFeatureEnabled } from '@/config/features';
 
 export default function BuzzCallScreen() {
   const insets = useSafeAreaInsets();
   const [recentBuzz, setRecentBuzz] = useState<BuzzEvent[]>([]);
-  const [buzzCooldowns, setBuzzCooldowns] = useState<Record<BuzzType, { canSend: boolean; remainingTime: number }>>({
-    ping: { canSend: true, remainingTime: 0 },
-    love: { canSend: true, remainingTime: 0 },
-    miss: { canSend: true, remainingTime: 0 },
+  const [buzzCooldown, setBuzzCooldown] = useState<{ canSend: boolean; remainingTime: number }>({
+    canSend: true,
+    remainingTime: 0,
   });
+  const [buzzTemplates, setBuzzTemplates] = useState<BuzzTemplate[]>([]);
   const [showNoteModal, setShowNoteModal] = useState(false);
-  const [selectedBuzzType, setSelectedBuzzType] = useState<BuzzType>('ping');
+  const [selectedBuzzTemplateId, setSelectedBuzzTemplateId] = useState<string>('ping');
   const [noteText, setNoteText] = useState('');
 
   useEffect(() => {
     loadRecentBuzz();
-    loadBuzzCooldowns();
+    loadBuzzCooldown();
+    loadBuzzTemplates();
     
     // Update cooldowns every second
-    const cooldownTimer = setInterval(loadBuzzCooldowns, 1000);
+    const cooldownTimer = setInterval(loadBuzzCooldown, 1000);
     return () => clearInterval(cooldownTimer);
   }, []);
 
   const loadRecentBuzz = async () => {
     try {
-      const recent = await BuzzService.listRecentBuzz(10);
+      const recent = await BuzzService.getBuzzHistory(10);
       setRecentBuzz(recent);
     } catch (error) {
       console.error('Failed to load recent buzz:', error);
     }
   };
 
-  const loadBuzzCooldowns = async () => {
+  const loadBuzzCooldown = async () => {
     if (isFeatureEnabled('buzz')) {
       const status = await BuzzService.getCooldownStatus();
-      setBuzzCooldowns(status);
+      setBuzzCooldown(status);
     }
   };
 
-  const sendBuzz = async (type: BuzzType, note?: string) => {
+  const loadBuzzTemplates = async () => {
+    try {
+      const templates = await BuzzService.getBuzzTemplates(false); // Assuming free user for now
+      setBuzzTemplates(templates);
+    } catch (error) {
+      console.error('Failed to load buzz templates:', error);
+    }
+  };
+
+  const sendBuzz = async (templateId: string, note?: string) => {
     if (!isFeatureEnabled('buzz')) return;
     
-    const result = await BuzzService.sendBuzz(type, note);
+    const result = await BuzzService.sendBuzz(templateId, note);
     
     if (result.success) {
-      Alert.alert('Buzz Sent! 💕', `Đã gửi ${type} đến người yêu của bạn`);
-      loadBuzzCooldowns();
+      const template = buzzTemplates.find(t => t.id === templateId);
+      Alert.alert('Buzz Sent! 💕', `Đã gửi ${template?.text || 'buzz'} đến người yêu của bạn`);
+      loadBuzzCooldown();
       loadRecentBuzz();
       setShowNoteModal(false);
       setNoteText('');
@@ -70,8 +81,8 @@ export default function BuzzCallScreen() {
     }
   };
 
-  const handleBuzzPress = (type: BuzzType) => {
-    setSelectedBuzzType(type);
+  const handleBuzzPress = (templateId: string) => {
+    setSelectedBuzzTemplateId(templateId);
     setShowNoteModal(true);
   };
 
@@ -86,9 +97,14 @@ export default function BuzzCallScreen() {
   const renderBuzzEvent = ({ item }: { item: BuzzEvent }) => (
     <View style={styles.buzzEventCard}>
       <View style={styles.buzzEventHeader}>
-        <Text style={styles.buzzEventType}>
-          {item.type === 'ping' ? '👋' : item.type === 'love' ? '❤️' : '🥺'} {item.type}
-        </Text>
+        {(() => {
+          const template = buzzTemplates.find(t => t.id === item.buzzId);
+          return (
+            <Text style={styles.buzzEventType}>
+              {template?.emoji || '💫'} {template?.text || item.text}
+            </Text>
+          );
+        })()}
         <Text style={styles.buzzEventTime}>
           {new Date(item.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
         </Text>
@@ -128,38 +144,38 @@ export default function BuzzCallScreen() {
             <Text style={styles.sectionTitle}>Quick Buzz</Text>
             <View style={styles.buzzButtons}>
               <TouchableOpacity
-                style={[styles.buzzButton, !buzzCooldowns.ping.canSend && styles.buzzButtonDisabled]}
+                style={[styles.buzzButton, !buzzCooldown.canSend && styles.buzzButtonDisabled]}
                 onPress={() => handleBuzzPress('ping')}
-                disabled={!buzzCooldowns.ping.canSend}
+                disabled={!buzzCooldown.canSend}
               >
                 <Text style={styles.buzzButtonIcon}>👋</Text>
                 <Text style={styles.buzzButtonText}>Ping</Text>
-                {!buzzCooldowns.ping.canSend && (
-                  <Text style={styles.buzzCooldown}>{Math.ceil(buzzCooldowns.ping.remainingTime / 1000)}s</Text>
+                {!buzzCooldown.canSend && (
+                  <Text style={styles.buzzCooldown}>{Math.ceil(buzzCooldown.remainingTime / 1000)}s</Text>
                 )}
               </TouchableOpacity>
               
               <TouchableOpacity
-                style={[styles.buzzButton, !buzzCooldowns.love.canSend && styles.buzzButtonDisabled]}
+                style={[styles.buzzButton, !buzzCooldown.canSend && styles.buzzButtonDisabled]}
                 onPress={() => handleBuzzPress('love')}
-                disabled={!buzzCooldowns.love.canSend}
+                disabled={!buzzCooldown.canSend}
               >
                 <Text style={styles.buzzButtonIcon}>❤️</Text>
                 <Text style={styles.buzzButtonText}>Love</Text>
-                {!buzzCooldowns.love.canSend && (
-                  <Text style={styles.buzzCooldown}>{Math.ceil(buzzCooldowns.love.remainingTime / 1000)}s</Text>
+                {!buzzCooldown.canSend && (
+                  <Text style={styles.buzzCooldown}>{Math.ceil(buzzCooldown.remainingTime / 1000)}s</Text>
                 )}
               </TouchableOpacity>
               
               <TouchableOpacity
-                style={[styles.buzzButton, !buzzCooldowns.miss.canSend && styles.buzzButtonDisabled]}
+                style={[styles.buzzButton, !buzzCooldown.canSend && styles.buzzButtonDisabled]}
                 onPress={() => handleBuzzPress('miss')}
-                disabled={!buzzCooldowns.miss.canSend}
+                disabled={!buzzCooldown.canSend}
               >
                 <Text style={styles.buzzButtonIcon}>🥺</Text>
                 <Text style={styles.buzzButtonText}>Miss</Text>
-                {!buzzCooldowns.miss.canSend && (
-                  <Text style={styles.buzzCooldown}>{Math.ceil(buzzCooldowns.miss.remainingTime / 1000)}s</Text>
+                {!buzzCooldown.canSend && (
+                  <Text style={styles.buzzCooldown}>{Math.ceil(buzzCooldown.remainingTime / 1000)}s</Text>
                 )}
               </TouchableOpacity>
             </View>
@@ -191,7 +207,10 @@ export default function BuzzCallScreen() {
           <View style={styles.noteModal}>
             <View style={styles.noteHeader}>
               <Text style={styles.noteTitle}>
-                Add Note to {selectedBuzzType === 'ping' ? '👋' : selectedBuzzType === 'love' ? '❤️' : '🥺'} {selectedBuzzType}
+                Add Note to {(() => {
+                  const template = buzzTemplates.find(t => t.id === selectedBuzzTemplateId);
+                  return `${template?.emoji || '💫'} ${template?.text || selectedBuzzTemplateId}`;
+                })()}
               </Text>
               <TouchableOpacity
                 style={styles.closeButton}
@@ -215,7 +234,7 @@ export default function BuzzCallScreen() {
               <View style={styles.noteActions}>
                 <TouchableOpacity
                   style={styles.sendBuzzButton}
-                  onPress={() => sendBuzz(selectedBuzzType, noteText.trim() || undefined)}
+                  onPress={() => sendBuzz(selectedBuzzTemplateId, noteText.trim() || undefined)}
                 >
                   <Zap size={20} color="#fff" strokeWidth={2} />
                   <Text style={styles.sendBuzzText}>Send Buzz</Text>
