@@ -72,10 +72,7 @@ class BuzzService {
       return allTemplates.filter(template => template.showInQuickBuzz);
     } catch (error) {
       console.error('Failed to get quick buzz templates:', error);
-      return templates;
-    } catch (error) {
-      console.error('Failed to get buzz templates:', error);
-      return this.DEFAULT_TEMPLATES;
+      return this.DEFAULT_TEMPLATES.filter(template => template.showInQuickBuzz);
     }
   }
 
