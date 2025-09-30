@@ -11,6 +11,7 @@ import {
   Platform,
   Modal,
   Switch,
+  ScrollView,
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
