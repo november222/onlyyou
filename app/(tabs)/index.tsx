@@ -71,7 +71,7 @@ export default function TouchScreen() {
 
   const loadBuzzTemplates = async () => {
     if (isFeatureEnabled('buzz')) {
-      const templates = await BuzzService.getBuzzTemplates(isPremium);
+      const templates = await BuzzService.getQuickBuzzTemplates(isPremium);
       setBuzzTemplates(templates);
     }
   };

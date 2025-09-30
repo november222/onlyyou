@@ -10,6 +10,7 @@ export interface BuzzTemplate {
   type: 'default' | 'custom';
   ownerId?: string;
   emoji?: string;
+  showInQuickBuzz?: boolean;
 }
 
 export interface BuzzEvent {
@@ -37,11 +38,11 @@ class BuzzService {
 
   // Default buzz templates for free users
   private readonly DEFAULT_TEMPLATES: BuzzTemplate[] = [
-    { id: 'ping', text: 'Ping', type: 'default', emoji: '👋' },
-    { id: 'love', text: 'Love you', type: 'default', emoji: '❤️' },
-    { id: 'miss', text: 'Miss you', type: 'default', emoji: '🥺' },
-    { id: 'default_4', text: 'Good morning', type: 'default', emoji: '🌅' },
-    { id: 'default_5', text: 'Good night', type: 'default', emoji: '🌙' },
+    { id: 'ping', text: 'Ping', type: 'default', emoji: '👋', showInQuickBuzz: true },
+    { id: 'love', text: 'Love you', type: 'default', emoji: '❤️', showInQuickBuzz: true },
+    { id: 'miss', text: 'Miss you', type: 'default', emoji: '🥺', showInQuickBuzz: true },
+    { id: 'default_4', text: 'Good morning', type: 'default', emoji: '🌅', showInQuickBuzz: false },
+    { id: 'default_5', text: 'Good night', type: 'default', emoji: '🌙', showInQuickBuzz: false },
   ];
 
   // Get all buzz templates (default + custom)
@@ -56,6 +57,21 @@ class BuzzService {
         templates = [...templates, ...customTemplates];
       }
 
+      // Filter only templates that should show in quick buzz for main screen
+      return templates;
+    } catch (error) {
+      console.error('Failed to get buzz templates:', error);
+      return this.DEFAULT_TEMPLATES;
+    }
+  }
+
+  // Get templates for quick buzz display (only enabled ones)
+  public async getQuickBuzzTemplates(isPremium: boolean = false): Promise<BuzzTemplate[]> {
+    try {
+      const allTemplates = await this.getBuzzTemplates(isPremium);
+      return allTemplates.filter(template => template.showInQuickBuzz);
+    } catch (error) {
+      console.error('Failed to get quick buzz templates:', error);
       return templates;
     } catch (error) {
       console.error('Failed to get buzz templates:', error);
@@ -106,6 +122,7 @@ class BuzzService {
         type: 'custom',
         ownerId: 'current_user', // Replace with actual user ID
         emoji: emoji || '💫',
+        showInQuickBuzz: false, // Default to not showing in quick buzz
       };
 
       // Save to local storage
@@ -124,6 +141,140 @@ class BuzzService {
       return {
         success: false,
         error: 'Failed to create custom buzz. Please try again.',
+      };
+    }
+  }
+
+  // Update custom buzz template
+  public async updateCustomBuzz(templateId: string, text: string, emoji?: string): Promise<BuzzResult> {
+    try {
+      if (!text.trim()) {
+        return {
+          success: false,
+          error: 'Buzz text cannot be empty',
+        };
+      }
+
+      if (text.length > 20) {
+        return {
+          success: false,
+          error: 'Buzz text must be 20 characters or less',
+        };
+      }
+
+      const templatesData = await AsyncStorage.getItem(this.TEMPLATES_KEY);
+      if (!templatesData) {
+        return {
+          success: false,
+          error: 'Template not found',
+        };
+      }
+
+      const templates = JSON.parse(templatesData);
+      const templateIndex = templates.findIndex((t: BuzzTemplate) => t.id === templateId);
+      
+      if (templateIndex === -1) {
+        return {
+          success: false,
+          error: 'Template not found',
+        };
+      }
+
+      templates[templateIndex].text = text.trim();
+      if (emoji) {
+        templates[templateIndex].emoji = emoji;
+      }
+
+      await AsyncStorage.setItem(this.TEMPLATES_KEY, JSON.stringify(templates));
+
+      console.log('Custom buzz template updated:', templateId);
+
+      return {
+        success: true,
+      };
+    } catch (error) {
+      console.error('Failed to update custom buzz:', error);
+      return {
+        success: false,
+        error: 'Failed to update custom buzz. Please try again.',
+      };
+    }
+  }
+
+  // Delete custom buzz template
+  public async deleteCustomBuzz(templateId: string): Promise<BuzzResult> {
+    try {
+      const templatesData = await AsyncStorage.getItem(this.TEMPLATES_KEY);
+      if (!templatesData) {
+        return {
+          success: false,
+          error: 'Template not found',
+        };
+      }
+
+      const templates = JSON.parse(templatesData);
+      const filteredTemplates = templates.filter((t: BuzzTemplate) => t.id !== templateId);
+      
+      await AsyncStorage.setItem(this.TEMPLATES_KEY, JSON.stringify(filteredTemplates));
+
+      console.log('Custom buzz template deleted:', templateId);
+
+      return {
+        success: true,
+      };
+    } catch (error) {
+      console.error('Failed to delete custom buzz:', error);
+      return {
+        success: false,
+        error: 'Failed to delete custom buzz. Please try again.',
+      };
+    }
+  }
+
+  // Toggle quick buzz visibility
+  public async toggleQuickBuzzVisibility(templateId: string): Promise<BuzzResult> {
+    try {
+      // Handle default templates
+      if (templateId.startsWith('default_') || ['ping', 'love', 'miss'].includes(templateId)) {
+        // For default templates, we need to update the local state
+        // In a real app, this would be saved to user preferences
+        console.log('Toggle quick buzz for default template:', templateId);
+        return { success: true };
+      }
+
+      // Handle custom templates
+      const templatesData = await AsyncStorage.getItem(this.TEMPLATES_KEY);
+      if (!templatesData) {
+        return {
+          success: false,
+          error: 'Template not found',
+        };
+      }
+
+      const templates = JSON.parse(templatesData);
+      const templateIndex = templates.findIndex((t: BuzzTemplate) => t.id === templateId);
+      
+      if (templateIndex === -1) {
+        return {
+          success: false,
+          error: 'Template not found',
+        };
+      }
+
+      templates[templateIndex].showInQuickBuzz = !templates[templateIndex].showInQuickBuzz;
+      
+      await AsyncStorage.setItem(this.TEMPLATES_KEY, JSON.stringify(templates));
+
+      console.log('Quick buzz visibility toggled:', templateId, templates[templateIndex].showInQuickBuzz);
+
+      return {
+        success: true,
+      };
+    } catch (error) {
+      console.error('Failed to toggle quick buzz visibility:', error);
+      return {
+        success: false,
+        error: 'Failed to update visibility. Please try again.',
       };
     }
   }
@@ -296,25 +447,6 @@ class BuzzService {
   // Get current cooldown status
   public async getCooldownStatus(): Promise<{ canSend: boolean; remainingTime: number }> {
     return await this.checkCooldown();
-  }
-
-  // System call (no VoIP)
-  public async makeSystemCall(phoneNumber: string = '+1234567890'): Promise<void> {
-    try {
-      const url = Platform.OS === 'ios' 
-        ? `telprompt:${phoneNumber}` 
-        : `tel:${phoneNumber}`;
-      
-      const canOpen = await Linking.canOpenURL(url);
-      if (canOpen) {
-        await Linking.openURL(url);
-      } else {
-        throw new Error('Cannot open phone app');
-      }
-    } catch (error) {
-      console.error('Failed to make system call:', error);
-      throw error;
-    }
   }
 
   // TODO: API methods for server communication

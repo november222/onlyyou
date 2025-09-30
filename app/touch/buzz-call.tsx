@@ -10,93 +10,39 @@ import {
   KeyboardAvoidingView,
   Platform,
   Modal,
+  Switch,
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
-import { ArrowLeft, Phone, Zap, Heart, MessageCircle, X } from 'lucide-react-native';
-import BuzzService, { BuzzEvent, BuzzTemplate } from '@/services/BuzzService';
+import { ArrowLeft, Zap, X, Edit, Trash2, Plus, Eye, EyeOff } from 'lucide-react-native';
+import BuzzService, { BuzzTemplate } from '@/services/BuzzService';
 import { isFeatureEnabled } from '@/config/features';
+import { usePremium } from '@/providers/PremiumProvider';
 
 export default function BuzzCallScreen() {
   const insets = useSafeAreaInsets();
-  const [recentBuzz, setRecentBuzz] = useState<BuzzEvent[]>([]);
-  const [buzzCooldown, setBuzzCooldown] = useState<{ canSend: boolean; remainingTime: number }>({
-    canSend: true,
-    remainingTime: 0,
-  });
-  const [buzzTemplates, setBuzzTemplates] = useState<BuzzTemplate[]>([]);
-  const [showNoteModal, setShowNoteModal] = useState(false);
-  const [showCustomBuzzModal, setShowCustomBuzzModal] = useState(false);
-  const [selectedBuzzTemplateId, setSelectedBuzzTemplateId] = useState<string>('ping');
-  const [noteText, setNoteText] = useState('');
+  const [customBuzzTemplates, setCustomBuzzTemplates] = useState<BuzzTemplate[]>([]);
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [editingTemplate, setEditingTemplate] = useState<BuzzTemplate | null>(null);
   const [customBuzzText, setCustomBuzzText] = useState('');
   const [customBuzzEmoji, setCustomBuzzEmoji] = useState('💫');
-  const [isPremium, setIsPremium] = useState(false);
+  const { isPremium } = usePremium();
 
   useEffect(() => {
-    loadRecentBuzz();
-    loadBuzzCooldown();
-    loadBuzzTemplates();
-    checkPremiumStatus();
-    
-    // Update cooldowns every second
-    const cooldownTimer = setInterval(loadBuzzCooldown, 1000);
-    return () => clearInterval(cooldownTimer);
+    loadCustomBuzzTemplates();
   }, []);
 
-  const loadRecentBuzz = async () => {
+  const loadCustomBuzzTemplates = async () => {
     try {
-      const recent = await BuzzService.getBuzzHistory(10);
-      setRecentBuzz(recent);
+      const allTemplates = await BuzzService.getBuzzTemplates(isPremium);
+      const customOnly = allTemplates.filter(template => template.type === 'custom');
+      setCustomBuzzTemplates(customOnly);
     } catch (error) {
-      console.error('Failed to load recent buzz:', error);
+      console.error('Failed to load custom buzz templates:', error);
     }
   };
 
-  const loadBuzzCooldown = async () => {
-    if (isFeatureEnabled('buzz')) {
-      const status = await BuzzService.getCooldownStatus();
-      setBuzzCooldown(status);
-    }
-  };
-
-  const checkPremiumStatus = async () => {
-    // Mock premium check - replace with actual premium service
-    setIsPremium(false); // Set to true to test premium features
-  };
-
-  const loadBuzzTemplates = async () => {
-    try {
-      const templates = await BuzzService.getBuzzTemplates(isPremium);
-      setBuzzTemplates(templates);
-    } catch (error) {
-      console.error('Failed to load buzz templates:', error);
-    }
-  };
-
-  const sendBuzz = async (templateId: string, note?: string) => {
-    if (!isFeatureEnabled('buzz')) return;
-    
-    const result = await BuzzService.sendBuzz(templateId, note);
-    
-    if (result.success) {
-      const template = buzzTemplates.find(t => t.id === templateId);
-      Alert.alert('Buzz Sent! 💕', `Đã gửi ${template?.text || 'buzz'} đến người yêu của bạn`);
-      loadBuzzCooldown();
-      loadRecentBuzz();
-      setShowNoteModal(false);
-      setNoteText('');
-    } else {
-      Alert.alert('Không thể gửi', result.error || 'Vui lòng thử lại');
-    }
-  };
-
-  const handleBuzzPress = (templateId: string) => {
-    setSelectedBuzzTemplateId(templateId);
-    setShowNoteModal(true);
-  };
-
-  const handleCreateCustomBuzz = () => {
+  const openCreateModal = () => {
     if (!isPremium) {
       Alert.alert(
         'Tính Năng Premium 👑',
@@ -109,9 +55,21 @@ export default function BuzzCallScreen() {
       return;
     }
     
+    resetForm();
+    setShowCreateModal(true);
+  };
+
+  const openEditModal = (template: BuzzTemplate) => {
+    setEditingTemplate(template);
+    setCustomBuzzText(template.text);
+    setCustomBuzzEmoji(template.emoji || '💫');
+    setShowCreateModal(true);
+  };
+
+  const resetForm = () => {
+    setEditingTemplate(null);
     setCustomBuzzText('');
     setCustomBuzzEmoji('💫');
-    setShowCustomBuzzModal(true);
   };
 
   const handleSaveCustomBuzz = async () => {
@@ -126,38 +84,122 @@ export default function BuzzCallScreen() {
     }
 
     try {
-      const result = await BuzzService.createCustomBuzz(customBuzzText, customBuzzEmoji, isPremium);
+      let result;
+      
+      if (editingTemplate) {
+        // Update existing template
+        result = await BuzzService.updateCustomBuzz(editingTemplate.id, customBuzzText, customBuzzEmoji);
+      } else {
+        // Create new template
+        result = await BuzzService.createCustomBuzz(customBuzzText, customBuzzEmoji, isPremium);
+      }
       
       if (result.success) {
-        Alert.alert('Thành công! ✨', 'Buzz tùy chỉnh đã được tạo');
-        setShowCustomBuzzModal(false);
-        loadBuzzTemplates(); // Refresh templates
+        Alert.alert(
+          'Thành công! ✨', 
+          editingTemplate ? 'Buzz đã được cập nhật' : 'Buzz tùy chỉnh đã được tạo'
+        );
+        setShowCreateModal(false);
+        loadCustomBuzzTemplates();
       } else {
-        Alert.alert('Lỗi', result.error || 'Không thể tạo buzz tùy chỉnh');
+        Alert.alert('Lỗi', result.error || 'Không thể lưu buzz tùy chỉnh');
       }
     } catch (error) {
       Alert.alert('Lỗi', 'Có lỗi xảy ra. Vui lòng thử lại.');
     }
   };
 
-  const renderBuzzEvent = ({ item }: { item: BuzzEvent }) => (
-    <View style={styles.buzzEventCard}>
-      <View style={styles.buzzEventHeader}>
-        {(() => {
-          const template = buzzTemplates.find(t => t.id === item.buzzId);
-          return (
-            <Text style={styles.buzzEventType}>
-              {template?.emoji || '💫'} {template?.text || item.text}
+  const handleDeleteTemplate = (template: BuzzTemplate) => {
+    Alert.alert(
+      'Xóa Buzz?',
+      `Bạn có chắc muốn xóa buzz "${template.text}"?`,
+      [
+        { text: 'Hủy', style: 'cancel' },
+        {
+          text: 'Xóa',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              const result = await BuzzService.deleteCustomBuzz(template.id);
+              if (result.success) {
+                loadCustomBuzzTemplates();
+              } else {
+                Alert.alert('Lỗi', result.error || 'Không thể xóa buzz');
+              }
+            } catch (error) {
+              Alert.alert('Lỗi', 'Có lỗi xảy ra. Vui lòng thử lại.');
+            }
+          },
+        },
+      ]
+    );
+  };
+
+  const handleToggleQuickBuzz = async (template: BuzzTemplate) => {
+    try {
+      const result = await BuzzService.toggleQuickBuzzVisibility(template.id);
+      if (result.success) {
+        loadCustomBuzzTemplates();
+      } else {
+        Alert.alert('Lỗi', result.error || 'Không thể cập nhật hiển thị');
+      }
+    } catch (error) {
+      Alert.alert('Lỗi', 'Có lỗi xảy ra. Vui lòng thử lại.');
+    }
+  };
+
+  const renderCustomBuzzTemplate = ({ item }: { item: BuzzTemplate }) => (
+    <View style={styles.customBuzzCard}>
+      <View style={styles.customBuzzHeader}>
+        <View style={styles.customBuzzLeft}>
+          <Text style={styles.customBuzzEmoji}>{item.emoji || '💫'}</Text>
+          <View style={styles.customBuzzInfo}>
+            <Text style={styles.customBuzzText}>{item.text}</Text>
+            <Text style={styles.customBuzzMeta}>
+              Tạo {new Date(parseInt(item.id.split('_')[1]) || Date.now()).toLocaleDateString('vi-VN')}
             </Text>
-          );
-        })()}
-        <Text style={styles.buzzEventTime}>
-          {new Date(item.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-        </Text>
+          </View>
+        </View>
+        
+        <View style={styles.customBuzzActions}>
+          <TouchableOpacity
+            style={styles.actionButton}
+            onPress={() => handleToggleQuickBuzz(item)}
+          >
+            {item.showInQuickBuzz ? (
+              <Eye size={20} color="#4ade80" strokeWidth={2} />
+            ) : (
+              <EyeOff size={20} color="#666" strokeWidth={2} />
+            )}
+          </TouchableOpacity>
+          
+          <TouchableOpacity
+            style={styles.actionButton}
+            onPress={() => openEditModal(item)}
+          >
+            <Edit size={20} color="#888" strokeWidth={2} />
+          </TouchableOpacity>
+          
+          <TouchableOpacity
+            style={styles.actionButton}
+            onPress={() => handleDeleteTemplate(item)}
+          >
+            <Trash2 size={20} color="#ef4444" strokeWidth={2} />
+          </TouchableOpacity>
+        </View>
       </View>
-      {item.note && (
-        <Text style={styles.buzzEventNote}>"{item.note}"</Text>
-      )}
+      
+      <View style={styles.quickBuzzToggle}>
+        <Text style={styles.quickBuzzToggleLabel}>
+          Hiển thị trong Quick Buzz
+        </Text>
+        <Switch
+          value={item.showInQuickBuzz || false}
+          onValueChange={() => handleToggleQuickBuzz(item)}
+          trackColor={{ false: '#333', true: '#ff6b9d' }}
+          thumbColor="#fff"
+        />
+      </View>
     </View>
   );
 
@@ -173,143 +215,69 @@ export default function BuzzCallScreen() {
           <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
             <ArrowLeft size={24} color="#fff" strokeWidth={2} />
           </TouchableOpacity>
-          <Text style={styles.title}>Buzz Call</Text>
-          <View style={styles.headerRight} />
-        </View>
-
-        {/* Main Content */}
-        <View style={styles.content}>
-          {/* Create Custom Buzz Button */}
-          <TouchableOpacity style={styles.customBuzzButton} onPress={handleCreateCustomBuzz}>
-            <Zap size={24} color="#fff" strokeWidth={2} />
-            <Text style={styles.customBuzzText}>Tạo Buzz Tùy Chỉnh</Text>
-            {!isPremium && <Text style={styles.premiumBadge}>👑</Text>}
+          <Text style={styles.title}>Quản Lý Buzz</Text>
+          <TouchableOpacity style={styles.addButton} onPress={openCreateModal}>
+            <Plus size={24} color="#ff6b9d" strokeWidth={2} />
           </TouchableOpacity>
-
-          {/* Buzz Buttons */}
-          <View style={styles.buzzSection}>
-            <Text style={styles.sectionTitle}>Quick Buzz</Text>
-            <View style={styles.buzzButtons}>
-              <TouchableOpacity
-                style={[styles.buzzButton, !buzzCooldown.canSend && styles.buzzButtonDisabled]}
-                onPress={() => handleBuzzPress('ping')}
-                disabled={!buzzCooldown.canSend}
-              >
-                <Text style={styles.buzzButtonIcon}>👋</Text>
-                <Text style={styles.buzzButtonText}>Ping</Text>
-                {!buzzCooldown.canSend && (
-                  <Text style={styles.buzzCooldown}>{Math.ceil(buzzCooldown.remainingTime / 1000)}s</Text>
-                )}
-              </TouchableOpacity>
-              
-              <TouchableOpacity
-                style={[styles.buzzButton, !buzzCooldown.canSend && styles.buzzButtonDisabled]}
-                onPress={() => handleBuzzPress('love')}
-                disabled={!buzzCooldown.canSend}
-              >
-                <Text style={styles.buzzButtonIcon}>❤️</Text>
-                <Text style={styles.buzzButtonText}>Love</Text>
-                {!buzzCooldown.canSend && (
-                  <Text style={styles.buzzCooldown}>{Math.ceil(buzzCooldown.remainingTime / 1000)}s</Text>
-                )}
-              </TouchableOpacity>
-              
-              <TouchableOpacity
-                style={[styles.buzzButton, !buzzCooldown.canSend && styles.buzzButtonDisabled]}
-                onPress={() => handleBuzzPress('miss')}
-                disabled={!buzzCooldown.canSend}
-              >
-                <Text style={styles.buzzButtonIcon}>🥺</Text>
-                <Text style={styles.buzzButtonText}>Miss</Text>
-                {!buzzCooldown.canSend && (
-                  <Text style={styles.buzzCooldown}>{Math.ceil(buzzCooldown.remainingTime / 1000)}s</Text>
-                )}
-              </TouchableOpacity>
-            </View>
-          </View>
-
-          {/* Recent Buzz */}
-          <View style={styles.recentSection}>
-            <Text style={styles.sectionTitle}>Recent Buzz</Text>
-            <FlatList
-              data={recentBuzz}
-              renderItem={renderBuzzEvent}
-              keyExtractor={item => item.id}
-              style={styles.recentList}
-              showsVerticalScrollIndicator={false}
-              ListEmptyComponent={
-                <Text style={styles.emptyText}>No recent buzz calls</Text>
-              }
-            />
-          </View>
         </View>
 
-        {/* Note Modal */}
+        {/* Custom Buzz List */}
+        <View style={styles.content}>
+          <Text style={styles.sectionTitle}>Buzz Tùy Chỉnh Của Bạn</Text>
+          <Text style={styles.sectionSubtitle}>
+            Tạo và quản lý các buzz cá nhân. Chọn buzz nào hiển thị trong Quick Buzz.
+          </Text>
+          
+          <FlatList
+            data={customBuzzTemplates}
+            renderItem={renderCustomBuzzTemplate}
+            keyExtractor={item => item.id}
+            style={styles.customBuzzList}
+            showsVerticalScrollIndicator={false}
+            ListEmptyComponent={
+              <View style={styles.emptyContainer}>
+                <Zap size={64} color="#333" strokeWidth={1} />
+                <Text style={styles.emptyText}>Chưa có buzz tùy chỉnh</Text>
+                <Text style={styles.emptySubtext}>
+                  {isPremium 
+                    ? 'Tap + để tạo buzz đầu tiên'
+                    : 'Nâng cấp Premium để tạo buzz tùy chỉnh'
+                  }
+                </Text>
+                {!isPremium && (
+                  <TouchableOpacity
+                    style={styles.upgradeButton}
+                    onPress={() => router.push('/premium')}
+                  >
+                    <Text style={styles.upgradeButtonText}>Nâng Cấp Premium 👑</Text>
+                  </TouchableOpacity>
+                )}
+              </View>
+            }
+          />
+        </View>
+
+        {/* Create/Edit Custom Buzz Modal */}
         <Modal
-          visible={showNoteModal}
+          visible={showCreateModal}
           animationType="slide"
           presentationStyle="pageSheet"
-          onRequestClose={() => setShowNoteModal(false)}
+          onRequestClose={() => setShowCreateModal(false)}
         >
-          <View style={styles.noteModal}>
-            <View style={styles.noteHeader}>
-              <Text style={styles.noteTitle}>
-                Add Note to {(() => {
-                  const template = buzzTemplates.find(t => t.id === selectedBuzzTemplateId);
-                  return `${template?.emoji || '💫'} ${template?.text || selectedBuzzTemplateId}`;
-                })()}
+          <View style={styles.customBuzzModal}>
+            <View style={styles.customBuzzModalHeader}>
+              <Text style={styles.customBuzzModalTitle}>
+                {editingTemplate ? 'Chỉnh Sửa Buzz' : 'Tạo Buzz Tùy Chỉnh'}
               </Text>
               <TouchableOpacity
                 style={styles.closeButton}
-                onPress={() => setShowNoteModal(false)}
+                onPress={() => setShowCreateModal(false)}
               >
                 <X size={24} color="#888" strokeWidth={2} />
               </TouchableOpacity>
             </View>
             
-            <View style={styles.noteContent}>
-              <TextInput
-                style={styles.noteInput}
-                value={noteText}
-                onChangeText={setNoteText}
-                placeholder="Add a personal note (optional)"
-                placeholderTextColor="#666"
-                multiline
-                maxLength={200}
-              />
-              
-              <View style={styles.noteActions}>
-                <TouchableOpacity
-                  style={styles.sendBuzzButton}
-                  onPress={() => sendBuzz(selectedBuzzTemplateId, noteText.trim() || undefined)}
-                >
-                  <Zap size={20} color="#fff" strokeWidth={2} />
-                  <Text style={styles.sendBuzzText}>Send Buzz</Text>
-                </TouchableOpacity>
-              </View>
-            </View>
-          </View>
-        </Modal>
-
-        {/* Custom Buzz Modal */}
-        <Modal
-          visible={showCustomBuzzModal}
-          animationType="slide"
-          presentationStyle="pageSheet"
-          onRequestClose={() => setShowCustomBuzzModal(false)}
-        >
-          <View style={styles.customBuzzModal}>
-            <View style={styles.customBuzzHeader}>
-              <Text style={styles.customBuzzTitle}>Tạo Buzz Tùy Chỉnh</Text>
-              <TouchableOpacity
-                style={styles.closeButton}
-                onPress={() => setShowCustomBuzzModal(false)}
-              >
-                <X size={24} color="#888" strokeWidth={2} />
-              </TouchableOpacity>
-            </View>
-            
-            <View style={styles.customBuzzContent}>
+            <View style={styles.customBuzzModalContent}>
               <View style={styles.emojiSelector}>
                 <Text style={styles.formLabel}>Chọn Emoji:</Text>
                 <View style={styles.emojiOptions}>
@@ -362,7 +330,9 @@ export default function BuzzCallScreen() {
                 disabled={!customBuzzText.trim()}
               >
                 <Zap size={20} color="#fff" strokeWidth={2} />
-                <Text style={styles.saveCustomBuzzText}>Lưu Buzz Tùy Chỉnh</Text>
+                <Text style={styles.saveCustomBuzzText}>
+                  {editingTemplate ? 'Cập Nhật Buzz' : 'Lưu Buzz Tùy Chỉnh'}
+                </Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -393,83 +363,30 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: '#fff',
   },
-  headerRight: {
-    width: 40,
+  addButton: {
+    padding: 8,
+    marginRight: -8,
   },
   content: {
     flex: 1,
     padding: 20,
   },
-  customBuzzButton: {
-    backgroundColor: '#f59e0b',
-    borderRadius: 16,
-    padding: 20,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 12,
-    marginBottom: 32,
-    position: 'relative',
-  },
-  customBuzzText: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#fff',
-  },
-  premiumBadge: {
-    position: 'absolute',
-    top: 8,
-    right: 8,
-    fontSize: 16,
-  },
-  buzzSection: {
-    marginBottom: 32,
-  },
   sectionTitle: {
     fontSize: 18,
     fontWeight: '600',
     color: '#fff',
-    marginBottom: 16,
-  },
-  buzzButtons: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    gap: 12,
-  },
-  buzzButton: {
-    flex: 1,
-    backgroundColor: '#111',
-    borderRadius: 16,
-    padding: 20,
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: '#333',
-  },
-  buzzButtonDisabled: {
-    opacity: 0.5,
-    backgroundColor: '#333',
-  },
-  buzzButtonIcon: {
-    fontSize: 32,
     marginBottom: 8,
   },
-  buzzButtonText: {
+  sectionSubtitle: {
     fontSize: 14,
-    fontWeight: '600',
-    color: '#fff',
-    marginBottom: 4,
-  },
-  buzzCooldown: {
-    fontSize: 12,
     color: '#888',
+    marginBottom: 20,
+    lineHeight: 20,
   },
-  recentSection: {
+  customBuzzList: {
     flex: 1,
   },
-  recentList: {
-    flex: 1,
-  },
-  buzzEventCard: {
+  customBuzzCard: {
     backgroundColor: '#111',
     borderRadius: 12,
     padding: 16,
@@ -477,84 +394,81 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#333',
   },
-  buzzEventHeader: {
+  customBuzzHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 8,
+    marginBottom: 12,
   },
-  buzzEventType: {
+  customBuzzLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+  },
+  customBuzzEmoji: {
+    fontSize: 24,
+    marginRight: 12,
+  },
+  customBuzzInfo: {
+    flex: 1,
+  },
+  customBuzzText: {
     fontSize: 16,
     fontWeight: '600',
     color: '#fff',
+    marginBottom: 2,
   },
-  buzzEventTime: {
+  customBuzzMeta: {
     fontSize: 12,
     color: '#888',
   },
-  buzzEventNote: {
-    fontSize: 14,
-    color: '#ccc',
-    fontStyle: 'italic',
+  customBuzzActions: {
+    flexDirection: 'row',
+    gap: 8,
   },
-  emptyText: {
-    fontSize: 14,
-    color: '#666',
-    textAlign: 'center',
-    marginTop: 20,
+  actionButton: {
+    padding: 8,
   },
-  noteModal: {
-    flex: 1,
-    backgroundColor: '#000',
-  },
-  noteHeader: {
+  quickBuzzToggle: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    padding: 20,
-    borderBottomWidth: 1,
-    borderBottomColor: '#333',
+    paddingTop: 12,
+    borderTopWidth: 1,
+    borderTopColor: '#333',
   },
-  noteTitle: {
+  quickBuzzToggleLabel: {
+    fontSize: 14,
+    color: '#fff',
+    fontWeight: '500',
+  },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingTop: 100,
+  },
+  emptyText: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#fff',
-    flex: 1,
+    color: '#666',
+    marginTop: 16,
+    marginBottom: 8,
   },
-  closeButton: {
-    padding: 8,
+  emptySubtext: {
+    fontSize: 14,
+    color: '#888',
+    textAlign: 'center',
+    marginBottom: 20,
   },
-  noteContent: {
-    flex: 1,
-    padding: 20,
+  upgradeButton: {
+    backgroundColor: '#f59e0b',
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    borderRadius: 20,
   },
-  noteInput: {
-    backgroundColor: '#111',
-    borderRadius: 12,
-    padding: 16,
-    color: '#fff',
-    fontSize: 16,
-    minHeight: 120,
-    borderWidth: 1,
-    borderColor: '#333',
-    marginBottom: 24,
-    textAlignVertical: 'top',
-  },
-  noteActions: {
-    alignItems: 'center',
-  },
-  sendBuzzButton: {
-    backgroundColor: '#ff6b9d',
-    borderRadius: 12,
-    padding: 16,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-    minWidth: 200,
-  },
-  sendBuzzText: {
-    fontSize: 16,
+  upgradeButtonText: {
+    fontSize: 14,
     fontWeight: '600',
     color: '#fff',
   },
@@ -562,7 +476,7 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#000',
   },
-  customBuzzHeader: {
+  customBuzzModalHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
@@ -570,12 +484,15 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: '#333',
   },
-  customBuzzTitle: {
+  customBuzzModalTitle: {
     fontSize: 20,
     fontWeight: '700',
     color: '#fff',
   },
-  customBuzzContent: {
+  closeButton: {
+    padding: 8,
+  },
+  customBuzzModalContent: {
     flex: 1,
     padding: 20,
   },
