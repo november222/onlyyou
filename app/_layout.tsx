@@ -48,7 +48,11 @@ export default function RootLayout() {
   useFrameworkReady();
 
   useEffect(() => {
-    const initializeServices = async () => {
+    initializeServices().catch((error) => {
+      console.error('Service initialization failed:', error);
+    });
+    
+    async function initializeServices() {
       try {
         // Initialize services in sequence
         await AuthService.init();
@@ -68,9 +72,7 @@ export default function RootLayout() {
       } catch (error) {
         console.error('Failed to initialize services:', error);
       }
-    };
-    
-    initializeServices();
+    }
   }, []);
 
   return (
