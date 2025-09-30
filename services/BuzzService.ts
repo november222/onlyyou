@@ -38,11 +38,11 @@ class BuzzService {
 
   // Default buzz templates for free users
   private readonly DEFAULT_TEMPLATES: BuzzTemplate[] = [
-    { id: 'ping', text: 'Ping', type: 'default', emoji: '👋', showInQuickBuzz: true },
-    { id: 'love', text: 'Love you', type: 'default', emoji: '❤️', showInQuickBuzz: true },
-    { id: 'miss', text: 'Miss you', type: 'default', emoji: '🥺', showInQuickBuzz: true },
-    { id: 'default_4', text: 'Good morning', type: 'default', emoji: '🌅', showInQuickBuzz: false },
-    { id: 'default_5', text: 'Good night', type: 'default', emoji: '🌙', showInQuickBuzz: false },
+    { id: 'default_1', text: 'I\'m hungry :(', type: 'default', emoji: '🍽️', showInQuickBuzz: true },
+    { id: 'default_2', text: 'Miss you a lot :(', type: 'default', emoji: '🥺', showInQuickBuzz: true },
+    { id: 'default_3', text: 'Babe, are you awake?', type: 'default', emoji: '😴', showInQuickBuzz: true },
+    { id: 'default_4', text: 'Thinking of you 💭', type: 'default', emoji: '💭', showInQuickBuzz: true },
+    { id: 'default_5', text: 'Love you so much! 💕', type: 'default', emoji: '💕', showInQuickBuzz: true },
   ];
 
   // Get all buzz templates (default + custom)
@@ -54,10 +54,9 @@ class BuzzService {
       if (isPremium) {
         // Load custom templates from storage for premium users
         const customTemplates = await this.getCustomTemplates();
-        templates = [...templates, ...customTemplates];
+        templates = [...customTemplates, ...templates];
       }
 
-      // Filter only templates that should show in quick buzz for main screen
       return templates;
     } catch (error) {
       console.error('Failed to get buzz templates:', error);
