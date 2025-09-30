@@ -25,8 +25,12 @@ class AuthService {
   // Event callbacks
   public onAuthStateChange: ((state: AuthState) => void) | null = null;
 
-  constructor() {
-    this.loadStoredAuth();
+  private initialized = false;
+
+  public async init(): Promise<void> {
+    if (this.initialized) return;
+    this.initialized = true;
+    await this.loadStoredAuth();
   }
 
   private async loadStoredAuth(): Promise<void> {

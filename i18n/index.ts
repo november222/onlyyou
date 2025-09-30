@@ -103,7 +103,7 @@ const initI18n = async () => {
       resources,
       fallbackLng: 'en',
       supportedLngs,
-      ns: ['common', 'auth', 'settings', 'history', 'onboarding'],
+      ns: ['common', 'auth', 'settings', 'history', 'onboarding', 'profile', 'connection', 'messages'],
       defaultNS: 'common',
       interpolation: {
         escapeValue: false,
@@ -119,6 +119,9 @@ const initI18n = async () => {
 // Initialize language from storage or device locale
 export const initLanguage = async () => {
   try {
+    // Ensure i18n is initialized first
+    await initI18n();
+    
     // Try to get saved language
     const savedLanguage = await AsyncStorage.getItem('lang');
     
@@ -142,7 +145,5 @@ export const initLanguage = async () => {
   }
 };
 
-// Initialize i18n
-initI18n();
 
 export default i18n;

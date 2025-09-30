@@ -67,6 +67,7 @@ class WebRTCService {
   private connectionStartTime: number | null = null;
   private backgroundTime: number | null = null;
   private totalConnectedTime: number = 0;
+  private initialized = false;
 
   // Event callbacks
   public onConnectionStateChange: ((state: ConnectionState) => void) | null = null;
@@ -74,14 +75,17 @@ class WebRTCService {
   public onRemoteStream: ((stream: any) => void) | null = null;
   public onLocalStream: ((stream: any) => void) | null = null;
 
-  constructor() {
+  public async init(): Promise<void> {
+    if (this.initialized) return;
+    this.initialized = true;
+    
     console.log('WebRTC Service: Running in frontend-only mode with mock data');
     
     // Load saved connection and try to auto-reconnect
-    this.loadSavedConnection();
+    await this.loadSavedConnection();
     
     // Load total connected time
-    this.loadTotalConnectedTime();
+    await this.loadTotalConnectedTime();
   }
 
   // Load saved connection from storage

@@ -48,22 +48,29 @@ export default function RootLayout() {
   useFrameworkReady();
 
   useEffect(() => {
-    // Initialize auth service
-    AuthService.getAuthState();
-    
-    // Initialize language
-    initLanguage();
-    
-    // Handle app state changes for connection timer
-    const handleAppStateChange = (nextAppState: string) => {
-      WebRTCService.handleAppStateChange(nextAppState);
+    const initializeServices = async () => {
+      try {
+        // Initialize services in sequence
+        await AuthService.init();
+        await WebRTCService.init();
+        await initLanguage();
+        
+        // Handle app state changes for connection timer
+        const handleAppStateChange = (nextAppState: string) => {
+          WebRTCService.handleAppStateChange(nextAppState);
+        };
+        
+        const subscription = AppState.addEventListener('change', handleAppStateChange);
+        
+        return () => {
+          subscription?.remove();
+        };
+      } catch (error) {
+        console.error('Failed to initialize services:', error);
+      }
     };
     
-    const subscription = AppState.addEventListener('change', handleAppStateChange);
-    
-    return () => {
-      subscription?.remove();
-    };
+    initializeServices();
   }, []);
 
   return (
