@@ -17,7 +17,8 @@ import { router } from 'expo-router';
 import WebRTCService, { WebRTCMessage, ConnectionState } from '../../services/WebRTCService';
 import CallScreen from '../../components/CallScreen';
 import { isFeatureEnabled } from '../../config/features';
-import BuzzService, { BuzzType } from '@/services/BuzzService';
+import BuzzService, { BuzzTemplate } from '@/services/BuzzService';
+import { usePremium } from '@/providers/PremiumProvider';
 
 export default function TouchScreen() {
   const { t } = useTranslation();
@@ -30,11 +31,12 @@ export default function TouchScreen() {
   });
   const [isInCall, setIsInCall] = useState(false);
   const [isVideoCall, setIsVideoCall] = useState(false);
-  const [buzzCooldowns, setBuzzCooldowns] = useState<Record<BuzzType, { canSend: boolean; remainingTime: number }>>({
-    ping: { canSend: true, remainingTime: 0 },
-    love: { canSend: true, remainingTime: 0 },
-    miss: { canSend: true, remainingTime: 0 },
+  const [buzzCooldown, setBuzzCooldown] = useState<{ canSend: boolean; remainingTime: number }>({
+    canSend: true,
+    remainingTime: 0,
   });
+  const [buzzTemplates, setBuzzTemplates] = useState<BuzzTemplate[]>([]);
+  const { isPremium } = usePremium();
 
   // Remove unused refs and state
   useEffect(() => {
@@ -44,10 +46,11 @@ export default function TouchScreen() {
     };
 
     // Load buzz cooldown status
-    loadBuzzCooldowns();
+    loadBuzzCooldown();
+    loadBuzzTemplates();
     
     // Update cooldowns every second
-    const cooldownTimer = setInterval(loadBuzzCooldowns, 1000);
+    const cooldownTimer = setInterval(loadBuzzCooldown, 1000);
     
     // Get initial connection state
     const currentState = WebRTCService.getConnectionState();
@@ -59,28 +62,36 @@ export default function TouchScreen() {
     };
   }, []);
 
-  const loadBuzzCooldowns = async () => {
+  const loadBuzzCooldown = async () => {
     if (isFeatureEnabled('buzz')) {
       const status = await BuzzService.getCooldownStatus();
-      setBuzzCooldowns(status);
+      setBuzzCooldown(status);
     }
   };
 
-  const sendBuzz = async (type: BuzzType) => {
+  const loadBuzzTemplates = async () => {
+    if (isFeatureEnabled('buzz')) {
+      const templates = await BuzzService.getBuzzTemplates(isPremium);
+      setBuzzTemplates(templates);
+    }
+  };
+
+  const sendBuzz = async (templateId: string) => {
     if (!isFeatureEnabled('buzz')) return;
     
     if (!connectionState.isConnected) {
-      Alert.alert('Chưa kết nối', 'Vui lòng kết nối với người yêu trước khi gửi buzz');
+      Alert.alert('Not Connected', 'Please connect with your partner before sending buzz');
       return;
     }
     
-    const result = await BuzzService.sendBuzz(type);
+    const result = await BuzzService.sendBuzz(templateId);
     
     if (result.success) {
-      Alert.alert('Buzz Sent! 💕', `Đã gửi ${type} đến người yêu của bạn`);
-      loadBuzzCooldowns(); // Refresh cooldown status
+      const template = buzzTemplates.find(t => t.id === templateId);
+      Alert.alert('Buzz Sent! 💕', `Sent "${template?.text}" to your partner`);
+      loadBuzzCooldown(); // Refresh cooldown status
     } else {
-      Alert.alert('Không thể gửi', result.error || 'Vui lòng thử lại');
+      Alert.alert('Cannot Send', result.error || 'Please try again');
     }
   };
 
@@ -206,43 +217,38 @@ export default function TouchScreen() {
       {isFeatureEnabled('buzz') && (
         <View style={styles.buzzContainer}>
           <Text style={styles.buzzTitle}>Quick Buzz 💕</Text>
-          <View style={styles.buzzButtons}>
-            <TouchableOpacity
-              style={[styles.buzzButton, !buzzCooldowns.ping.canSend && styles.buzzButtonDisabled]}
-              onPress={() => sendBuzz('ping')}
-              disabled={!buzzCooldowns.ping.canSend}
-            >
-              <Text style={styles.buzzButtonText}>👋</Text>
-              <Text style={styles.buzzButtonLabel}>Ping</Text>
-              {!buzzCooldowns.ping.canSend && (
-                <Text style={styles.buzzCooldown}>{Math.ceil(buzzCooldowns.ping.remainingTime / 1000)}s</Text>
-              )}
-            </TouchableOpacity>
-            
-            <TouchableOpacity
-              style={[styles.buzzButton, !buzzCooldowns.love.canSend && styles.buzzButtonDisabled]}
-              onPress={() => sendBuzz('love')}
-              disabled={!buzzCooldowns.love.canSend}
-            >
-              <Text style={styles.buzzButtonText}>❤️</Text>
-              <Text style={styles.buzzButtonLabel}>Love</Text>
-              {!buzzCooldowns.love.canSend && (
-                <Text style={styles.buzzCooldown}>{Math.ceil(buzzCooldowns.love.remainingTime / 1000)}s</Text>
-              )}
-            </TouchableOpacity>
-            
-            <TouchableOpacity
-              style={[styles.buzzButton, !buzzCooldowns.miss.canSend && styles.buzzButtonDisabled]}
-              onPress={() => sendBuzz('miss')}
-              disabled={!buzzCooldowns.miss.canSend}
-            >
-              <Text style={styles.buzzButtonText}>🥺</Text>
-              <Text style={styles.buzzButtonLabel}>Miss</Text>
-              {!buzzCooldowns.miss.canSend && (
-                <Text style={styles.buzzCooldown}>{Math.ceil(buzzCooldowns.miss.remainingTime / 1000)}s</Text>
-              )}
-            </TouchableOpacity>
-          </View>
+          <ScrollView 
+            horizontal 
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.buzzButtons}
+          >
+            {buzzTemplates.slice(0, isPremium ? buzzTemplates.length : 5).map((template) => (
+              <TouchableOpacity
+                key={template.id}
+                style={[styles.buzzButton, !buzzCooldown.canSend && styles.buzzButtonDisabled]}
+                onPress={() => sendBuzz(template.id)}
+                disabled={!buzzCooldown.canSend}
+              >
+                <Text style={styles.buzzButtonText}>{template.emoji || '💫'}</Text>
+                <Text style={styles.buzzButtonLabel} numberOfLines={2}>
+                  {template.text}
+                </Text>
+                {template.type === 'custom' && (
+                  <Text style={styles.customBadge}>Custom</Text>
+                )}
+                {!buzzCooldown.canSend && (
+                  <Text style={styles.buzzCooldownText}>
+                    {Math.ceil(buzzCooldown.remainingTime / 1000)}s
+                  </Text>
+                )}
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+          {!buzzCooldown.canSend && (
+            <Text style={styles.cooldownMessage}>
+              Wait {Math.ceil(buzzCooldown.remainingTime / 1000)}s before sending another buzz
+            </Text>
+          )}
         </View>
       )}
 
@@ -424,17 +430,20 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   buzzButtons: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    alignItems: 'center',
+    paddingHorizontal: 10,
+    gap: 12,
   },
   buzzButton: {
-    alignItems: 'center',
-    paddingVertical: 8,
+    alignItems: 'center', 
+    paddingVertical: 12,
     paddingHorizontal: 12,
     borderRadius: 12,
     backgroundColor: 'rgba(255, 107, 157, 0.1)',
-    minWidth: 60,
+    minWidth: 80,
+    maxWidth: 100,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 107, 157, 0.2)',
+    position: 'relative',
   },
   buzzButtonDisabled: {
     opacity: 0.5,
@@ -445,13 +454,34 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   buzzButtonLabel: {
-    fontSize: 12,
+    fontSize: 11,
     color: '#fff',
     fontWeight: '500',
+    textAlign: 'center',
+    lineHeight: 14,
+    marginTop: 4,
   },
-  buzzCooldown: {
+  customBadge: {
+    position: 'absolute',
+    top: -6,
+    right: -6,
+    backgroundColor: '#f59e0b',
+    borderRadius: 8,
+    paddingHorizontal: 4,
+    paddingVertical: 2,
+    fontSize: 8,
+    color: '#fff',
+    fontWeight: '600',
+  },
+  buzzCooldownText: {
     fontSize: 10,
     color: '#888',
     marginTop: 2,
+  },
+  cooldownMessage: {
+    fontSize: 12,
+    color: '#f59e0b',
+    textAlign: 'center',
+    marginTop: 8,
   },
 });

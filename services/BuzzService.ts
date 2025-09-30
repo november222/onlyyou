@@ -1,94 +1,234 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Linking, Platform } from 'react-native';
+import { Linking, Platform, Alert } from 'react-native';
 import TimelineService from './TimelineService';
 
 export type BuzzType = 'ping' | 'love' | 'miss';
 
+export interface BuzzTemplate {
+  id: string;
+  text: string;
+  type: 'default' | 'custom';
+  ownerId?: string;
+  emoji?: string;
+}
+
 export interface BuzzEvent {
   id: string;
-  type: BuzzType;
-  note?: string;
+  buzzId: string;
+  senderId: string;
+  receiverId: string;
+  text: string;
   timestamp: number;
-  userId: string;
 }
 
 export interface BuzzResult {
   success: boolean;
   error?: string;
-  event?: BuzzEvent;
+  buzzEvent?: BuzzEvent;
 }
 
 class BuzzService {
-  private readonly STORAGE_KEY = 'onlyyou_events';
+  private readonly STORAGE_KEY = 'onlyyou_buzz_history';
+  private readonly TEMPLATES_KEY = 'onlyyou_buzz_templates';
   private readonly COOLDOWN_KEY = 'onlyyou_buzz_cooldown';
-  private readonly COOLDOWN_DURATION = 15000; // 15 seconds
+  private readonly COOLDOWN_DURATION = 30000; // 30 seconds
+  private readonly API_BASE = 'https://api.onlyyou.app'; // Replace with actual API
 
-  // Send a buzz with cooldown protection
-  public async sendBuzz(type: BuzzType, note?: string): Promise<BuzzResult> {
+  // Default buzz templates for free users
+  private readonly DEFAULT_TEMPLATES: BuzzTemplate[] = [
+    { id: 'default_1', text: 'Thinking of you', type: 'default', emoji: '💭' },
+    { id: 'default_2', text: 'Miss you', type: 'default', emoji: '🥺' },
+    { id: 'default_3', text: 'Love you', type: 'default', emoji: '❤️' },
+    { id: 'default_4', text: 'Good morning', type: 'default', emoji: '🌅' },
+    { id: 'default_5', text: 'Good night', type: 'default', emoji: '🌙' },
+  ];
+
+  // Get all buzz templates (default + custom)
+  public async getBuzzTemplates(isPremium: boolean = false): Promise<BuzzTemplate[]> {
+    try {
+      // Always include default templates
+      let templates = [...this.DEFAULT_TEMPLATES];
+
+      if (isPremium) {
+        // Load custom templates from storage for premium users
+        const customTemplates = await this.getCustomTemplates();
+        templates = [...templates, ...customTemplates];
+      }
+
+      return templates;
+    } catch (error) {
+      console.error('Failed to get buzz templates:', error);
+      return this.DEFAULT_TEMPLATES;
+    }
+  }
+
+  // Get custom templates from local storage
+  private async getCustomTemplates(): Promise<BuzzTemplate[]> {
+    try {
+      const templatesData = await AsyncStorage.getItem(this.TEMPLATES_KEY);
+      if (!templatesData) return [];
+      
+      return JSON.parse(templatesData);
+    } catch (error) {
+      console.error('Failed to get custom templates:', error);
+      return [];
+    }
+  }
+
+  // Create custom buzz template (premium only)
+  public async createCustomBuzz(text: string, emoji?: string, isPremium: boolean = false): Promise<BuzzResult> {
+    try {
+      if (!isPremium) {
+        return {
+          success: false,
+          error: 'Custom buzz messages require premium subscription',
+        };
+      }
+
+      if (!text.trim()) {
+        return {
+          success: false,
+          error: 'Buzz text cannot be empty',
+        };
+      }
+
+      if (text.length > 50) {
+        return {
+          success: false,
+          error: 'Buzz text must be 50 characters or less',
+        };
+      }
+
+      const customTemplate: BuzzTemplate = {
+        id: `custom_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+        text: text.trim(),
+        type: 'custom',
+        ownerId: 'current_user', // Replace with actual user ID
+        emoji: emoji || '💫',
+      };
+
+      // Save to local storage
+      await this.saveCustomTemplate(customTemplate);
+
+      // TODO: API call to save on server
+      // await this.apiCreateCustomBuzz(customTemplate);
+
+      console.log('Custom buzz template created:', customTemplate.text);
+
+      return {
+        success: true,
+      };
+    } catch (error) {
+      console.error('Failed to create custom buzz:', error);
+      return {
+        success: false,
+        error: 'Failed to create custom buzz. Please try again.',
+      };
+    }
+  }
+
+  // Save custom template to local storage
+  private async saveCustomTemplate(template: BuzzTemplate): Promise<void> {
+    try {
+      const templatesData = await AsyncStorage.getItem(this.TEMPLATES_KEY);
+      const templates = templatesData ? JSON.parse(templatesData) : [];
+      
+      templates.push(template);
+      
+      // Keep only last 20 custom templates to prevent storage bloat
+      if (templates.length > 20) {
+        templates.splice(0, templates.length - 20);
+      }
+      
+      await AsyncStorage.setItem(this.TEMPLATES_KEY, JSON.stringify(templates));
+    } catch (error) {
+      console.error('Failed to save custom template:', error);
+      throw error;
+    }
+  }
+
+  // Send buzz using template
+  public async sendBuzz(templateId: string, receiverId: string = 'partner_user'): Promise<BuzzResult> {
     try {
       // Check cooldown
-      const cooldownCheck = await this.checkCooldown(type);
+      const cooldownCheck = await this.checkCooldown();
       if (!cooldownCheck.canSend) {
         return {
           success: false,
-          error: `Vui lòng đợi ${Math.ceil(cooldownCheck.remainingTime / 1000)}s trước khi gửi ${type} tiếp theo`,
+          error: `Please wait ${Math.ceil(cooldownCheck.remainingTime / 1000)}s before sending another buzz`,
+        };
+      }
+
+      // Find template
+      const templates = await this.getBuzzTemplates(true); // Get all templates
+      const template = templates.find(t => t.id === templateId);
+      
+      if (!template) {
+        return {
+          success: false,
+          error: 'Buzz template not found',
         };
       }
 
       // Create buzz event
-      const event: BuzzEvent = {
+      const buzzEvent: BuzzEvent = {
         id: `buzz_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-        type,
-        note,
+        buzzId: templateId,
+        senderId: 'current_user', // Replace with actual user ID
+        receiverId,
+        text: template.text,
         timestamp: Date.now(),
-        userId: 'current_user', // Mock user ID
       };
 
       // Save event to storage
-      await this.saveEvent(event);
+      await this.saveBuzzEvent(buzzEvent);
 
       // Add to timeline
       await TimelineService.addEvent({
-        id: event.id,
+        id: buzzEvent.id,
         type: 'buzz',
-        timestamp: event.timestamp,
+        timestamp: buzzEvent.timestamp,
         data: {
-          buzzType: event.type,
-          note: event.note,
+          buzzId: templateId,
+          text: template.text,
+          emoji: template.emoji,
         },
-        userId: event.userId,
+        userId: buzzEvent.senderId,
       });
 
       // Set cooldown
-      await this.setCooldown(type);
+      await this.setCooldown();
 
-      console.log(`Buzz sent: ${type}${note ? ` - ${note}` : ''}`);
+      // TODO: Send via WebSocket/API
+      // await this.apiSendBuzz(buzzEvent);
+      // this.socketSendBuzz(buzzEvent);
+
+      console.log(`Buzz sent: ${template.text}`);
 
       return {
         success: true,
-        event,
+        buzzEvent,
       };
     } catch (error) {
       console.error('Failed to send buzz:', error);
       return {
         success: false,
-        error: 'Không thể gửi buzz. Vui lòng thử lại.',
+        error: 'Failed to send buzz. Please try again.',
       };
     }
   }
 
-  // Check if user can send buzz (cooldown)
-  private async checkCooldown(type: BuzzType): Promise<{ canSend: boolean; remainingTime: number }> {
+  // Check cooldown for any buzz
+  private async checkCooldown(): Promise<{ canSend: boolean; remainingTime: number }> {
     try {
       const cooldownData = await AsyncStorage.getItem(this.COOLDOWN_KEY);
       if (!cooldownData) {
         return { canSend: true, remainingTime: 0 };
       }
 
-      const cooldowns = JSON.parse(cooldownData);
-      const lastSent = cooldowns[type];
+      const lastSent = parseInt(cooldownData);
       
-      if (!lastSent) {
+      if (!lastSent || isNaN(lastSent)) {
         return { canSend: true, remainingTime: 0 };
       }
 
@@ -105,22 +245,17 @@ class BuzzService {
     }
   }
 
-  // Set cooldown for buzz type
-  private async setCooldown(type: BuzzType): Promise<void> {
+  // Set cooldown for buzz sending
+  private async setCooldown(): Promise<void> {
     try {
-      const cooldownData = await AsyncStorage.getItem(this.COOLDOWN_KEY);
-      const cooldowns = cooldownData ? JSON.parse(cooldownData) : {};
-      
-      cooldowns[type] = Date.now();
-      
-      await AsyncStorage.setItem(this.COOLDOWN_KEY, JSON.stringify(cooldowns));
+      await AsyncStorage.setItem(this.COOLDOWN_KEY, Date.now().toString());
     } catch (error) {
       console.error('Failed to set cooldown:', error);
     }
   }
 
-  // Save event to storage
-  private async saveEvent(event: BuzzEvent): Promise<void> {
+  // Save buzz event to storage
+  private async saveBuzzEvent(event: BuzzEvent): Promise<void> {
     try {
       const eventsData = await AsyncStorage.getItem(this.STORAGE_KEY);
       const events = eventsData ? JSON.parse(eventsData) : [];
@@ -139,30 +274,25 @@ class BuzzService {
     }
   }
 
-  // Get all buzz events
-  public async getBuzzHistory(): Promise<BuzzEvent[]> {
+  // Get buzz history
+  public async getBuzzHistory(limit?: number): Promise<BuzzEvent[]> {
     try {
       const eventsData = await AsyncStorage.getItem(this.STORAGE_KEY);
       if (!eventsData) return [];
       
-      const allEvents = JSON.parse(eventsData);
-      return allEvents.filter((event: any) => event.type && ['ping', 'love', 'miss'].includes(event.type));
+      const events = JSON.parse(eventsData);
+      const sortedEvents = events.sort((a: BuzzEvent, b: BuzzEvent) => b.timestamp - a.timestamp);
+      
+      return limit ? sortedEvents.slice(0, limit) : sortedEvents;
     } catch (error) {
       console.error('Failed to get buzz history:', error);
       return [];
     }
   }
 
-  // Get cooldown status for all buzz types
-  public async getCooldownStatus(): Promise<Record<BuzzType, { canSend: boolean; remainingTime: number }>> {
-    const types: BuzzType[] = ['ping', 'love', 'miss'];
-    const status: Record<BuzzType, { canSend: boolean; remainingTime: number }> = {} as any;
-    
-    for (const type of types) {
-      status[type] = await this.checkCooldown(type);
-    }
-    
-    return status;
+  // Get current cooldown status
+  public async getCooldownStatus(): Promise<{ canSend: boolean; remainingTime: number }> {
+    return await this.checkCooldown();
   }
 
   // System call (no VoIP)
@@ -184,23 +314,10 @@ class BuzzService {
     }
   }
 
-  // List recent buzz events
-  public async listRecentBuzz(limit: number = 10): Promise<BuzzEvent[]> {
-    try {
-      const eventsData = await AsyncStorage.getItem(this.STORAGE_KEY);
-      if (!eventsData) return [];
-      
-      const allEvents = JSON.parse(eventsData);
-      const buzzEvents = allEvents
-        .filter((event: any) => event.type && ['ping', 'love', 'miss'].includes(event.type))
-        .slice(0, limit);
-      
-      return buzzEvents;
-    } catch (error) {
-      console.error('Failed to list recent buzz:', error);
-      return [];
-    }
-  }
+  // TODO: API methods for server communication
+  // private async apiSendBuzz(buzzEvent: BuzzEvent): Promise<void> { ... }
+  // private async apiCreateCustomBuzz(template: BuzzTemplate): Promise<void> { ... }
+  // private async apiGetBuzzTemplates(): Promise<BuzzTemplate[]> { ... }
 }
 
 export default new BuzzService();
