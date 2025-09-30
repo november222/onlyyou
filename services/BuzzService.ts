@@ -96,7 +96,7 @@ class BuzzService {
       if (text.length > 50) {
         return {
           success: false,
-          error: 'Buzz text must be 50 characters or less',
+          error: 'Buzz text must be 20 characters or less',
         };
       }
 

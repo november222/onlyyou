@@ -26,13 +26,18 @@ export default function BuzzCallScreen() {
   });
   const [buzzTemplates, setBuzzTemplates] = useState<BuzzTemplate[]>([]);
   const [showNoteModal, setShowNoteModal] = useState(false);
+  const [showCustomBuzzModal, setShowCustomBuzzModal] = useState(false);
   const [selectedBuzzTemplateId, setSelectedBuzzTemplateId] = useState<string>('ping');
   const [noteText, setNoteText] = useState('');
+  const [customBuzzText, setCustomBuzzText] = useState('');
+  const [customBuzzEmoji, setCustomBuzzEmoji] = useState('💫');
+  const [isPremium, setIsPremium] = useState(false);
 
   useEffect(() => {
     loadRecentBuzz();
     loadBuzzCooldown();
     loadBuzzTemplates();
+    checkPremiumStatus();
     
     // Update cooldowns every second
     const cooldownTimer = setInterval(loadBuzzCooldown, 1000);
@@ -55,9 +60,14 @@ export default function BuzzCallScreen() {
     }
   };
 
+  const checkPremiumStatus = async () => {
+    // Mock premium check - replace with actual premium service
+    setIsPremium(false); // Set to true to test premium features
+  };
+
   const loadBuzzTemplates = async () => {
     try {
-      const templates = await BuzzService.getBuzzTemplates(false); // Assuming free user for now
+      const templates = await BuzzService.getBuzzTemplates(isPremium);
       setBuzzTemplates(templates);
     } catch (error) {
       console.error('Failed to load buzz templates:', error);
@@ -86,11 +96,47 @@ export default function BuzzCallScreen() {
     setShowNoteModal(true);
   };
 
-  const handleSystemCall = async () => {
+  const handleCreateCustomBuzz = () => {
+    if (!isPremium) {
+      Alert.alert(
+        'Tính Năng Premium 👑',
+        'Tạo buzz tùy chỉnh là tính năng dành cho người dùng Premium.',
+        [
+          { text: 'Để Sau', style: 'cancel' },
+          { text: 'Nâng Cấp', onPress: () => router.push('/premium') },
+        ]
+      );
+      return;
+    }
+    
+    setCustomBuzzText('');
+    setCustomBuzzEmoji('💫');
+    setShowCustomBuzzModal(true);
+  };
+
+  const handleSaveCustomBuzz = async () => {
+    if (!customBuzzText.trim()) {
+      Alert.alert('Lỗi', 'Vui lòng nhập nội dung buzz');
+      return;
+    }
+
+    if (customBuzzText.length > 20) {
+      Alert.alert('Lỗi', 'Buzz tùy chỉnh không được quá 20 ký tự');
+      return;
+    }
+
     try {
-      await BuzzService.makeSystemCall();
+      const result = await BuzzService.createCustomBuzz(customBuzzText, customBuzzEmoji, isPremium);
+      
+      if (result.success) {
+        Alert.alert('Thành công! ✨', 'Buzz tùy chỉnh đã được tạo');
+        setShowCustomBuzzModal(false);
+        loadBuzzTemplates(); // Refresh templates
+      } else {
+        Alert.alert('Lỗi', result.error || 'Không thể tạo buzz tùy chỉnh');
+      }
     } catch (error) {
-      Alert.alert('Lỗi', 'Không thể mở ứng dụng gọi điện');
+      Alert.alert('Lỗi', 'Có lỗi xảy ra. Vui lòng thử lại.');
     }
   };
 
@@ -133,10 +179,11 @@ export default function BuzzCallScreen() {
 
         {/* Main Content */}
         <View style={styles.content}>
-          {/* System Call Button */}
-          <TouchableOpacity style={styles.systemCallButton} onPress={handleSystemCall}>
-            <Phone size={24} color="#fff" strokeWidth={2} />
-            <Text style={styles.systemCallText}>Gọi Hệ Thống</Text>
+          {/* Create Custom Buzz Button */}
+          <TouchableOpacity style={styles.customBuzzButton} onPress={handleCreateCustomBuzz}>
+            <Zap size={24} color="#fff" strokeWidth={2} />
+            <Text style={styles.customBuzzText}>Tạo Buzz Tùy Chỉnh</Text>
+            {!isPremium && <Text style={styles.premiumBadge}>👑</Text>}
           </TouchableOpacity>
 
           {/* Buzz Buttons */}
@@ -243,6 +290,83 @@ export default function BuzzCallScreen() {
             </View>
           </View>
         </Modal>
+
+        {/* Custom Buzz Modal */}
+        <Modal
+          visible={showCustomBuzzModal}
+          animationType="slide"
+          presentationStyle="pageSheet"
+          onRequestClose={() => setShowCustomBuzzModal(false)}
+        >
+          <View style={styles.customBuzzModal}>
+            <View style={styles.customBuzzHeader}>
+              <Text style={styles.customBuzzTitle}>Tạo Buzz Tùy Chỉnh</Text>
+              <TouchableOpacity
+                style={styles.closeButton}
+                onPress={() => setShowCustomBuzzModal(false)}
+              >
+                <X size={24} color="#888" strokeWidth={2} />
+              </TouchableOpacity>
+            </View>
+            
+            <View style={styles.customBuzzContent}>
+              <View style={styles.emojiSelector}>
+                <Text style={styles.formLabel}>Chọn Emoji:</Text>
+                <View style={styles.emojiOptions}>
+                  {['💫', '✨', '⚡', '🔥', '💖', '🌟', '💝', '🎉'].map((emoji) => (
+                    <TouchableOpacity
+                      key={emoji}
+                      style={[
+                        styles.emojiOption,
+                        customBuzzEmoji === emoji && styles.selectedEmojiOption
+                      ]}
+                      onPress={() => setCustomBuzzEmoji(emoji)}
+                    >
+                      <Text style={styles.emojiOptionText}>{emoji}</Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              </View>
+              
+              <View style={styles.textInputContainer}>
+                <Text style={styles.formLabel}>Nội dung Buzz:</Text>
+                <TextInput
+                  style={styles.customBuzzInput}
+                  value={customBuzzText}
+                  onChangeText={setCustomBuzzText}
+                  placeholder="Nhập nội dung buzz (tối đa 20 ký tự)"
+                  placeholderTextColor="#666"
+                  maxLength={20}
+                />
+                <Text style={styles.charCount}>
+                  {customBuzzText.length}/20 ký tự
+                </Text>
+              </View>
+              
+              <View style={styles.previewContainer}>
+                <Text style={styles.previewLabel}>Xem trước:</Text>
+                <View style={styles.previewBuzz}>
+                  <Text style={styles.previewEmoji}>{customBuzzEmoji}</Text>
+                  <Text style={styles.previewText}>
+                    {customBuzzText || 'Nội dung buzz...'}
+                  </Text>
+                </View>
+              </View>
+              
+              <TouchableOpacity
+                style={[
+                  styles.saveCustomBuzzButton,
+                  !customBuzzText.trim() && styles.saveCustomBuzzButtonDisabled
+                ]}
+                onPress={handleSaveCustomBuzz}
+                disabled={!customBuzzText.trim()}
+              >
+                <Zap size={20} color="#fff" strokeWidth={2} />
+                <Text style={styles.saveCustomBuzzText}>Lưu Buzz Tùy Chỉnh</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </Modal>
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
@@ -276,8 +400,8 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 20,
   },
-  systemCallButton: {
-    backgroundColor: '#4ade80',
+  customBuzzButton: {
+    backgroundColor: '#f59e0b',
     borderRadius: 16,
     padding: 20,
     flexDirection: 'row',
@@ -285,11 +409,18 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: 12,
     marginBottom: 32,
+    position: 'relative',
   },
-  systemCallText: {
+  customBuzzText: {
     fontSize: 18,
     fontWeight: '600',
     color: '#fff',
+  },
+  premiumBadge: {
+    position: 'absolute',
+    top: 8,
+    right: 8,
+    fontSize: 16,
   },
   buzzSection: {
     marginBottom: 32,
@@ -423,6 +554,120 @@ const styles = StyleSheet.create({
     minWidth: 200,
   },
   sendBuzzText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#fff',
+  },
+  customBuzzModal: {
+    flex: 1,
+    backgroundColor: '#000',
+  },
+  customBuzzHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: '#333',
+  },
+  customBuzzTitle: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#fff',
+  },
+  customBuzzContent: {
+    flex: 1,
+    padding: 20,
+  },
+  emojiSelector: {
+    marginBottom: 24,
+  },
+  formLabel: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#fff',
+    marginBottom: 12,
+  },
+  emojiOptions: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 12,
+  },
+  emojiOption: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: '#111',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 2,
+    borderColor: '#333',
+  },
+  selectedEmojiOption: {
+    borderColor: '#f59e0b',
+    backgroundColor: 'rgba(245, 158, 11, 0.1)',
+  },
+  emojiOptionText: {
+    fontSize: 24,
+  },
+  textInputContainer: {
+    marginBottom: 24,
+  },
+  customBuzzInput: {
+    backgroundColor: '#111',
+    borderRadius: 12,
+    padding: 16,
+    color: '#fff',
+    fontSize: 16,
+    borderWidth: 1,
+    borderColor: '#333',
+    marginBottom: 8,
+  },
+  charCount: {
+    fontSize: 12,
+    color: '#888',
+    textAlign: 'right',
+  },
+  previewContainer: {
+    marginBottom: 32,
+  },
+  previewLabel: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#888',
+    marginBottom: 8,
+  },
+  previewBuzz: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#111',
+    borderRadius: 12,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: '#333',
+    gap: 12,
+  },
+  previewEmoji: {
+    fontSize: 24,
+  },
+  previewText: {
+    fontSize: 16,
+    color: '#fff',
+    fontWeight: '500',
+  },
+  saveCustomBuzzButton: {
+    backgroundColor: '#f59e0b',
+    borderRadius: 12,
+    padding: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+  },
+  saveCustomBuzzButtonDisabled: {
+    opacity: 0.5,
+  },
+  saveCustomBuzzText: {
     fontSize: 16,
     fontWeight: '600',
     color: '#fff',
