@@ -26,6 +26,7 @@ export default function BuzzCallScreen() {
   const [editingTemplate, setEditingTemplate] = useState<BuzzTemplate | null>(null);
   const [customBuzzText, setCustomBuzzText] = useState('');
   const [customBuzzEmoji, setCustomBuzzEmoji] = useState('💫');
+  const [showAllEmojis, setShowAllEmojis] = useState(false);
   const { isPremium } = usePremium();
 
   useEffect(() => {
@@ -148,6 +149,59 @@ export default function BuzzCallScreen() {
     }
   };
 
+  // Emoji Selector Component
+  const EmojiSelector = () => {
+    const allEmojis = [
+      '💫', '✨', '⚡', '🔥', '💖', '🌟', '💝', '🎉',
+      '💕', '💗', '💓', '💘', '💞', '💌', '💋', '😘',
+      '🥰', '😍', '🤗', '😊', '😚', '🥺', '🤭', '😇',
+      '🌸', '🌺', '🌻', '🌷', '🌹', '🦋', '🐰', '🐱',
+      '🍓', '🍑', '🍯', '🧁', '🍰', '🎂', '🍭', '🍬',
+      '🌙', '⭐', '☀️', '🌈', '☁️', '❄️', '🎀', '👑'
+    ];
+    
+    const basicEmojis = allEmojis.slice(0, 16); // First 2 rows (8 per row)
+    const displayEmojis = showAllEmojis ? allEmojis : basicEmojis;
+    
+    return (
+      <View style={styles.emojiSelectorContainer}>
+        <View style={styles.emojiOptions}>
+          {displayEmojis.map((emoji) => (
+            <TouchableOpacity
+              key={emoji}
+              style={[
+                styles.emojiOption,
+                customBuzzEmoji === emoji && styles.selectedEmojiOption
+              ]}
+              onPress={() => setCustomBuzzEmoji(emoji)}
+            >
+              <Text style={styles.emojiOptionText}>{emoji}</Text>
+            </TouchableOpacity>
+          ))}
+          
+          {/* Expand/Collapse Button */}
+          {!showAllEmojis && (
+            <TouchableOpacity
+              style={styles.expandEmojiButton}
+              onPress={() => setShowAllEmojis(true)}
+            >
+              <Text style={styles.expandEmojiText}>+</Text>
+            </TouchableOpacity>
+          )}
+        </View>
+        
+        {showAllEmojis && (
+          <TouchableOpacity
+            style={styles.collapseButton}
+            onPress={() => setShowAllEmojis(false)}
+          >
+            <Text style={styles.collapseButtonText}>Thu gọn</Text>
+          </TouchableOpacity>
+        )}
+      </View>
+    );
+  };
+
   const renderCustomBuzzTemplate = ({ item }: { item: BuzzTemplate }) => (
     <View style={styles.customBuzzCard}>
       <View style={styles.customBuzzHeader}>
@@ -264,7 +318,11 @@ export default function BuzzCallScreen() {
           presentationStyle="pageSheet"
           onRequestClose={() => setShowCreateModal(false)}
         >
-          <View style={styles.customBuzzModal}>
+          <KeyboardAvoidingView
+            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+            keyboardVerticalOffset={insets.bottom}
+            style={styles.customBuzzModal}
+          >
             <View style={styles.customBuzzModalHeader}>
               <Text style={styles.customBuzzModalTitle}>
                 {editingTemplate ? 'Chỉnh Sửa Buzz' : 'Tạo Buzz Tùy Chỉnh'}
@@ -277,30 +335,14 @@ export default function BuzzCallScreen() {
               </TouchableOpacity>
             </View>
             
-            <View style={styles.customBuzzModalContent}>
+            <ScrollView 
+              style={styles.customBuzzModalContent}
+              keyboardShouldPersistTaps="handled"
+              showsVerticalScrollIndicator={false}
+            >
               <View style={styles.emojiSelector}>
                 <Text style={styles.formLabel}>Chọn Emoji:</Text>
-                <View style={styles.emojiOptions}>
-                  {[
-                    '💫', '✨', '⚡', '🔥', '💖', '🌟', '💝', '🎉',
-                    '💕', '💗', '💓', '💘', '💞', '💌', '💋', '😘',
-                    '🥰', '😍', '🤗', '😊', '😚', '🥺', '🤭', '😇',
-                    '🌸', '🌺', '🌻', '🌷', '🌹', '🦋', '🐰', '🐱',
-                    '🍓', '🍑', '🍯', '🧁', '🍰', '🎂', '🍭', '🍬',
-                    '🌙', '⭐', '☀️', '🌈', '☁️', '❄️', '🎀', '👑'
-                  ].map((emoji) => (
-                    <TouchableOpacity
-                      key={emoji}
-                      style={[
-                        styles.emojiOption,
-                        customBuzzEmoji === emoji && styles.selectedEmojiOption
-                      ]}
-                      onPress={() => setCustomBuzzEmoji(emoji)}
-                    >
-                      <Text style={styles.emojiOptionText}>{emoji}</Text>
-                    </TouchableOpacity>
-                  ))}
-                </View>
+                <EmojiSelector />
               </View>
               
               <View style={styles.textInputContainer}>
@@ -341,8 +383,8 @@ export default function BuzzCallScreen() {
                   {editingTemplate ? 'Cập Nhật Buzz' : 'Lưu Buzz Tùy Chỉnh'}
                 </Text>
               </TouchableOpacity>
-            </View>
-          </View>
+            </ScrollView>
+          </KeyboardAvoidingView>
         </Modal>
       </KeyboardAvoidingView>
     </SafeAreaView>
@@ -516,6 +558,38 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: 12,
+  },
+  emojiSelectorContainer: {
+    marginBottom: 8,
+  },
+  expandEmojiButton: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: '#333',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 2,
+    borderColor: '#555',
+    borderStyle: 'dashed',
+  },
+  expandEmojiText: {
+    fontSize: 24,
+    color: '#888',
+    fontWeight: '300',
+  },
+  collapseButton: {
+    alignSelf: 'center',
+    backgroundColor: '#333',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 16,
+    marginTop: 12,
+  },
+  collapseButtonText: {
+    fontSize: 14,
+    color: '#888',
+    fontWeight: '500',
   },
   emojiOption: {
     width: 48,
