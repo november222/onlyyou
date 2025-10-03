@@ -11,9 +11,10 @@ import {
   ScrollView,
   KeyboardAvoidingView,
   Platform,
+  Modal,
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Heart, Shield, Wifi, WifiOff, Copy, Key, Plus, RefreshCw, Trash2 } from 'lucide-react-native';
+import { Heart, Shield, Wifi, WifiOff, Copy, Key, Plus, RefreshCw, Trash2, QrCode, X } from 'lucide-react-native';
 import WebRTCService, { ConnectionState } from '@/services/WebRTCService';
 import { router } from 'expo-router';
 
@@ -32,6 +33,7 @@ export default function ConnectionScreen() {
   const [isConnectingToServer, setIsConnectingToServer] = useState(false);
   const [isJoining, setIsJoining] = useState(false);
   const [savedConnection, setSavedConnection] = useState(WebRTCService.getSavedConnection());
+  const [showQRCode, setShowQRCode] = useState(false);
 
   useEffect(() => {
     // Set up WebRTC event listeners
@@ -371,7 +373,6 @@ export default function ConnectionScreen() {
                 placeholder="Nhập mã phòng"
                 placeholderTextColor="#666"
                 autoCapitalize="characters"
-                maxLength={6}
               />
               <TouchableOpacity 
                 style={styles.joinButton} 
@@ -391,18 +392,19 @@ export default function ConnectionScreen() {
         {/* Action Buttons */}
         {connectionState.isConnected && (
           <>
-            {/* Go to Messages */}
-            <TouchableOpacity style={styles.messagesButton} onPress={navigateToMessages}>
-              <Heart size={20} color="#fff" strokeWidth={2} />
-              <Text style={styles.messagesButtonText}>Bắt đầu trò chuyện 💕</Text>
-            </TouchableOpacity>
-
             <View style={styles.actions}>
               {connectionState.roomCode && (
-                <TouchableOpacity style={styles.copyCodeButton} onPress={() => copyRoomCode()}>
-                  <Copy size={16} color="#ff6b9d" strokeWidth={2} />
-                  <Text style={styles.copyCodeButtonText}>Sao chép mã phòng</Text>
-                </TouchableOpacity>
+                <>
+                  <TouchableOpacity style={styles.copyCodeButton} onPress={() => copyRoomCode()}>
+                    <Copy size={16} color="#ff6b9d" strokeWidth={2} />
+                    <Text style={styles.copyCodeButtonText}>Sao chép mã phòng</Text>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity style={styles.qrCodeButton} onPress={() => setShowQRCode(true)}>
+                    <QrCode size={16} color="#4ade80" strokeWidth={2} />
+                    <Text style={styles.qrCodeButtonText}>Hiển thị mã QR</Text>
+                  </TouchableOpacity>
+                </>
               )}
               
               <TouchableOpacity style={styles.disconnectButton} onPress={handleDisconnect}>
@@ -438,6 +440,44 @@ export default function ConnectionScreen() {
         </View>
         </ScrollView>
       </KeyboardAvoidingView>
+
+      {/* QR Code Modal */}
+      <Modal
+        visible={showQRCode}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setShowQRCode(false)}
+      >
+        <View style={styles.qrModalOverlay}>
+          <View style={styles.qrModalContent}>
+            <View style={styles.qrModalHeader}>
+              <Text style={styles.qrModalTitle}>Mã QR Kết Nối</Text>
+              <TouchableOpacity onPress={() => setShowQRCode(false)}>
+                <X size={24} color="#fff" strokeWidth={2} />
+              </TouchableOpacity>
+            </View>
+
+            <View style={styles.qrCodeContainer}>
+              {connectionState.roomCode && (
+                <View style={styles.qrPlaceholder}>
+                  <View style={styles.qrCodeDisplay}>
+                    <QrCode size={200} color="#000" strokeWidth={1} />
+                  </View>
+                  <Text style={styles.qrCodeText}>{connectionState.roomCode}</Text>
+                  <Text style={styles.qrCodeHint}>Quét mã này để kết nối</Text>
+                </View>
+              )}
+            </View>
+
+            <TouchableOpacity
+              style={styles.closeQrButton}
+              onPress={() => setShowQRCode(false)}
+            >
+              <Text style={styles.closeQrButtonText}>Đóng</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -760,5 +800,86 @@ const styles = StyleSheet.create({
     color: '#666',
     fontSize: 14,
     fontWeight: '500',
+  },
+  qrCodeButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'transparent',
+    borderRadius: 12,
+    padding: 16,
+    gap: 8,
+    borderWidth: 1,
+    borderColor: '#4ade80',
+  },
+  qrCodeButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#4ade80',
+  },
+  qrModalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.9)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  qrModalContent: {
+    backgroundColor: '#111',
+    borderRadius: 24,
+    padding: 24,
+    width: '100%',
+    maxWidth: 400,
+    borderWidth: 1,
+    borderColor: '#333',
+  },
+  qrModalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 24,
+  },
+  qrModalTitle: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#fff',
+  },
+  qrCodeContainer: {
+    alignItems: 'center',
+    marginBottom: 24,
+  },
+  qrPlaceholder: {
+    alignItems: 'center',
+    gap: 16,
+  },
+  qrCodeDisplay: {
+    backgroundColor: '#fff',
+    padding: 20,
+    borderRadius: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  qrCodeText: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#fff',
+    fontFamily: 'monospace',
+    textAlign: 'center',
+  },
+  qrCodeHint: {
+    fontSize: 14,
+    color: '#888',
+    textAlign: 'center',
+  },
+  closeQrButton: {
+    backgroundColor: '#ff6b9d',
+    borderRadius: 12,
+    padding: 16,
+    alignItems: 'center',
+  },
+  closeQrButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#fff',
   },
 });

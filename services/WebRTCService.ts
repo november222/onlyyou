@@ -261,7 +261,8 @@ class WebRTCService {
     await new Promise(resolve => setTimeout(resolve, 2000));
     
     // Validate room code format (basic validation)
-    if (roomCode.length < 4 || roomCode.length > 8) {
+    const cleanCode = roomCode.replace(/-/g, '');
+    if (cleanCode.length < 4) {
       throw new Error('Mã phòng không hợp lệ');
     }
     
@@ -498,19 +499,23 @@ class WebRTCService {
   // Mock: Generate room code
   public async generateRoomCode(): Promise<string> {
     console.log('Mock: Generating room code...');
-    
+
     // Simulate API delay
     await new Promise(resolve => setTimeout(resolve, 500));
-    
-    // Generate a more readable room code
+
+    // Generate a longer, more secure room code (16 characters)
     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
     let roomCode = '';
-    for (let i = 0; i < 6; i++) {
+    for (let i = 0; i < 16; i++) {
       roomCode += chars.charAt(Math.floor(Math.random() * chars.length));
+      // Add hyphen every 4 characters for readability
+      if ((i + 1) % 4 === 0 && i < 15) {
+        roomCode += '-';
+      }
     }
-    
+
     console.log(`Mock: Generated room code: ${roomCode}`);
-    
+
     return roomCode;
   }
 
