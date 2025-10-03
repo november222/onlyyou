@@ -12,6 +12,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   Modal,
+  Image,
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Heart, Shield, Wifi, WifiOff, Copy, Key, Plus, RefreshCw, Trash2, QrCode, X } from 'lucide-react-native';
@@ -461,7 +462,13 @@ export default function ConnectionScreen() {
               {connectionState.roomCode && (
                 <View style={styles.qrPlaceholder}>
                   <View style={styles.qrCodeDisplay}>
-                    <QrCode size={200} color="#000" strokeWidth={1} />
+                    <Image
+                      source={{
+                        uri: `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(connectionState.roomCode)}&bgcolor=ffffff&color=000000&margin=10`
+                      }}
+                      style={styles.qrCodeImage}
+                      resizeMode="contain"
+                    />
                   </View>
                   <Text style={styles.qrCodeText}>{connectionState.roomCode}</Text>
                   <Text style={styles.qrCodeHint}>Quét mã này để kết nối</Text>
@@ -858,6 +865,12 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     alignItems: 'center',
     justifyContent: 'center',
+    width: 260,
+    height: 260,
+  },
+  qrCodeImage: {
+    width: 220,
+    height: 220,
   },
   qrCodeText: {
     fontSize: 18,
