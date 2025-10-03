@@ -5,7 +5,7 @@
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "myapp",
+    "scheme": "onlyyou",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "developer": {
@@ -16,11 +16,15 @@
     ],
     "ios": {
       "supportsTablet": true,
+      "bundleIdentifier": "com.onlyyou.app",
       "infoPlist": {
         "NSCameraUsageDescription": "This app uses the camera for video calls.",
         "NSMicrophoneUsageDescription": "This app uses the microphone for voice and video calls.",
         "NSFaceIDUsageDescription": "OnlyYou uses Face ID to unlock your private content."
-      }
+      },
+      "associatedDomains": [
+        "applinks:onlyyou.app"
+      ]
     },
     "android": {
       "softwareKeyboardLayoutMode": "resize",
@@ -31,6 +35,23 @@
         "BLUETOOTH",
         "BLUETOOTH_ADMIN",
         "MODIFY_AUDIO_SETTINGS"
+      ],
+      "intentFilters": [
+        {
+          "action": "VIEW",
+          "autoVerify": true,
+          "data": [
+            {
+              "scheme": "https",
+              "host": "onlyyou.app",
+              "pathPrefix": "/connect"
+            }
+          ],
+          "category": [
+            "BROWSABLE",
+            "DEFAULT"
+          ]
+        }
       ]
     },
     "web": {

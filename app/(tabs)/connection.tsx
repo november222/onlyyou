@@ -464,14 +464,15 @@ export default function ConnectionScreen() {
                   <View style={styles.qrCodeDisplay}>
                     <Image
                       source={{
-                        uri: `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(connectionState.roomCode)}&bgcolor=ffffff&color=000000&margin=10`
+                        uri: `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(`onlyyou://connect/${connectionState.roomCode}`)}&bgcolor=ffffff&color=000000&margin=10`
                       }}
                       style={styles.qrCodeImage}
                       resizeMode="contain"
                     />
                   </View>
                   <Text style={styles.qrCodeText}>{connectionState.roomCode}</Text>
-                  <Text style={styles.qrCodeHint}>Quét mã này để kết nối</Text>
+                  <Text style={styles.qrCodeHint}>Quét mã này bằng máy ảnh điện thoại</Text>
+                  <Text style={styles.qrCodeSubHint}>Sẽ tự động mở app và kết nối! ✨</Text>
                 </View>
               )}
             </View>
@@ -883,6 +884,12 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#888',
     textAlign: 'center',
+  },
+  qrCodeSubHint: {
+    fontSize: 12,
+    color: '#4ade80',
+    textAlign: 'center',
+    fontWeight: '500',
   },
   closeQrButton: {
     backgroundColor: '#ff6b9d',

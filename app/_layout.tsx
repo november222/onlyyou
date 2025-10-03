@@ -4,9 +4,9 @@ if (require('react-native').Platform.OS !== 'web') {
 }
 
 import { useEffect } from 'react';
-import { Stack } from 'expo-router/stack';
+import { Stack, useRouter } from 'expo-router/stack';
 import { StatusBar } from 'expo-status-bar';
-import { Platform, AppState } from 'react-native';
+import { Platform, AppState, Alert, Linking } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { useFrameworkReady } from '@/hooks/useFrameworkReady';
 import AuthService from '@/services/AuthService';
@@ -51,23 +51,67 @@ export default function RootLayout() {
     initializeServices().catch((error) => {
       console.error('Service initialization failed:', error);
     });
-    
+
     async function initializeServices() {
       try {
         // Initialize services in sequence
         await AuthService.init();
         await WebRTCService.init();
         await initLanguage();
-        
+
         // Handle app state changes for connection timer
         const handleAppStateChange = (nextAppState: string) => {
           WebRTCService.handleAppStateChange(nextAppState);
         };
-        
+
         const subscription = AppState.addEventListener('change', handleAppStateChange);
-        
+
+        // Handle deep links
+        const handleDeepLink = async (event: { url: string }) => {
+          const url = event.url;
+          console.log('Deep link received:', url);
+
+          // Parse deep link: onlyyou://connect/ROOMCODE or https://onlyyou.app/connect/ROOMCODE
+          const connectMatch = url.match(/(?:onlyyou:\/\/|https:\/\/onlyyou\.app\/)connect\/([A-Z0-9-]+)/i);
+
+          if (connectMatch && connectMatch[1]) {
+            const roomCode = connectMatch[1];
+            console.log('Extracted room code:', roomCode);
+
+            // Try to join the room
+            try {
+              await WebRTCService.connectToSignalingServer();
+              await WebRTCService.joinRoom(roomCode);
+
+              Alert.alert(
+                'Kết nối thành công! 💕',
+                `Đã tự động kết nối với người yêu qua mã: ${roomCode}`,
+                [{ text: 'Tuyệt vời!' }]
+              );
+            } catch (error) {
+              console.error('Failed to join room from deep link:', error);
+              Alert.alert(
+                'Kết nối thất bại',
+                `Không thể tự động kết nối. Vui lòng nhập mã thủ công: ${roomCode}`,
+                [{ text: 'OK' }]
+              );
+            }
+          }
+        };
+
+        // Listen for deep links when app is already open
+        const linkingSubscription = Linking.addEventListener('url', handleDeepLink);
+
+        // Check if app was opened via deep link
+        Linking.getInitialURL().then((url) => {
+          if (url) {
+            handleDeepLink({ url });
+          }
+        });
+
         return () => {
           subscription?.remove();
+          linkingSubscription?.remove();
         };
       } catch (error) {
         console.error('Failed to initialize services:', error);
