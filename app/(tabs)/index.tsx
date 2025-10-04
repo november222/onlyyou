@@ -268,13 +268,6 @@ export default function TouchScreen() {
                 {template.type === 'custom' && (
                   <Text style={styles.customBadge}>Custom</Text>
                 )}
-                {!buzzCooldown.canSend && (
-                  <Text style={styles.buzzCooldownText}>
-                    {buzzCooldown.remainingTime > 60000
-                      ? `${Math.floor(buzzCooldown.remainingTime / 60000)}m`
-                      : `${Math.ceil(buzzCooldown.remainingTime / 1000)}s`}
-                  </Text>
-                )}
               </TouchableOpacity>
             ))}
           </ScrollView>
