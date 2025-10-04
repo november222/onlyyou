@@ -21,7 +21,6 @@ import BuzzService, { BuzzTemplate } from '@/services/BuzzService';
 import { usePremium } from '@/providers/PremiumProvider';
 import { rateLimiter, RATE_LIMITS } from '@/services/RateLimiter';
 import * as Haptics from 'expo-haptics';
-import { notificationService } from '@/services/NotificationService';
 
 export default function TouchScreen() {
   const { t } = useTranslation();
@@ -68,35 +67,6 @@ export default function TouchScreen() {
     // Get initial connection state
     const currentState = WebRTCService.getConnectionState();
     setConnectionState(currentState);
-
-    // Setup notification listeners
-    if (Platform.OS !== 'web') {
-      notificationService.registerForPushNotifications();
-
-      const notificationListener = notificationService.addNotificationReceivedListener(
-        (notification) => {
-          console.log('Notification received:', notification);
-        }
-      );
-
-      const responseListener = notificationService.addNotificationResponseReceivedListener(
-        (response) => {
-          console.log('Notification clicked:', response);
-          const { type } = response.notification.request.content.data;
-          if (type === 'buzz') {
-            Alert.alert('Opening Buzz', 'Navigate to buzz screen here');
-          }
-        }
-      );
-
-      return () => {
-        WebRTCService.onConnectionStateChange = null;
-        BuzzService.onBuzzTemplatesChanged = null;
-        clearInterval(cooldownTimer);
-        notificationListener.remove();
-        responseListener.remove();
-      };
-    }
 
     return () => {
       WebRTCService.onConnectionStateChange = null;

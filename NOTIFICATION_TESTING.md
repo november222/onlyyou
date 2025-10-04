@@ -1,5 +1,7 @@
 # 🔔 Push Notification Testing Guide
 
+> **⚠️ STATUS:** Test UI đã ẩn khỏi production. NotificationService vẫn còn cho future use.
+
 ## Overview
 Complete guide để test push notifications khi app đóng hoặc minimize.
 
