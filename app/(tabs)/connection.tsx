@@ -361,7 +361,7 @@ export default function ConnectionScreen() {
                 ? t('connection:connectedDesc')
                 : connectionState.isConnecting
                   ? t('connection:connectingDesc')
-                  : connectionState.error || t('connection:readyToConnect')
+                  : (typeof connectionState.error === 'string' ? connectionState.error : null) || t('connection:readyToConnect')
             }
           </Text>
 
