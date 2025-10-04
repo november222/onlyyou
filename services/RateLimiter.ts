@@ -119,9 +119,9 @@ export const rateLimiter = RateLimiter.getInstance();
 
 export const RATE_LIMITS = {
   BUZZ: {
-    maxActions: 5,
-    windowMs: 60 * 1000,
-    cooldownMs: 30 * 1000,
+    maxActions: 1,
+    windowMs: 30 * 1000,
+    cooldownMs: 0,
   },
   CALENDAR_ADD: {
     maxActions: 10,
