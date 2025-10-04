@@ -337,7 +337,11 @@ export default function CalendarScreen() {
     );
   };
 
-  const groupedItemsArray = Object.entries(groupedItems).sort(([a], [b]) => b.localeCompare(a));
+  const groupedItemsArray = Object.entries(groupedItems).sort(([dateA], [dateB]) => {
+    const a = parseDate(dateA);
+    const b = parseDate(dateB);
+    return a.getTime() - b.getTime();
+  });
 
   return (
     <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
