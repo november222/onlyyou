@@ -1,6 +1,8 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { supabase } from '@/lib/supabase';
+import AuthService from './AuthService';
+import { Platform } from 'react-native';
 
-export type Plan = 'monthly' | 'yearly';
+export type Plan = 'monthly' | 'yearly' | 'lifetime';
 
 export interface PurchaseResult {
   success: boolean;
@@ -15,18 +17,27 @@ export interface IPurchase {
   listen(cb: (premium: boolean) => void): () => void;
 }
 
-class MockPurchase implements IPurchase {
+class SecurePurchaseService implements IPurchase {
   private subscribers: ((premium: boolean) => void)[] = [];
-  private readonly STORAGE_KEY = 'onlyyou_premium';
+  private initialized = false;
 
   async init(): Promise<void> {
-    // No-op for mock implementation
+    if (this.initialized) return;
+    this.initialized = true;
+
+    AuthService.onAuthStateChange = async (state) => {
+      if (state.isAuthenticated && state.user) {
+        const premium = await this.isPremium();
+        this.emit(premium);
+      } else {
+        this.emit(false);
+      }
+    };
   }
 
   async isPremium(): Promise<boolean> {
     try {
-      const value = await AsyncStorage.getItem(this.STORAGE_KEY);
-      return value === '1';
+      return await AuthService.isPremium();
     } catch (error) {
       console.error('Failed to check premium status:', error);
       return false;
@@ -35,66 +46,131 @@ class MockPurchase implements IPurchase {
 
   async purchase(plan: Plan): Promise<PurchaseResult> {
     try {
-      console.log(`Mock: Purchasing ${plan} plan...`);
-      
-      // Simulate purchase delay
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
-      // Save premium status
-      await AsyncStorage.setItem(this.STORAGE_KEY, '1');
-      
-      // Notify all subscribers
-      this.emit(true);
-      
-      console.log(`Mock: Successfully purchased ${plan} plan`);
+      const user = AuthService.getCurrentUser();
+      if (!user) {
+        return {
+          success: false,
+          error: 'Vui lòng đăng nhập để mua Premium.',
+        };
+      }
+
+      console.log(`Initiating ${plan} purchase...`);
+
+      const productId = `com.onlyyou.premium.${plan}`;
+      const mockReceipt = `mock_receipt_${Date.now()}`;
+
+      console.log('Verifying purchase with server...');
+
+      const { data, error } = await supabase.functions.invoke('verify-purchase', {
+        body: {
+          receipt: mockReceipt,
+          platform: Platform.OS as 'apple' | 'google',
+          productId,
+        },
+      });
+
+      if (error) {
+        console.error('Purchase verification error:', error);
+        return {
+          success: false,
+          error: 'Xác minh thanh toán thất bại. Vui lòng thử lại.',
+        };
+      }
+
+      if (!data.success) {
+        return {
+          success: false,
+          error: data.error || 'Thanh toán thất bại.',
+        };
+      }
+
+      console.log('Purchase verified successfully');
+
+      const { data: { user: refreshedUser } } = await supabase.auth.getUser();
+      if (refreshedUser) {
+        const { data: profile } = await supabase
+          .from('users')
+          .select('premium_tier, premium_expires_at')
+          .eq('id', refreshedUser.id)
+          .maybeSingle();
+
+        if (profile) {
+          const isPremium =
+            profile.premium_tier !== 'free' &&
+            (!profile.premium_expires_at || new Date(profile.premium_expires_at) > new Date());
+
+          this.emit(isPremium);
+        }
+      }
+
       return { success: true };
-    } catch (error) {
-      console.error('Mock purchase failed:', error);
-      return { 
-        success: false, 
-        error: 'Thanh toán thất bại. Vui lòng thử lại.' 
+    } catch (error: any) {
+      console.error('Purchase failed:', error);
+      return {
+        success: false,
+        error: error.message || 'Thanh toán thất bại. Vui lòng thử lại.',
       };
     }
   }
 
   async restore(): Promise<PurchaseResult> {
     try {
-      console.log('Mock: Restoring purchases...');
-      
-      // Simulate restore delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      const isPremium = await this.isPremium();
-      
-      if (isPremium) {
-        // Notify subscribers of current state
-        this.emit(true);
-        console.log('Mock: Premium subscription restored');
-        return { success: true };
-      } else {
-        console.log('Mock: No premium subscription found');
-        return { 
-          success: false, 
-          error: 'Không tìm thấy gói Premium nào để khôi phục.' 
+      const user = AuthService.getCurrentUser();
+      if (!user) {
+        return {
+          success: false,
+          error: 'Vui lòng đăng nhập để khôi phục gói Premium.',
         };
       }
-    } catch (error) {
-      console.error('Mock restore failed:', error);
-      return { 
-        success: false, 
-        error: 'Khôi phục thất bại. Vui lòng thử lại.' 
+
+      console.log('Restoring purchases...');
+
+      const { data: profile, error } = await supabase
+        .from('users')
+        .select('premium_tier, premium_expires_at')
+        .eq('id', user.id)
+        .maybeSingle();
+
+      if (error) {
+        console.error('Restore error:', error);
+        return {
+          success: false,
+          error: 'Khôi phục thất bại. Vui lòng thử lại.',
+        };
+      }
+
+      if (!profile || profile.premium_tier === 'free') {
+        return {
+          success: false,
+          error: 'Không tìm thấy gói Premium nào để khôi phục.',
+        };
+      }
+
+      if (profile.premium_expires_at && new Date(profile.premium_expires_at) <= new Date()) {
+        return {
+          success: false,
+          error: 'Gói Premium của bạn đã hết hạn.',
+        };
+      }
+
+      this.emit(true);
+      console.log('Premium subscription restored');
+
+      return { success: true };
+    } catch (error: any) {
+      console.error('Restore failed:', error);
+      return {
+        success: false,
+        error: error.message || 'Khôi phục thất bại. Vui lòng thử lại.',
       };
     }
   }
 
   listen(callback: (premium: boolean) => void): () => void {
-    // Add subscriber
     this.subscribers.push(callback);
-    
-    // Call with current state immediately
+
     this.isPremium().then(callback);
-    
-    // Return unsubscribe function
+
     return () => {
       const index = this.subscribers.indexOf(callback);
       if (index > -1) {
@@ -104,7 +180,7 @@ class MockPurchase implements IPurchase {
   }
 
   private emit(premium: boolean): void {
-    this.subscribers.forEach(callback => {
+    this.subscribers.forEach((callback) => {
       try {
         callback(premium);
       } catch (error) {
@@ -112,17 +188,6 @@ class MockPurchase implements IPurchase {
       }
     });
   }
-
-  // Debug method to reset premium status
-  async resetPremium(): Promise<void> {
-    try {
-      await AsyncStorage.removeItem(this.STORAGE_KEY);
-      this.emit(false);
-      console.log('Mock: Premium status reset');
-    } catch (error) {
-      console.error('Failed to reset premium status:', error);
-    }
-  }
 }
 
-export const PurchaseService: IPurchase = new MockPurchase();
+export const PurchaseService: IPurchase = new SecurePurchaseService();

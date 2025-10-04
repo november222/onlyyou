@@ -1,12 +1,14 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Platform } from 'react-native';
+import { supabase } from '@/lib/supabase';
+import type { User as SupabaseUser, Session } from '@supabase/supabase-js';
 
 export interface User {
   id: string;
   email: string;
   name: string;
   avatar?: string;
-  provider: 'google' | 'apple';
+  premiumTier: 'free' | 'monthly' | 'yearly' | 'lifetime';
+  premiumExpiresAt?: string | null;
 }
 
 export interface AuthState {
@@ -19,10 +21,9 @@ class AuthService {
   private authState: AuthState = {
     isAuthenticated: false,
     user: null,
-    isLoading: false,
+    isLoading: true,
   };
 
-  // Event callbacks
   public onAuthStateChange: ((state: AuthState) => void) | null = null;
 
   private initialized = false;
@@ -30,26 +31,63 @@ class AuthService {
   public async init(): Promise<void> {
     if (this.initialized) return;
     this.initialized = true;
-    await this.loadStoredAuth();
+
+    supabase.auth.onAuthStateChange(async (event, session) => {
+      console.log('Auth event:', event);
+
+      if (event === 'SIGNED_IN' && session) {
+        await this.handleSessionChange(session);
+      } else if (event === 'SIGNED_OUT') {
+        this.updateAuthState({
+          isAuthenticated: false,
+          user: null,
+          isLoading: false,
+        });
+      } else if (event === 'TOKEN_REFRESHED' && session) {
+        await this.handleSessionChange(session);
+      }
+    });
+
+    const { data: { session } } = await supabase.auth.getSession();
+    if (session) {
+      await this.handleSessionChange(session);
+    } else {
+      this.updateAuthState({ isLoading: false });
+    }
   }
 
-  private async loadStoredAuth(): Promise<void> {
+  private async handleSessionChange(session: Session): Promise<void> {
     try {
-      this.updateAuthState({ isLoading: true });
-      
-      const storedUser = await AsyncStorage.getItem('user');
-      if (storedUser) {
-        const user = JSON.parse(storedUser);
+      const { data: profile, error } = await supabase
+        .from('users')
+        .select('*')
+        .eq('id', session.user.id)
+        .maybeSingle();
+
+      if (error) {
+        console.error('Failed to fetch user profile:', error);
+        this.updateAuthState({ isLoading: false });
+        return;
+      }
+
+      if (profile) {
+        const user: User = {
+          id: profile.id,
+          email: profile.email,
+          name: profile.full_name || profile.email,
+          avatar: profile.avatar_url || undefined,
+          premiumTier: profile.premium_tier,
+          premiumExpiresAt: profile.premium_expires_at,
+        };
+
         this.updateAuthState({
           isAuthenticated: true,
           user,
           isLoading: false,
         });
-      } else {
-        this.updateAuthState({ isLoading: false });
       }
     } catch (error) {
-      console.error('Failed to load stored auth:', error);
+      console.error('Error handling session change:', error);
       this.updateAuthState({ isLoading: false });
     }
   }
@@ -59,94 +97,144 @@ class AuthService {
     this.onAuthStateChange?.(this.authState);
   }
 
-  public async signInWithGoogle(): Promise<void> {
+  public async signInWithEmail(email: string, password: string): Promise<void> {
     try {
       this.updateAuthState({ isLoading: true });
-      
-      // Mock Google Sign In
-      console.log('Mock: Signing in with Google...');
-      
-      // Simulate API delay
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      const mockUser: User = {
-        id: 'google_123456789',
-        email: 'user@gmail.com',
-        name: 'John Doe',
-        avatar: 'https://images.pexels.com/photos/220453/pexels-photo-220453.jpeg?auto=compress&cs=tinysrgb&w=150',
-        provider: 'google',
-      };
-      
-      await AsyncStorage.setItem('user', JSON.stringify(mockUser));
-      
-      this.updateAuthState({
-        isAuthenticated: true,
-        user: mockUser,
-        isLoading: false,
+
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
       });
-      
-      console.log('Mock: Google sign in successful');
-    } catch (error) {
-      console.error('Google sign in failed:', error);
+
+      if (error) {
+        throw error;
+      }
+
+      if (data.session) {
+        await this.handleSessionChange(data.session);
+      }
+    } catch (error: any) {
+      console.error('Email sign in failed:', error);
       this.updateAuthState({ isLoading: false });
-      throw new Error('Đăng nhập Google thất bại. Vui lòng thử lại.');
+
+      if (error.message?.includes('Invalid login credentials')) {
+        throw new Error('Email hoặc mật khẩu không đúng.');
+      } else if (error.message?.includes('Email not confirmed')) {
+        throw new Error('Vui lòng xác nhận email trước khi đăng nhập.');
+      } else {
+        throw new Error('Đăng nhập thất bại. Vui lòng thử lại.');
+      }
     }
   }
 
-  public async signInWithApple(): Promise<void> {
+  public async signUpWithEmail(email: string, password: string, name: string): Promise<void> {
     try {
       this.updateAuthState({ isLoading: true });
-      
-      // Mock Apple Sign In
-      console.log('Mock: Signing in with Apple...');
-      
-      // Simulate API delay
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      const mockUser: User = {
-        id: 'apple_987654321',
-        email: 'user@privaterelay.appleid.com',
-        name: 'Apple User',
-        avatar: 'https://images.pexels.com/photos/774909/pexels-photo-774909.jpeg?auto=compress&cs=tinysrgb&w=150',
-        provider: 'apple',
-      };
-      
-      await AsyncStorage.setItem('user', JSON.stringify(mockUser));
-      
-      this.updateAuthState({
-        isAuthenticated: true,
-        user: mockUser,
-        isLoading: false,
+
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            full_name: name,
+          },
+        },
       });
-      
-      console.log('Mock: Apple sign in successful');
-    } catch (error) {
-      console.error('Apple sign in failed:', error);
+
+      if (error) {
+        throw error;
+      }
+
+      if (data.session) {
+        await this.handleSessionChange(data.session);
+      } else {
+        this.updateAuthState({ isLoading: false });
+      }
+    } catch (error: any) {
+      console.error('Email sign up failed:', error);
       this.updateAuthState({ isLoading: false });
-      throw new Error('Đăng nhập Apple thất bại. Vui lòng thử lại.');
+
+      if (error.message?.includes('already registered')) {
+        throw new Error('Email này đã được đăng ký.');
+      } else if (error.message?.includes('Password')) {
+        throw new Error('Mật khẩu phải có ít nhất 6 ký tự.');
+      } else {
+        throw new Error('Đăng ký thất bại. Vui lòng thử lại.');
+      }
     }
   }
 
   public async signOut(): Promise<void> {
     try {
       this.updateAuthState({ isLoading: true });
-      
-      console.log('Mock: Signing out...');
-      
-      // Clear stored user data
-      await AsyncStorage.removeItem('user');
-      
+
+      const { error } = await supabase.auth.signOut();
+
+      if (error) {
+        throw error;
+      }
+
       this.updateAuthState({
         isAuthenticated: false,
         user: null,
         isLoading: false,
       });
-      
-      console.log('Mock: Sign out successful');
+
+      console.log('Sign out successful');
     } catch (error) {
       console.error('Sign out failed:', error);
       this.updateAuthState({ isLoading: false });
       throw new Error('Đăng xuất thất bại. Vui lòng thử lại.');
+    }
+  }
+
+  public async updateProfile(updates: { name?: string; avatar?: string }): Promise<void> {
+    try {
+      if (!this.authState.user) {
+        throw new Error('Not authenticated');
+      }
+
+      const { error } = await supabase
+        .from('users')
+        .update({
+          full_name: updates.name,
+          avatar_url: updates.avatar,
+        })
+        .eq('id', this.authState.user.id);
+
+      if (error) {
+        throw error;
+      }
+
+      this.updateAuthState({
+        user: this.authState.user
+          ? {
+              ...this.authState.user,
+              name: updates.name || this.authState.user.name,
+              avatar: updates.avatar || this.authState.user.avatar,
+            }
+          : null,
+      });
+    } catch (error) {
+      console.error('Update profile failed:', error);
+      throw new Error('Cập nhật profile thất bại. Vui lòng thử lại.');
+    }
+  }
+
+  public async resetPassword(email: string): Promise<void> {
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: 'onlyyou://reset-password',
+      });
+
+      if (error) {
+        throw error;
+      }
+
+      console.log('Password reset email sent');
+    } catch (error) {
+      console.error('Password reset failed:', error);
+      throw new Error('Gửi email đặt lại mật khẩu thất bại. Vui lòng thử lại.');
     }
   }
 
@@ -160,6 +248,19 @@ class AuthService {
 
   public isAuthenticated(): boolean {
     return this.authState.isAuthenticated;
+  }
+
+  public async isPremium(): Promise<boolean> {
+    if (!this.authState.user) return false;
+
+    const tier = this.authState.user.premiumTier;
+    if (tier === 'free') return false;
+
+    if (this.authState.user.premiumExpiresAt) {
+      return new Date(this.authState.user.premiumExpiresAt) > new Date();
+    }
+
+    return true;
   }
 }
 
