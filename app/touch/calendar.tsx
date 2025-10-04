@@ -66,15 +66,45 @@ export default function CalendarScreen() {
     setEditingItem(null);
   };
 
+  const validateDateTime = (): boolean => {
+    // Validate date format: DD/MM/YYYY
+    const dateRegex = /^(0[1-9]|[12][0-9]|3[01])\/(0[1-9]|1[0-2])\/\d{4}$/;
+    if (!dateRegex.test(date.trim())) {
+      Alert.alert(
+        'Định dạng ngày không hợp lệ',
+        'Vui lòng nhập ngày theo định dạng: DD/MM/YYYY\nVí dụ: 15/01/2025'
+      );
+      return false;
+    }
+
+    // Validate time format if provided: HH:MM
+    if (time.trim()) {
+      const timeRegex = /^([01][0-9]|2[0-3]):([0-5][0-9])$/;
+      if (!timeRegex.test(time.trim())) {
+        Alert.alert(
+          'Định dạng thời gian không hợp lệ',
+          'Vui lòng nhập thời gian theo định dạng: HH:MM (24 giờ)\nVí dụ: 14:30'
+        );
+        return false;
+      }
+    }
+
+    return true;
+  };
+
   const handleAddItem = async () => {
     if (!title.trim() || !date.trim()) {
       Alert.alert('Lỗi', 'Vui lòng nhập tiêu đề và ngày');
       return;
     }
 
+    if (!validateDateTime()) {
+      return;
+    }
+
     try {
       const result = await CalendarService.addItem(title, date, time, note);
-      
+
       if (result.success) {
         Alert.alert('Thành công! 📅', 'Sự kiện đã được thêm vào lịch');
         resetForm();
@@ -94,6 +124,10 @@ export default function CalendarScreen() {
       return;
     }
 
+    if (!validateDateTime()) {
+      return;
+    }
+
     try {
       const result = await CalendarService.updateItem(editingItem.id, {
         title,
@@ -101,7 +135,7 @@ export default function CalendarScreen() {
         time,
         note,
       });
-      
+
       if (result.success) {
         Alert.alert('Thành công! ✏️', 'Sự kiện đã được cập nhật');
         resetForm();
@@ -300,27 +334,31 @@ export default function CalendarScreen() {
               </View>
               
               <View style={styles.formGroup}>
-                <Text style={styles.formLabel}>Date *</Text>
+                <Text style={styles.formLabel}>Ngày *</Text>
                 <TextInput
                   style={styles.formInput}
                   value={date}
                   onChangeText={setDate}
-                  placeholder="YYYY-MM-DD"
+                  placeholder="DD/MM/YYYY (Ví dụ: 15/01/2025)"
                   placeholderTextColor="#666"
                   maxLength={10}
+                  keyboardType="numeric"
                 />
+                <Text style={styles.formHint}>Định dạng: DD/MM/YYYY</Text>
               </View>
-              
+
               <View style={styles.formGroup}>
-                <Text style={styles.formLabel}>Time (optional)</Text>
+                <Text style={styles.formLabel}>Thời gian (không bắt buộc)</Text>
                 <TextInput
                   style={styles.formInput}
                   value={time}
                   onChangeText={setTime}
-                  placeholder="HH:MM"
+                  placeholder="HH:MM (Ví dụ: 14:30)"
                   placeholderTextColor="#666"
                   maxLength={5}
+                  keyboardType="numeric"
                 />
+                <Text style={styles.formHint}>Định dạng 24 giờ: HH:MM</Text>
               </View>
               
               <View style={styles.formGroup}>
@@ -508,6 +546,12 @@ const styles = StyleSheet.create({
     fontSize: 16,
     borderWidth: 1,
     borderColor: '#333',
+  },
+  formHint: {
+    fontSize: 12,
+    color: '#888',
+    marginTop: 6,
+    fontStyle: 'italic',
   },
   formTextArea: {
     minHeight: 100,
