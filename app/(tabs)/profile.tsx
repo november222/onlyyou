@@ -50,7 +50,7 @@ interface ConnectionSession {
 }
 
 export default function ProfileScreen() {
-  const { t } = useTranslation();
+  const { t, ready } = useTranslation();
   const [currentConnectionStart, setCurrentConnectionStart] = useState<Date | null>(null);
   const [totalConnectedTime, setTotalConnectedTime] = useState(0);
   const [totalDisconnectedTime, setTotalDisconnectedTime] = useState(0);
@@ -508,6 +508,16 @@ export default function ProfileScreen() {
 
   const totalHistoryDuration = allConnectionSessions.reduce((sum, session) => sum + session.duration, 0);
   const totalHistoryBuzzCalls = allConnectionSessions.reduce((sum, session) => sum + session.buzzCallsCount, 0);
+
+  if (!ready) {
+    return (
+      <View style={styles.container}>
+        <View style={styles.loadingContainer}>
+          <Text style={styles.loadingText}>Loading...</Text>
+        </View>
+      </View>
+    );
+  }
 
   return (
     <>
@@ -1273,6 +1283,15 @@ const styles = StyleSheet.create({
     color: '#888',
     lineHeight: 20,
     flexWrap: 'wrap',
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  loadingText: {
+    fontSize: 16,
+    color: '#888',
   },
   guaranteeSection: {
     alignItems: 'center',
