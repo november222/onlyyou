@@ -585,42 +585,70 @@ export default function CalendarScreen() {
             )}
 
             {modalView === 'timePicker' && (
-              <View style={styles.pickerContent}>
-                <View style={styles.timePickerGrid}>
-                  <View style={styles.timePickerRow}>
-                    <Text style={styles.datePickerLabel}>Giờ:</Text>
-                    <TextInput
-                      style={styles.datePickerInput}
-                      value={selectedTime.getHours().toString().padStart(2, '0')}
-                      onChangeText={(val) => {
-                        const hours = parseInt(val) || 0;
-                        const newTime = new Date(selectedTime);
-                        newTime.setHours(Math.min(23, Math.max(0, hours)));
-                        setSelectedTime(newTime);
-                      }}
-                      keyboardType="numeric"
-                      maxLength={2}
-                      placeholder="HH"
-                      placeholderTextColor="#666"
-                    />
+              <ScrollView style={styles.pickerContent}>
+                <View style={styles.timePickerContainer}>
+                  <View style={styles.timeSection}>
+                    <Text style={styles.timeSectionTitle}>Giờ</Text>
+                    <View style={styles.timeGrid}>
+                      {Array.from({ length: 24 }, (_, i) => i).map((hour) => {
+                        const isSelected = hour === selectedTime.getHours();
+                        return (
+                          <TouchableOpacity
+                            key={hour}
+                            style={[
+                              styles.timeCell,
+                              isSelected && styles.timeCellSelected,
+                            ]}
+                            onPress={() => {
+                              const newTime = new Date(selectedTime);
+                              newTime.setHours(hour);
+                              setSelectedTime(newTime);
+                            }}
+                          >
+                            <Text
+                              style={[
+                                styles.timeCellText,
+                                isSelected && styles.timeCellTextSelected,
+                              ]}
+                            >
+                              {hour.toString().padStart(2, '0')}
+                            </Text>
+                          </TouchableOpacity>
+                        );
+                      })}
+                    </View>
                   </View>
 
-                  <View style={styles.timePickerRow}>
-                    <Text style={styles.datePickerLabel}>Phút:</Text>
-                    <TextInput
-                      style={styles.datePickerInput}
-                      value={selectedTime.getMinutes().toString().padStart(2, '0')}
-                      onChangeText={(val) => {
-                        const minutes = parseInt(val) || 0;
-                        const newTime = new Date(selectedTime);
-                        newTime.setMinutes(Math.min(59, Math.max(0, minutes)));
-                        setSelectedTime(newTime);
-                      }}
-                      keyboardType="numeric"
-                      maxLength={2}
-                      placeholder="MM"
-                      placeholderTextColor="#666"
-                    />
+                  <View style={styles.timeSection}>
+                    <Text style={styles.timeSectionTitle}>Phút</Text>
+                    <View style={styles.timeGrid}>
+                      {Array.from({ length: 12 }, (_, i) => i * 5).map((minute) => {
+                        const isSelected = minute === selectedTime.getMinutes();
+                        return (
+                          <TouchableOpacity
+                            key={minute}
+                            style={[
+                              styles.timeCell,
+                              isSelected && styles.timeCellSelected,
+                            ]}
+                            onPress={() => {
+                              const newTime = new Date(selectedTime);
+                              newTime.setMinutes(minute);
+                              setSelectedTime(newTime);
+                            }}
+                          >
+                            <Text
+                              style={[
+                                styles.timeCellText,
+                                isSelected && styles.timeCellTextSelected,
+                              ]}
+                            >
+                              {minute.toString().padStart(2, '0')}
+                            </Text>
+                          </TouchableOpacity>
+                        );
+                      })}
+                    </View>
                   </View>
                 </View>
 
@@ -634,7 +662,7 @@ export default function CalendarScreen() {
                 >
                   <Text style={styles.pickerConfirmText}>Xác Nhận</Text>
                 </TouchableOpacity>
-              </View>
+              </ScrollView>
             )}
           </View>
         </KeyboardAvoidingView>
@@ -950,14 +978,46 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#333',
   },
-  timePickerGrid: {
-    flexDirection: 'row',
-    gap: 16,
+  timePickerContainer: {
+    gap: 30,
     marginBottom: 20,
   },
-  timePickerRow: {
-    flex: 1,
+  timeSection: {
+    gap: 12,
+  },
+  timeSectionTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#fff',
+    marginBottom: 8,
+  },
+  timeGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
     gap: 8,
+  },
+  timeCell: {
+    width: '14%',
+    aspectRatio: 1.5,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderRadius: 8,
+    backgroundColor: '#1a1a1a',
+    borderWidth: 1,
+    borderColor: '#333',
+  },
+  timeCellSelected: {
+    backgroundColor: '#4ade80',
+    borderColor: '#4ade80',
+  },
+  timeCellText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#fff',
+  },
+  timeCellTextSelected: {
+    color: '#000',
+    fontWeight: '700',
   },
   datePreview: {
     fontSize: 24,
