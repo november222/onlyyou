@@ -417,14 +417,14 @@ export default function CalendarScreen() {
                 keyboardShouldPersistTaps="handled"
               >
               <View style={styles.formGroup}>
-                <Text style={styles.formLabel}>Title *</Text>
+                <Text style={styles.formLabel}>Title * ({title.length}/20)</Text>
                 <TextInput
                   style={styles.formInput}
                   value={title}
                   onChangeText={setTitle}
                   placeholder="Event title"
                   placeholderTextColor="#666"
-                  maxLength={100}
+                  maxLength={20}
                 />
               </View>
               
@@ -457,7 +457,7 @@ export default function CalendarScreen() {
               </View>
               
               <View style={styles.formGroup}>
-                <Text style={styles.formLabel}>Note (optional)</Text>
+                <Text style={styles.formLabel}>Note (optional) ({note.length}/120)</Text>
                 <TextInput
                   style={[styles.formInput, styles.formTextArea]}
                   value={note}
@@ -465,7 +465,7 @@ export default function CalendarScreen() {
                   placeholder="Additional notes"
                   placeholderTextColor="#666"
                   multiline
-                  maxLength={500}
+                  maxLength={120}
                   textAlignVertical="top"
                 />
               </View>
