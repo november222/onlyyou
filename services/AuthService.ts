@@ -1,6 +1,11 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { supabase } from '@/lib/supabase';
 import type { User as SupabaseUser, Session } from '@supabase/supabase-js';
+import * as AuthSession from 'expo-auth-session';
+import * as WebBrowser from 'expo-web-browser';
+import { Platform } from 'react-native';
+
+WebBrowser.maybeCompleteAuthSession();
 
 export interface User {
   id: string;
@@ -218,6 +223,67 @@ class AuthService {
     } catch (error) {
       console.error('Update profile failed:', error);
       throw new Error('Cập nhật profile thất bại. Vui lòng thử lại.');
+    }
+  }
+
+  public async signInWithGoogle(): Promise<void> {
+    try {
+      this.updateAuthState({ isLoading: true });
+
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: Platform.select({
+            web: window.location.origin,
+            default: 'onlyyou://auth/callback',
+          }),
+          skipBrowserRedirect: Platform.OS !== 'web',
+        },
+      });
+
+      if (error) {
+        throw error;
+      }
+
+      if (Platform.OS === 'web') {
+        return;
+      }
+
+      if (data?.url) {
+        const result = await WebBrowser.openAuthSessionAsync(
+          data.url,
+          'onlyyou://auth/callback'
+        );
+
+        if (result.type === 'success') {
+          const url = result.url;
+          const params = new URL(url).searchParams;
+          const accessToken = params.get('access_token');
+          const refreshToken = params.get('refresh_token');
+
+          if (accessToken && refreshToken) {
+            const { data: sessionData, error: sessionError } =
+              await supabase.auth.setSession({
+                access_token: accessToken,
+                refresh_token: refreshToken,
+              });
+
+            if (sessionError) {
+              throw sessionError;
+            }
+
+            if (sessionData.session) {
+              await this.handleSessionChange(sessionData.session);
+            }
+          }
+        } else {
+          this.updateAuthState({ isLoading: false });
+        }
+      }
+    } catch (error: any) {
+      console.error('Google sign in failed:', error);
+      this.updateAuthState({ isLoading: false });
+      throw new Error('Đăng nhập Google thất bại. Vui lòng thử lại.');
     }
   }
 
