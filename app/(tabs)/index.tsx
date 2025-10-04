@@ -20,6 +20,7 @@ import { isFeatureEnabled } from '../../config/features';
 import BuzzService, { BuzzTemplate } from '@/services/BuzzService';
 import { usePremium } from '@/providers/PremiumProvider';
 import { rateLimiter, RATE_LIMITS } from '@/services/RateLimiter';
+import * as Haptics from 'expo-haptics';
 
 export default function TouchScreen() {
   const { t } = useTranslation();
@@ -124,6 +125,29 @@ export default function TouchScreen() {
       loadBuzzCooldown();
     } else {
       Alert.alert('Cannot Send', result.error || 'Please try again');
+    }
+  };
+
+  const simulateReceiveBuzz = () => {
+    const randomTemplates = [
+      { emoji: '💕', text: 'I miss you' },
+      { emoji: '🥺', text: 'Are you there?' },
+      { emoji: '😴', text: 'Going to sleep' },
+      { emoji: '🍕', text: 'I\'m hungry' },
+    ];
+    const random = randomTemplates[Math.floor(Math.random() * randomTemplates.length)];
+
+    Alert.alert(
+      `${random.emoji} Buzz từ ${partnerName}!`,
+      random.text,
+      [
+        { text: 'Đóng', style: 'cancel' },
+        { text: 'Trả Lời', onPress: () => console.log('Reply to buzz') }
+      ]
+    );
+
+    if (Platform.OS !== 'web') {
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     }
   };
 
@@ -278,6 +302,13 @@ export default function TouchScreen() {
                 : `Chờ ${Math.ceil(buzzCooldown.remainingTime / 1000)} giây trước khi gửi buzz tiếp`}
             </Text>
           )}
+
+          <TouchableOpacity
+            style={styles.testButton}
+            onPress={simulateReceiveBuzz}
+          >
+            <Text style={styles.testButtonText}>🧪 Test: Nhận Buzz</Text>
+          </TouchableOpacity>
         </View>
       )}
 
@@ -569,5 +600,18 @@ const styles = StyleSheet.create({
     color: '#f59e0b',
     textAlign: 'center',
     marginTop: 8,
+  },
+  testButton: {
+    marginTop: 12,
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    backgroundColor: '#3b82f6',
+    borderRadius: 12,
+    alignSelf: 'center',
+  },
+  testButtonText: {
+    fontSize: 13,
+    color: '#fff',
+    fontWeight: '600',
   },
 });
