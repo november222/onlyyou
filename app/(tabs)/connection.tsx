@@ -183,9 +183,18 @@ export default function ConnectionScreen() {
   };
 
   const handleDisconnect = () => {
+    if (!savedConnection) {
+      // Nếu chưa có saved connection, không cho disconnect
+      Alert.alert(
+        'Không thể ngắt kết nối',
+        'Vui lòng đặt tên cho kết nối này trước khi ngắt kết nối.'
+      );
+      return;
+    }
+
     Alert.alert(
-      'Ngắt kết nối với người yêu?',
-      'Điều này sẽ kết thúc kết nối riêng tư của bạn. Bạn có thể kết nối lại bằng mã kết nối.',
+      'Ngắt kết nối tạm thời?',
+      `Bạn sẽ tạm thời ngắt kết nối với "${savedConnection.partnerName}". Đối tác của bạn sẽ ở trạng thái chờ cho đến khi bạn kết nối lại.`,
       [
         { text: 'Hủy', style: 'cancel' },
         {
@@ -193,7 +202,10 @@ export default function ConnectionScreen() {
           style: 'destructive',
           onPress: async () => {
             await WebRTCService.disconnect();
-            Alert.alert('Đã ngắt kết nối', 'Bạn có thể kết nối lại bất cứ lúc nào.');
+            Alert.alert(
+              'Đã ngắt kết nối',
+              `Đối tác đang chờ bạn kết nối lại. Sử dụng nút "Kết nối lại" để tiếp tục.`
+            );
           },
         },
       ]
@@ -355,13 +367,15 @@ export default function ConnectionScreen() {
           </View>
 
           <Text style={styles.statusDescription}>
-            {connectionState.isWaitingForPartner
-              ? 'Phòng đã được tạo. Đang chờ đối tác kết nối...'
-              : connectionState.isConnected
-                ? t('connection:connectedDesc')
-                : connectionState.isConnecting
-                  ? t('connection:connectingDesc')
-                  : (typeof connectionState.error === 'string' ? connectionState.error : null) || t('connection:readyToConnect')
+            {connectionState.isWaitingForPartner && savedConnection
+              ? `Đối tác "${savedConnection.partnerName}" đang chờ bạn kết nối lại...`
+              : connectionState.isWaitingForPartner
+                ? 'Phòng đã được tạo. Đang chờ đối tác kết nối...'
+                : connectionState.isConnected
+                  ? t('connection:connectedDesc')
+                  : connectionState.isConnecting
+                    ? t('connection:connectingDesc')
+                    : (typeof connectionState.error === 'string' ? connectionState.error : null) || t('connection:readyToConnect')
             }
           </Text>
 
@@ -385,6 +399,16 @@ export default function ConnectionScreen() {
               <Text style={styles.savedConnectionDate}>
                 Từ {new Date(savedConnection.connectionDate).toLocaleDateString('vi-VN')}
               </Text>
+
+              {connectionState.isWaitingForPartner && (
+                <View style={styles.waitingNotice}>
+                  <RefreshCw size={16} color="#f59e0b" strokeWidth={2} />
+                  <Text style={styles.waitingNoticeText}>
+                    {savedConnection.partnerName} đang chờ bạn...
+                  </Text>
+                </View>
+              )}
+
               <TouchableOpacity style={styles.reconnectButton} onPress={handleReconnect}>
                 <RefreshCw size={16} color="#4ade80" strokeWidth={2} />
                 <Text style={styles.reconnectButtonText}>Kết nối lại</Text>
@@ -417,13 +441,13 @@ export default function ConnectionScreen() {
         </View>
 
         {/* Connection Setup */}
-        {!connectionState.isConnected && !connectionState.isConnecting && (
+        {!connectionState.isConnected && !connectionState.isConnecting && !savedConnection && (
           <View style={styles.setupCard}>
             <Text style={styles.setupTitle}>Kết nối với người yêu</Text>
-            
+
             {/* Generate Room Code */}
-            <TouchableOpacity 
-              style={styles.generateButton} 
+            <TouchableOpacity
+              style={styles.generateButton}
               onPress={generateRoomCode}
               disabled={isGeneratingCode || isConnectingToServer}
             >
@@ -895,6 +919,25 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: '#888',
     marginBottom: 8,
+  },
+  waitingNotice: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    backgroundColor: '#332200',
+    borderRadius: 8,
+    marginTop: 8,
+    marginBottom: 8,
+    borderWidth: 1,
+    borderColor: '#f59e0b',
+  },
+  waitingNoticeText: {
+    fontSize: 13,
+    color: '#f59e0b',
+    fontWeight: '600',
+    flex: 1,
   },
   reconnectButton: {
     flexDirection: 'row',

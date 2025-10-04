@@ -452,21 +452,25 @@ class WebRTCService {
   // Mock: Disconnect
   public async disconnect(): Promise<void> {
     console.log('Mock: Disconnecting...');
-    
+
     // Stop connection timer
     await this.stopConnectionTimer();
-    
+
     // Clear reconnect timer
     if (this.reconnectTimer) {
       clearTimeout(this.reconnectTimer);
       this.reconnectTimer = null;
     }
-    
+
+    // Keep savedConnection info, just disconnect temporarily
+    const currentRoomCode = this.savedConnection?.roomCode || this.connectionState.roomCode;
+
     this.updateConnectionState({
       isConnected: false,
       isConnecting: false,
       partnerConnected: false,
-      roomCode: null,
+      isWaitingForPartner: true, // Partner is now waiting
+      roomCode: currentRoomCode, // Keep room code for reconnection
       error: null,
     });
     
