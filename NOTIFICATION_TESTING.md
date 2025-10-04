@@ -17,59 +17,91 @@ Package `expo-notifications@~0.30.5` đã được thêm vào.
 ### 2. Config Files
 - ✅ `app.json` - Đã config notification plugin
 - ✅ `NotificationService.ts` - Service quản lý notifications
-- ✅ Test buttons trong UI - 3 loại test
+
+### 3. EAS Project ID (Optional)
+
+**For Production Push Notifications:**
+
+Nếu muốn gửi push notifications từ backend, cần thêm projectId vào `app.json`:
+
+```json
+{
+  "expo": {
+    "extra": {
+      "eas": {
+        "projectId": "your-project-id-here"
+      }
+    }
+  }
+}
+```
+
+**Lấy Project ID:**
+```bash
+# Login to EAS
+eas login
+
+# Create/Link project
+eas build:configure
+
+# Project ID sẽ tự động được thêm vào app.json
+```
+
+**Note:** Local notifications (trong app) không cần projectId.
 
 ---
 
-## 🧪 3 Loại Test
+## 🧪 Testing Notifications
 
-### **1. 🧪 In-App Buzz**
-**Mô tả:** Test UI nhận buzz khi app đang mở
+### **Method 1: Test với Code (Developer)**
 
-**Cách test:**
-1. App đang mở
-2. Click button "🧪 In-App Buzz"
-3. Alert popup xuất hiện ngay lập tức
-4. Có haptic feedback (rung)
+Uncomment test functions trong `app/(tabs)/index.tsx`:
 
-**Use case:** Test UI flow khi đang dùng app
+```typescript
+// Thêm test functions (đã ẩn):
+const simulateReceiveBuzz = () => { ... };
+const testInstantNotification = async () => { ... };
+const testPushNotification = async () => { ... };
 
----
+// Thêm test buttons vào UI
+```
 
-### **2. 🔔 Instant Push**
-**Mô tả:** Test local notification hiện ngay lập tức
+### **Method 2: Test với Backend API**
 
-**Cách test:**
-1. App đang mở hoặc background
-2. Click button "🔔 Instant Push"
-3. Notification xuất hiện trong notification tray
-4. Pull down notification tray để xem
+```typescript
+// Backend gửi notification
+const pushToken = await notificationService.getPushToken();
 
-**Use case:** Test notification khi app minimize
+POST https://exp.host/--/api/v2/push/send
+{
+  "to": pushToken,
+  "title": "💕 Buzz từ Touch!",
+  "body": "I miss you",
+  "data": { "type": "buzz" }
+}
+```
+
+### **Method 3: Test với Console**
+
+```typescript
+// Trong React DevTools Console hoặc component
+import { notificationService } from '@/services/NotificationService';
+
+// Gửi instant notification
+await notificationService.sendLocalBuzzNotification({
+  title: '💕 Test',
+  body: 'Hello!',
+  data: { type: 'buzz' }
+});
+
+// Schedule notification
+await notificationService.scheduleTestBuzzNotification(5);
+```
 
 **Platform Support:**
-- ✅ iOS
-- ✅ Android
-- ❌ Web (không hỗ trợ)
-
----
-
-### **3. ⏰ Delayed Push (5 giây)**
-**Mô tả:** Test scheduled notification - app có thể đóng
-
-**Cách test:**
-1. Click button "⏰ Delayed Push"
-2. Alert confirm: "Thông báo sẽ xuất hiện sau 5 giây"
-3. Click "Gửi Test"
-4. **QUAN TRỌNG: Minimize hoặc đóng app ngay!**
-5. Sau 5 giây → Notification xuất hiện
-
-**Use case:** Test notification như thực tế (app đóng)
-
-**Platform Support:**
-- ✅ iOS
-- ✅ Android
-- ❌ Web (không hỗ trợ)
+- ✅ iOS - Full support
+- ✅ Android - Full support
+- ❌ Web - Không hỗ trợ (Expo limitation)
 
 ---
 

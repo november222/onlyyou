@@ -1,6 +1,7 @@
 import * as Notifications from 'expo-notifications';
 import { Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import Constants from 'expo-constants';
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
@@ -54,9 +55,11 @@ class NotificationService {
         return null;
       }
 
-      const tokenData = await Notifications.getExpoPushTokenAsync({
-        projectId: '8f8b2f9c-7e62-4aef-b0e1-9d8e5c3a1b4f',
-      });
+      const projectId = Constants.expoConfig?.extra?.eas?.projectId;
+
+      const tokenData = projectId
+        ? await Notifications.getExpoPushTokenAsync({ projectId })
+        : await Notifications.getExpoPushTokenAsync();
 
       const token = tokenData.data;
       await AsyncStorage.setItem(this.PUSH_TOKEN_KEY, token);
