@@ -268,7 +268,7 @@ export default function CalendarScreen() {
     setShowAddModal(true);
   };
 
-  const formatDate = (dateString: string) => {
+  const formatDateDisplay = (dateString: string) => {
     try {
       const date = new Date(dateString);
       return date.toLocaleDateString('vi-VN', {
@@ -311,7 +311,7 @@ export default function CalendarScreen() {
         )}
         <View style={styles.itemDetail}>
           <CalendarIcon size={14} color="#888" strokeWidth={2} />
-          <Text style={styles.itemDetailText}>{formatDate(item.date)}</Text>
+          <Text style={styles.itemDetailText}>{formatDateDisplay(item.date)}</Text>
         </View>
       </View>
       
@@ -326,7 +326,7 @@ export default function CalendarScreen() {
     
     return (
       <View style={styles.dateGroup}>
-        <Text style={styles.dateGroupTitle}>{formatDate(date)}</Text>
+        <Text style={styles.dateGroupTitle}>{formatDateDisplay(date)}</Text>
         {dateItems.map(calItem => (
           <View key={calItem.id}>
             {renderCalendarItem({ item: calItem })}
