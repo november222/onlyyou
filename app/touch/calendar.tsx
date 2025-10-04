@@ -283,44 +283,65 @@ export default function CalendarScreen() {
     }
   };
 
-  const renderCalendarItem = ({ item }: { item: CalItem }) => (
-    <View style={styles.calendarItem}>
-      <View style={styles.itemHeader}>
-        <Text style={styles.itemTitle}>{item.title}</Text>
-        <View style={styles.itemActions}>
-          <TouchableOpacity
-            style={styles.actionButton}
-            onPress={() => openEditModal(item)}
-          >
-            <Edit size={16} color="#888" strokeWidth={2} />
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={styles.actionButton}
-            onPress={() => handleDeleteItem(item)}
-          >
-            <Trash2 size={16} color="#ef4444" strokeWidth={2} />
-          </TouchableOpacity>
-        </View>
-      </View>
-      
-      <View style={styles.itemDetails}>
-        {item.time && (
-          <View style={styles.itemDetail}>
-            <Clock size={14} color="#888" strokeWidth={2} />
-            <Text style={styles.itemDetailText}>{item.time}</Text>
+  const isEventPast = (dateStr: string, timeStr?: string): boolean => {
+    try {
+      const eventDate = parseDate(dateStr);
+
+      if (timeStr) {
+        const [hours, minutes] = timeStr.split(':');
+        eventDate.setHours(parseInt(hours), parseInt(minutes));
+      } else {
+        eventDate.setHours(23, 59, 59);
+      }
+
+      return eventDate.getTime() < new Date().getTime();
+    } catch {
+      return false;
+    }
+  };
+
+  const renderCalendarItem = ({ item }: { item: CalItem }) => {
+    const isPast = isEventPast(item.date, item.time);
+
+    return (
+      <View style={[styles.calendarItem, isPast && styles.calendarItemPast]}>
+        <View style={styles.itemHeader}>
+          <Text style={[styles.itemTitle, isPast && styles.itemTitlePast]}>{item.title}</Text>
+          <View style={styles.itemActions}>
+            <TouchableOpacity
+              style={styles.actionButton}
+              onPress={() => openEditModal(item)}
+            >
+              <Edit size={16} color={isPast ? "#555" : "#888"} strokeWidth={2} />
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.actionButton}
+              onPress={() => handleDeleteItem(item)}
+            >
+              <Trash2 size={16} color="#ef4444" strokeWidth={2} />
+            </TouchableOpacity>
           </View>
-        )}
-        <View style={styles.itemDetail}>
-          <CalendarIcon size={14} color="#888" strokeWidth={2} />
-          <Text style={styles.itemDetailText}>{formatDateDisplay(item.date)}</Text>
         </View>
+
+        <View style={styles.itemDetails}>
+          {item.time && (
+            <View style={styles.itemDetail}>
+              <Clock size={14} color={isPast ? "#555" : "#888"} strokeWidth={2} />
+              <Text style={[styles.itemDetailText, isPast && styles.itemDetailTextPast]}>{item.time}</Text>
+            </View>
+          )}
+          <View style={styles.itemDetail}>
+            <CalendarIcon size={14} color={isPast ? "#555" : "#888"} strokeWidth={2} />
+            <Text style={[styles.itemDetailText, isPast && styles.itemDetailTextPast]}>{formatDateDisplay(item.date)}</Text>
+          </View>
+        </View>
+
+        {item.note && (
+          <Text style={[styles.itemNote, isPast && styles.itemNotePast]}>"{item.note}"</Text>
+        )}
       </View>
-      
-      {item.note && (
-        <Text style={styles.itemNote}>"{item.note}"</Text>
-      )}
-    </View>
-  );
+    );
+  };
 
   const renderDateGroup = ({ item }: { item: [string, CalItem[]] }) => {
     const [date, dateItems] = item;
@@ -775,6 +796,11 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#333',
   },
+  calendarItemPast: {
+    backgroundColor: '#0a0a0a',
+    borderColor: '#222',
+    opacity: 0.6,
+  },
   itemHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -786,6 +812,10 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#fff',
     flex: 1,
+  },
+  itemTitlePast: {
+    color: '#666',
+    textDecorationLine: 'line-through',
   },
   itemActions: {
     flexDirection: 'row',
@@ -808,10 +838,16 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#888',
   },
+  itemDetailTextPast: {
+    color: '#555',
+  },
   itemNote: {
     fontSize: 14,
     color: '#ccc',
     fontStyle: 'italic',
+  },
+  itemNotePast: {
+    color: '#555',
   },
   emptyContainer: {
     flex: 1,
