@@ -145,39 +145,9 @@ export default function CalendarScreen() {
     setShowTimePicker(true);
   };
 
-  const validateDateTime = (): boolean => {
-    // Validate date format: DD/MM/YYYY
-    const dateRegex = /^(0[1-9]|[12][0-9]|3[01])\/(0[1-9]|1[0-2])\/\d{4}$/;
-    if (!dateRegex.test(date.trim())) {
-      Alert.alert(
-        'Định dạng ngày không hợp lệ',
-        'Vui lòng nhập ngày theo định dạng: DD/MM/YYYY\nVí dụ: 15/01/2025'
-      );
-      return false;
-    }
-
-    // Validate time format if provided: HH:MM
-    if (time.trim()) {
-      const timeRegex = /^([01][0-9]|2[0-3]):([0-5][0-9])$/;
-      if (!timeRegex.test(time.trim())) {
-        Alert.alert(
-          'Định dạng thời gian không hợp lệ',
-          'Vui lòng nhập thời gian theo định dạng: HH:MM (24 giờ)\nVí dụ: 14:30'
-        );
-        return false;
-      }
-    }
-
-    return true;
-  };
-
   const handleAddItem = async () => {
     if (!title.trim() || !date.trim()) {
-      Alert.alert('Lỗi', 'Vui lòng nhập tiêu đề và ngày');
-      return;
-    }
-
-    if (!validateDateTime()) {
+      Alert.alert('Lỗi', 'Vui lòng nhập tiêu đề và chọn ngày');
       return;
     }
 
@@ -199,11 +169,7 @@ export default function CalendarScreen() {
 
   const handleEditItem = async () => {
     if (!editingItem || !title.trim() || !date.trim()) {
-      Alert.alert('Lỗi', 'Vui lòng nhập tiêu đề và ngày');
-      return;
-    }
-
-    if (!validateDateTime()) {
+      Alert.alert('Lỗi', 'Vui lòng nhập tiêu đề và chọn ngày');
       return;
     }
 
@@ -260,6 +226,24 @@ export default function CalendarScreen() {
     setDate(item.date);
     setTime(item.time || '');
     setNote(item.note || '');
+
+    // Parse existing date/time for pickers
+    if (item.date) {
+      try {
+        setSelectedDate(parseDate(item.date));
+      } catch (e) {
+        setSelectedDate(new Date());
+      }
+    }
+
+    if (item.time) {
+      try {
+        setSelectedTime(parseTime(item.time));
+      } catch (e) {
+        setSelectedTime(new Date());
+      }
+    }
+
     setShowAddModal(true);
   };
 
@@ -581,7 +565,7 @@ export default function CalendarScreen() {
                   <Text style={styles.datePickerLabel}>Giờ:</Text>
                   <TextInput
                     style={styles.datePickerInput}
-                    value={String(selectedTime.getHours()).padStart(2, '0')}
+                    value={selectedTime.getHours().toString().padStart(2, '0')}
                     onChangeText={(val) => {
                       const hours = parseInt(val) || 0;
                       const newTime = new Date(selectedTime);
@@ -599,7 +583,7 @@ export default function CalendarScreen() {
                   <Text style={styles.datePickerLabel}>Phút:</Text>
                   <TextInput
                     style={styles.datePickerInput}
-                    value={String(selectedTime.getMinutes()).padStart(2, '0')}
+                    value={selectedTime.getMinutes().toString().padStart(2, '0')}
                     onChangeText={(val) => {
                       const minutes = parseInt(val) || 0;
                       const newTime = new Date(selectedTime);
