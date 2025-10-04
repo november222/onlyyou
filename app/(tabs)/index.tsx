@@ -158,70 +158,6 @@ export default function TouchScreen() {
     }
   };
 
-  const simulateReceiveBuzz = () => {
-    const randomTemplates = [
-      { emoji: '💕', text: 'I miss you' },
-      { emoji: '🥺', text: 'Are you there?' },
-      { emoji: '😴', text: 'Going to sleep' },
-      { emoji: '🍕', text: 'I\'m hungry' },
-    ];
-    const random = randomTemplates[Math.floor(Math.random() * randomTemplates.length)];
-
-    Alert.alert(
-      `${random.emoji} Buzz từ ${partnerName}!`,
-      random.text,
-      [
-        { text: 'Đóng', style: 'cancel' },
-        { text: 'Trả Lời', onPress: () => console.log('Reply to buzz') }
-      ]
-    );
-
-    if (Platform.OS !== 'web') {
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-    }
-  };
-
-  const testPushNotification = async () => {
-    if (Platform.OS === 'web') {
-      Alert.alert('Not Supported', 'Push notifications are not available on web');
-      return;
-    }
-
-    Alert.alert(
-      '🔔 Test Push Notification',
-      'Thông báo sẽ xuất hiện sau 5 giây. Bạn có thể thoát app để test!',
-      [
-        { text: 'Hủy', style: 'cancel' },
-        {
-          text: 'Gửi Test',
-          onPress: async () => {
-            await notificationService.scheduleTestBuzzNotification(5);
-            Alert.alert('✅ Scheduled!', 'Thông báo sẽ hiện sau 5 giây. Có thể minimize app để test!');
-          }
-        }
-      ]
-    );
-  };
-
-  const testInstantNotification = async () => {
-    if (Platform.OS === 'web') {
-      Alert.alert('Not Supported', 'Notifications are not available on web');
-      return;
-    }
-
-    await notificationService.sendLocalBuzzNotification({
-      title: '💕 Buzz từ Touch!',
-      body: 'Missing you right now 🥺',
-      data: {
-        type: 'buzz',
-        emoji: '💕',
-        senderId: 'test-partner',
-        senderName: 'Touch',
-      },
-    });
-
-    Alert.alert('✅ Sent!', 'Check your notification tray');
-  };
 
   const startVoiceCall = async () => {
     if (!connectionState.isConnected) {
@@ -374,29 +310,6 @@ export default function TouchScreen() {
                 : `Chờ ${Math.ceil(buzzCooldown.remainingTime / 1000)} giây trước khi gửi buzz tiếp`}
             </Text>
           )}
-
-          <View style={styles.testButtonsRow}>
-            <TouchableOpacity
-              style={styles.testButton}
-              onPress={simulateReceiveBuzz}
-            >
-              <Text style={styles.testButtonText}>🧪 In-App Buzz</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={styles.testButton}
-              onPress={testInstantNotification}
-            >
-              <Text style={styles.testButtonText}>🔔 Instant Push</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={styles.testButton}
-              onPress={testPushNotification}
-            >
-              <Text style={styles.testButtonText}>⏰ Delayed Push</Text>
-            </TouchableOpacity>
-          </View>
         </View>
       )}
 
@@ -688,25 +601,5 @@ const styles = StyleSheet.create({
     color: '#f59e0b',
     textAlign: 'center',
     marginTop: 8,
-  },
-  testButtonsRow: {
-    flexDirection: 'row',
-    gap: 8,
-    marginTop: 12,
-    justifyContent: 'center',
-    flexWrap: 'wrap',
-  },
-  testButton: {
-    paddingVertical: 8,
-    paddingHorizontal: 14,
-    backgroundColor: '#3b82f6',
-    borderRadius: 10,
-    minWidth: 100,
-  },
-  testButtonText: {
-    fontSize: 11,
-    color: '#fff',
-    fontWeight: '600',
-    textAlign: 'center',
   },
 });
