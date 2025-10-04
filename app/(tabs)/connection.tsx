@@ -154,9 +154,9 @@ export default function ConnectionScreen() {
         'Bạn đã kết nối với người yêu của mình.',
         [{ text: 'Tuyệt vời!' }]
       );
-    } catch (error: any) {
+    } catch (error) {
       console.error('Failed to join room:', error);
-      const errorMessage = error?.message || 'Không thể tham gia phòng';
+      const errorMessage = (error as Error)?.message || 'Không thể tham gia phòng';
 
       if (errorMessage.includes('không hợp lệ') || errorMessage.includes('invalid')) {
         Alert.alert(
