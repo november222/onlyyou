@@ -1,5 +1,55 @@
 # CHANGELOG - Only You V1
 
+## V1.0.1 - Connection Logic Fixes (2025-10-04)
+
+### 🔧 **Bug Fixes**
+
+**Connection Flow**
+- ✅ Fixed name prompt not showing after ending session
+- ✅ Fixed state preservation when entering invalid room codes
+- ✅ Fixed reconnection logic to always succeed for saved connections
+- ✅ Fixed disconnect behavior to maintain 2-person session integrity
+
+**Key Changes:**
+- Name prompt now properly shows when `partnerConnected && !savedConnection`
+- Invalid room code errors no longer corrupt connection state
+- Reconnecting with saved connection bypasses random failure
+- Disconnect keeps roomCode and sets `isWaitingForPartner` for partner
+- End session properly resets all state and clears savedConnection
+- "Tạo phòng mới" button hidden when savedConnection exists
+
+### 📋 **Connection State Flow**
+
+```
+NEW CONNECTION:
+1. User A: Tạo phòng → ABC123 (waiting)
+2. User B: Join ABC123 → Connected
+3. Both: Name prompt → Save connection
+4. ✅ Saved connection established
+
+TEMPORARY DISCONNECT:
+1. User A: Ngắt kết nối
+2. State: isWaitingForPartner = true, roomCode kept
+3. User B sees: "User A đang chờ bạn..."
+4. User A: Kết nối lại → Success (no random fail)
+5. ✅ Reconnected to same session
+
+PERMANENT END:
+1. User: Cắt đứt phiên
+2. History saved to Profile
+3. savedConnection = null
+4. State fully reset
+5. "Tạo phòng mới" available again
+6. ✅ Next connection shows name prompt
+
+ERROR HANDLING:
+1. Invalid room code → Previous state restored
+2. Connection error → Previous state restored
+3. No corruption of existing session
+```
+
+---
+
 ## V1.0.0 - Completed Features ✅
 
 ### 🎯 **Core Philosophy**

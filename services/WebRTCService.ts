@@ -264,40 +264,51 @@ class WebRTCService {
   }
 
   // Mock: Join room with code
-  public async joinRoom(roomCode: string, skipNamePrompt: boolean = false): Promise<void> {
+  public async joinRoom(roomCode: string, isReconnecting: boolean = false): Promise<void> {
     console.log(`Mock: Joining room ${roomCode}...`);
 
     this.updateConnectionState({ isConnecting: true, error: null });
 
+    // Store previous state in case of error
+    const previousState = { ...this.connectionState };
+
     // Validate room code format
     const cleanCode = roomCode.replace(/-/g, '');
     if (cleanCode.length < 4) {
-      this.updateConnectionState({ isConnecting: false, error: 'Mã phòng không hợp lệ' });
+      this.updateConnectionState({
+        ...previousState,
+        isConnecting: false,
+        error: 'Mã phòng không hợp lệ'
+      });
       throw new Error('Mã phòng không hợp lệ');
     }
 
     // Validate format: should be 16 alphanumeric characters
     if (cleanCode.length !== 16 || !/^[A-Z0-9]+$/i.test(cleanCode)) {
-      this.updateConnectionState({ isConnecting: false, error: 'Mã phòng không đúng định dạng' });
+      this.updateConnectionState({
+        ...previousState,
+        isConnecting: false,
+        error: 'Mã phòng không đúng định dạng'
+      });
       throw new Error('Mã phòng không đúng định dạng. Vui lòng nhập đúng 16 ký tự.');
     }
 
     // Simulate connection delay
     await new Promise(resolve => setTimeout(resolve, 2000));
 
-    // Mock: Random 20% chance the room doesn't exist
-    if (Math.random() < 0.2) {
-      this.updateConnectionState({ isConnecting: false, error: 'Mã phòng không tồn tại' });
+    // Mock: Only fail if this is a NEW connection (not reconnecting)
+    // For saved connections, always succeed
+    if (!isReconnecting && !this.savedConnection && Math.random() < 0.2) {
+      this.updateConnectionState({
+        ...previousState,
+        isConnecting: false,
+        error: 'Mã phòng không tồn tại'
+      });
       throw new Error('Mã phòng không tồn tại. Vui lòng kiểm tra lại mã từ đối tác.');
     }
 
     // Start connection timer
     this.startConnectionTimer();
-
-    // Only save connection if skipNamePrompt is true (auto-reconnect case)
-    if (skipNamePrompt) {
-      await this.saveConnection(roomCode);
-    }
 
     this.updateConnectionState({
       isConnected: true,
@@ -521,7 +532,16 @@ class WebRTCService {
         this.reconnectTimer = null;
       }
 
-      this.disconnect();
+      // Reset connection state completely
+      this.updateConnectionState({
+        isConnected: false,
+        isConnecting: false,
+        roomCode: null,
+        partnerConnected: false,
+        isWaitingForPartner: false,
+        error: null,
+      });
+
       console.log('Cleared saved connection');
     } catch (error) {
       console.error('Failed to clear saved connection:', error);
@@ -575,7 +595,16 @@ class WebRTCService {
         this.reconnectTimer = null;
       }
 
-      this.disconnect();
+      // Reset connection state completely
+      this.updateConnectionState({
+        isConnected: false,
+        isConnecting: false,
+        roomCode: null,
+        partnerConnected: false,
+        isWaitingForPartner: false,
+        error: null,
+      });
+
       console.log('Session ended and saved to history');
     } catch (error) {
       console.error('Failed to end session:', error);

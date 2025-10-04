@@ -45,23 +45,20 @@ export default function ConnectionScreen() {
     WebRTCService.onConnectionStateChange = (state) => {
       setConnectionState(state);
 
-      // Show name prompt when partner joins
-      if (state.partnerConnected && !state.isWaitingForPartner && !savedConnection) {
-        setShowNamePrompt(true);
-      }
-
       // Update saved connection when state changes
-      if (state.isConnected && state.roomCode) {
-        setSavedConnection(WebRTCService.getSavedConnection());
-      } else if (!state.isConnected) {
-        setSavedConnection(WebRTCService.getSavedConnection());
+      const currentSaved = WebRTCService.getSavedConnection();
+      setSavedConnection(currentSaved);
+
+      // Show name prompt when partner joins AND no saved connection exists
+      if (state.partnerConnected && !state.isWaitingForPartner && !currentSaved) {
+        setShowNamePrompt(true);
       }
     };
 
     // Get initial connection state
     const currentState = WebRTCService.getConnectionState();
     setConnectionState(currentState);
-    
+
     // Load saved connection
     const saved = WebRTCService.getSavedConnection();
     setSavedConnection(saved);
@@ -289,18 +286,15 @@ export default function ConnectionScreen() {
 
   const handleReconnect = async () => {
     if (!savedConnection?.roomCode) return;
-    
+
     try {
-      await WebRTCService.joinRoom(savedConnection.roomCode);
+      await WebRTCService.joinRoom(savedConnection.roomCode, true); // isReconnecting = true
       Alert.alert('Kết nối lại thành công! 💕', 'Đã kết nối lại với người yêu của bạn.');
     } catch (error) {
       Alert.alert(
         'Kết nối lại thất bại',
-        'Không thể kết nối lại. Vui lòng thử tạo phòng mới.',
-        [
-          { text: 'Tạo phòng mới', onPress: generateRoomCode },
-          { text: 'Hủy', style: 'cancel' }
-        ]
+        'Không thể kết nối lại. Vui lòng thử lại sau.',
+        [{ text: 'OK' }]
       );
     }
   };
