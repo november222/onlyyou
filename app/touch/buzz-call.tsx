@@ -47,8 +47,8 @@ export default function BuzzCallScreen() {
   const loadCustomBuzzTemplates = async () => {
     try {
       const allTemplates = await BuzzService.getBuzzTemplates(isPremium);
-      const customOnly = allTemplates.filter(template => template.type === 'custom');
-      setCustomBuzzTemplates(customOnly);
+      // Show all templates (both custom and default)
+      setCustomBuzzTemplates(allTemplates);
     } catch (error) {
       console.error('Failed to load custom buzz templates:', error);
     }
@@ -108,11 +108,13 @@ export default function BuzzCallScreen() {
       
       if (result.success) {
         Alert.alert(
-          'Thành công! ✨', 
+          'Thành công! ✨',
           editingTemplate ? 'Buzz đã được cập nhật' : 'Buzz tùy chỉnh đã được tạo'
         );
         setShowCreateModal(false);
-        loadCustomBuzzTemplates();
+        await loadCustomBuzzTemplates();
+        // Notify other screens to reload
+        BuzzService.notifyBuzzTemplatesChanged();
       } else {
         Alert.alert('Lỗi', result.error || 'Không thể lưu buzz tùy chỉnh');
       }
@@ -151,7 +153,9 @@ export default function BuzzCallScreen() {
     try {
       const result = await BuzzService.toggleQuickBuzzVisibility(template.id);
       if (result.success) {
-        loadCustomBuzzTemplates();
+        await loadCustomBuzzTemplates();
+        // Notify other screens to reload
+        BuzzService.notifyBuzzTemplatesChanged();
       } else {
         Alert.alert('Lỗi', result.error || 'Không thể cập nhật hiển thị');
       }
@@ -219,13 +223,21 @@ export default function BuzzCallScreen() {
         <View style={styles.customBuzzLeft}>
           <Text style={styles.customBuzzEmoji}>{item.emoji || '💫'}</Text>
           <View style={styles.customBuzzInfo}>
-            <Text style={styles.customBuzzText}>{item.text}</Text>
+            <View style={styles.customBuzzTextRow}>
+              <Text style={styles.customBuzzText}>{item.text}</Text>
+              {item.type === 'default' && (
+                <Text style={styles.defaultBadge}>Mặc định</Text>
+              )}
+            </View>
             <Text style={styles.customBuzzMeta}>
-              Tạo {new Date(parseInt(item.id.split('_')[1]) || Date.now()).toLocaleDateString('vi-VN')}
+              {item.type === 'custom'
+                ? `Tạo ${new Date(parseInt(item.id.split('_')[1]) || Date.now()).toLocaleDateString('vi-VN')}`
+                : 'Buzz mặc định từ hệ thống'
+              }
             </Text>
           </View>
         </View>
-        
+
         <View style={styles.customBuzzActions}>
           <TouchableOpacity
             style={styles.actionButton}
@@ -237,20 +249,24 @@ export default function BuzzCallScreen() {
               <EyeOff size={20} color="#666" strokeWidth={2} />
             )}
           </TouchableOpacity>
-          
-          <TouchableOpacity
-            style={styles.actionButton}
-            onPress={() => openEditModal(item)}
-          >
-            <Edit size={20} color="#888" strokeWidth={2} />
-          </TouchableOpacity>
-          
-          <TouchableOpacity
-            style={styles.actionButton}
-            onPress={() => handleDeleteTemplate(item)}
-          >
-            <Trash2 size={20} color="#ef4444" strokeWidth={2} />
-          </TouchableOpacity>
+
+          {item.type === 'custom' && (
+            <>
+              <TouchableOpacity
+                style={styles.actionButton}
+                onPress={() => openEditModal(item)}
+              >
+                <Edit size={20} color="#888" strokeWidth={2} />
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={styles.actionButton}
+                onPress={() => handleDeleteTemplate(item)}
+              >
+                <Trash2 size={20} color="#ef4444" strokeWidth={2} />
+              </TouchableOpacity>
+            </>
+          )}
         </View>
       </View>
       
@@ -291,9 +307,9 @@ export default function BuzzCallScreen() {
 
         {/* Custom Buzz List */}
         <View style={styles.content}>
-          <Text style={styles.sectionTitle}>Buzz Tùy Chỉnh Của Bạn</Text>
+          <Text style={styles.sectionTitle}>Quản Lý Buzz</Text>
           <Text style={styles.sectionSubtitle}>
-            Tạo và quản lý các buzz cá nhân. Chọn buzz nào hiển thị trong Quick Buzz.
+            Tạo buzz tùy chỉnh và quản lý buzz mặc định. Chọn buzz nào hiển thị trong Quick Buzz.
           </Text>
           
           <FlatList
@@ -484,11 +500,25 @@ const styles = StyleSheet.create({
   customBuzzInfo: {
     flex: 1,
   },
+  customBuzzTextRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 2,
+  },
   customBuzzText: {
     fontSize: 16,
     fontWeight: '600',
     color: '#fff',
-    marginBottom: 2,
+  },
+  defaultBadge: {
+    fontSize: 10,
+    color: '#4ade80',
+    backgroundColor: 'rgba(74, 222, 128, 0.1)',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4,
+    fontWeight: '600',
   },
   customBuzzMeta: {
     fontSize: 12,

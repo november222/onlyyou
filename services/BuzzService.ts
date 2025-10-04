@@ -36,6 +36,9 @@ class BuzzService {
   private readonly COOLDOWN_DURATION = 30000; // 30 seconds
   private readonly API_BASE = 'https://api.onlyyou.app'; // Replace with actual API
 
+  // Event callback for buzz templates changes
+  public onBuzzTemplatesChanged: (() => void) | null = null;
+
   // Default buzz templates for free users
   private readonly DEFAULT_TEMPLATES: BuzzTemplate[] = [
     { id: 'default_1', text: 'I\'m hungry :(', type: 'default', emoji: '🍽️', showInQuickBuzz: true },
@@ -48,19 +51,40 @@ class BuzzService {
   // Get all buzz templates (default + custom)
   public async getBuzzTemplates(isPremium: boolean = false): Promise<BuzzTemplate[]> {
     try {
-      // Always include default templates
-      let templates = [...this.DEFAULT_TEMPLATES];
+      // Load default templates with saved visibility state
+      const defaultTemplates = await this.getDefaultTemplatesWithState();
 
       if (isPremium) {
         // Load custom templates from storage for premium users
         const customTemplates = await this.getCustomTemplates();
-        templates = [...customTemplates, ...templates];
+        return [...customTemplates, ...defaultTemplates];
       }
 
-      return templates;
+      return defaultTemplates;
     } catch (error) {
       console.error('Failed to get buzz templates:', error);
       return this.DEFAULT_TEMPLATES;
+    }
+  }
+
+  // Get default templates with saved visibility state
+  private async getDefaultTemplatesWithState(): Promise<BuzzTemplate[]> {
+    try {
+      const savedState = await AsyncStorage.getItem('onlyyou_default_buzz_state');
+      if (!savedState) {
+        return [...this.DEFAULT_TEMPLATES];
+      }
+
+      const stateMap: Record<string, boolean> = JSON.parse(savedState);
+      return this.DEFAULT_TEMPLATES.map(template => ({
+        ...template,
+        showInQuickBuzz: stateMap[template.id] !== undefined
+          ? stateMap[template.id]
+          : template.showInQuickBuzz,
+      }));
+    } catch (error) {
+      console.error('Failed to load default templates state:', error);
+      return [...this.DEFAULT_TEMPLATES];
     }
   }
 
@@ -232,9 +256,22 @@ class BuzzService {
     try {
       // Handle default templates
       if (templateId.startsWith('default_') || ['ping', 'love', 'miss'].includes(templateId)) {
-        // For default templates, we need to update the local state
-        // In a real app, this would be saved to user preferences
-        console.log('Toggle quick buzz for default template:', templateId);
+        const savedState = await AsyncStorage.getItem('onlyyou_default_buzz_state');
+        const stateMap: Record<string, boolean> = savedState ? JSON.parse(savedState) : {};
+
+        // Find current state
+        const defaultTemplate = this.DEFAULT_TEMPLATES.find(t => t.id === templateId);
+        const currentState = stateMap[templateId] !== undefined
+          ? stateMap[templateId]
+          : defaultTemplate?.showInQuickBuzz ?? true;
+
+        // Toggle state
+        stateMap[templateId] = !currentState;
+
+        // Save updated state
+        await AsyncStorage.setItem('onlyyou_default_buzz_state', JSON.stringify(stateMap));
+        console.log('Toggled quick buzz for default template:', templateId, 'to', !currentState);
+
         return { success: true };
       }
 
@@ -443,6 +480,13 @@ class BuzzService {
   // Get current cooldown status
   public async getCooldownStatus(): Promise<{ canSend: boolean; remainingTime: number }> {
     return await this.checkCooldown();
+  }
+
+  // Notify listeners that buzz templates have changed
+  public notifyBuzzTemplatesChanged(): void {
+    if (this.onBuzzTemplatesChanged) {
+      this.onBuzzTemplatesChanged();
+    }
   }
 
   // TODO: API methods for server communication

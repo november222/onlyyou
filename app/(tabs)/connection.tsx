@@ -496,17 +496,6 @@ export default function ConnectionScreen() {
                 <Text style={styles.disconnectButtonText}>Ngắt kết nối</Text>
               </TouchableOpacity>
             </View>
-
-
-            {/* Forget Connection */}
-            {savedConnection && (
-              <View style={styles.forgetActions}>
-                <TouchableOpacity style={styles.forgetButton} onPress={handleForgetConnection}>
-                  <Trash2 size={16} color="#666" strokeWidth={2} />
-                  <Text style={styles.forgetButtonText}>Xóa Kết Nối Đã Lưu</Text>
-                </TouchableOpacity>
-              </View>
-            )}
           </>
         )}
 

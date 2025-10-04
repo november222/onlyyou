@@ -28,6 +28,7 @@ export default function TouchScreen() {
     roomCode: null,
     partnerConnected: false,
     error: null,
+    isWaitingForPartner: false,
   });
   const [isInCall, setIsInCall] = useState(false);
   const [isVideoCall, setIsVideoCall] = useState(false);
@@ -37,6 +38,7 @@ export default function TouchScreen() {
   });
   const [buzzTemplates, setBuzzTemplates] = useState<BuzzTemplate[]>([]);
   const { isPremium } = usePremium();
+  const [partnerName, setPartnerName] = useState<string>('Touch');
 
   // Remove unused refs and state
   useEffect(() => {
@@ -45,22 +47,38 @@ export default function TouchScreen() {
       setConnectionState(state);
     };
 
+    // Set up BuzzService event listener
+    BuzzService.onBuzzTemplatesChanged = () => {
+      loadBuzzTemplates();
+    };
+
+    // Load partner name
+    loadPartnerName();
+
     // Load buzz cooldown status
     loadBuzzCooldown();
     loadBuzzTemplates();
-    
+
     // Update cooldowns every second
     const cooldownTimer = setInterval(loadBuzzCooldown, 1000);
-    
+
     // Get initial connection state
     const currentState = WebRTCService.getConnectionState();
     setConnectionState(currentState);
-    
+
     return () => {
       WebRTCService.onConnectionStateChange = null;
+      BuzzService.onBuzzTemplatesChanged = null;
       clearInterval(cooldownTimer);
     };
   }, []);
+
+  const loadPartnerName = () => {
+    const savedConnection = WebRTCService.getSavedConnection();
+    if (savedConnection?.partnerName) {
+      setPartnerName(savedConnection.partnerName);
+    }
+  };
 
   const loadBuzzCooldown = async () => {
     if (isFeatureEnabled('buzz')) {
@@ -191,7 +209,7 @@ export default function TouchScreen() {
               { backgroundColor: connectionState.isConnected ? '#4ade80' : '#ef4444' }
             ]} />
             <View style={styles.connectionInfo}>
-              <Text style={styles.headerTitle}>Touch</Text>
+              <Text style={styles.headerTitle}>{partnerName}</Text>
               <Text style={styles.partnerName}>{getPartnerDisplayName()}</Text>
             </View>
           </View>
@@ -263,33 +281,84 @@ export default function TouchScreen() {
         </Text>
         
         <View style={styles.touchButtons}>
-          <TouchableOpacity 
-            style={[styles.touchButton, !connectionState.isConnected && styles.touchButtonDisabled]}
-            onPress={() => router.push('/touch/buzz-call')}
+          <TouchableOpacity
+            style={[
+              styles.touchButton,
+              (!connectionState.isConnected || !isPremium) && styles.touchButtonDisabled
+            ]}
+            onPress={() => {
+              if (!isPremium) {
+                Alert.alert(
+                  'Tính Năng Premium 👑',
+                  'Buzz Call là tính năng dành cho người dùng Premium.',
+                  [
+                    { text: 'Để Sau', style: 'cancel' },
+                    { text: 'Nâng Cấp', onPress: () => router.push('/premium') },
+                  ]
+                );
+              } else {
+                router.push('/touch/buzz-call');
+              }
+            }}
             disabled={!connectionState.isConnected}
           >
             <Text style={styles.touchButtonIcon}>⚡</Text>
             <Text style={styles.touchButtonText}>Buzz Call</Text>
+            {!isPremium && <Text style={styles.touchButtonPremiumBadge}>👑 Premium</Text>}
             {!connectionState.isConnected && <Text style={styles.touchButtonDisabledText}>Cần kết nối</Text>}
           </TouchableOpacity>
-          
-          <TouchableOpacity 
-            style={[styles.touchButton, !connectionState.isConnected && styles.touchButtonDisabled]}
-            onPress={() => router.push('/touch/calendar')}
+
+          <TouchableOpacity
+            style={[
+              styles.touchButton,
+              (!connectionState.isConnected || !isPremium) && styles.touchButtonDisabled
+            ]}
+            onPress={() => {
+              if (!isPremium) {
+                Alert.alert(
+                  'Tính Năng Premium 👑',
+                  'Calendar là tính năng dành cho người dùng Premium.',
+                  [
+                    { text: 'Để Sau', style: 'cancel' },
+                    { text: 'Nâng Cấp', onPress: () => router.push('/premium') },
+                  ]
+                );
+              } else {
+                router.push('/touch/calendar');
+              }
+            }}
             disabled={!connectionState.isConnected}
           >
             <Text style={styles.touchButtonIcon}>📅</Text>
             <Text style={styles.touchButtonText}>Calendar</Text>
+            {!isPremium && <Text style={styles.touchButtonPremiumBadge}>👑 Premium</Text>}
             {!connectionState.isConnected && <Text style={styles.touchButtonDisabledText}>Cần kết nối</Text>}
           </TouchableOpacity>
-          
-          <TouchableOpacity 
-            style={[styles.touchButton, !connectionState.isConnected && styles.touchButtonDisabled]}
-            onPress={() => router.push('/touch/shared-gallery')}
+
+          <TouchableOpacity
+            style={[
+              styles.touchButton,
+              (!connectionState.isConnected || !isPremium) && styles.touchButtonDisabled
+            ]}
+            onPress={() => {
+              if (!isPremium) {
+                Alert.alert(
+                  'Tính Năng Premium 👑',
+                  'Gallery là tính năng dành cho người dùng Premium.',
+                  [
+                    { text: 'Để Sau', style: 'cancel' },
+                    { text: 'Nâng Cấp', onPress: () => router.push('/premium') },
+                  ]
+                );
+              } else {
+                router.push('/touch/shared-gallery');
+              }
+            }}
             disabled={!connectionState.isConnected}
           >
             <Text style={styles.touchButtonIcon}>📸</Text>
             <Text style={styles.touchButtonText}>Gallery</Text>
+            {!isPremium && <Text style={styles.touchButtonPremiumBadge}>👑 Premium</Text>}
             {!connectionState.isConnected && <Text style={styles.touchButtonDisabledText}>Cần kết nối</Text>}
           </TouchableOpacity>
         </View>
@@ -414,6 +483,12 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: '#666',
     marginTop: 4,
+  },
+  touchButtonPremiumBadge: {
+    fontSize: 11,
+    color: '#f59e0b',
+    marginTop: 4,
+    fontWeight: '600',
   },
   buzzContainer: {
     backgroundColor: '#111',
