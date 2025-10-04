@@ -17,6 +17,7 @@ import { router } from 'expo-router';
 import { ArrowLeft, Plus, Calendar as CalendarIcon, Clock, Edit, Trash2, X } from 'lucide-react-native';
 import CalendarService, { CalItem } from '@/services/CalendarService';
 import { isFeatureEnabled } from '@/config/features';
+import WebRTCService from '@/services/WebRTCService';
 
 export default function CalendarScreen() {
   const insets = useSafeAreaInsets();
@@ -24,16 +25,25 @@ export default function CalendarScreen() {
   const [groupedItems, setGroupedItems] = useState<Record<string, CalItem[]>>({});
   const [showAddModal, setShowAddModal] = useState(false);
   const [editingItem, setEditingItem] = useState<CalItem | null>(null);
-  
+
   // Form state
   const [title, setTitle] = useState('');
   const [date, setDate] = useState('');
   const [time, setTime] = useState('');
   const [note, setNote] = useState('');
+  const [partnerName, setPartnerName] = useState<string>('My Love');
 
   useEffect(() => {
     loadCalendarItems();
+    loadPartnerName();
   }, []);
+
+  const loadPartnerName = () => {
+    const savedConnection = WebRTCService.getSavedConnection();
+    if (savedConnection?.partnerName) {
+      setPartnerName(savedConnection.partnerName);
+    }
+  };
 
   const loadCalendarItems = async () => {
     if (!isFeatureEnabled('calendar')) return;
@@ -222,7 +232,10 @@ export default function CalendarScreen() {
         <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
           <ArrowLeft size={24} color="#fff" strokeWidth={2} />
         </TouchableOpacity>
-        <Text style={styles.title}>Calendar</Text>
+        <View style={styles.titleContainer}>
+          <Text style={styles.title}>Calendar</Text>
+          <Text style={styles.partnerNameSubtitle}>Với {partnerName} 💕</Text>
+        </View>
         <TouchableOpacity style={styles.addButton} onPress={openAddModal}>
           <Plus size={24} color="#ff6b9d" strokeWidth={2} />
         </TouchableOpacity>
@@ -357,10 +370,19 @@ const styles = StyleSheet.create({
     padding: 8,
     marginLeft: -8,
   },
+  titleContainer: {
+    flex: 1,
+    alignItems: 'center',
+  },
   title: {
     fontSize: 20,
     fontWeight: '700',
     color: '#fff',
+  },
+  partnerNameSubtitle: {
+    fontSize: 12,
+    color: '#ff6b9d',
+    marginTop: 2,
   },
   addButton: {
     padding: 8,

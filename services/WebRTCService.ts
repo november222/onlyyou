@@ -16,11 +16,12 @@ export interface ConnectionState {
   roomCode: string | null;
   partnerConnected: boolean;
   error: string | null;
+  isWaitingForPartner: boolean;
 }
 
 export interface SavedConnection {
   roomCode: string;
-  partnerName?: string;
+  partnerName: string;
   connectionDate: string;
   lastConnected: string;
   buzzCallsCount?: number;
@@ -59,6 +60,7 @@ class WebRTCService {
     roomCode: null,
     partnerConnected: false,
     error: null,
+    isWaitingForPartner: false,
   };
 
   private savedConnection: SavedConnection | null = null;
@@ -252,34 +254,37 @@ class WebRTCService {
   }
 
   // Mock: Join room with code
-  public async joinRoom(roomCode: string): Promise<void> {
+  public async joinRoom(roomCode: string, skipNamePrompt: boolean = false): Promise<void> {
     console.log(`Mock: Joining room ${roomCode}...`);
-    
+
     this.updateConnectionState({ isConnecting: true, error: null });
-    
+
     // Simulate connection delay
     await new Promise(resolve => setTimeout(resolve, 2000));
-    
+
     // Validate room code format (basic validation)
     const cleanCode = roomCode.replace(/-/g, '');
     if (cleanCode.length < 4) {
       throw new Error('Mã phòng không hợp lệ');
     }
-    
+
     // Start connection timer
     this.startConnectionTimer();
-    
-    // Save this connection for future auto-reconnect
-    await this.saveConnection(roomCode);
-    
+
+    // Only save connection if skipNamePrompt is true (auto-reconnect case)
+    if (skipNamePrompt) {
+      await this.saveConnection(roomCode);
+    }
+
     this.updateConnectionState({
       isConnected: true,
       isConnecting: false,
       roomCode: roomCode.toUpperCase(),
       partnerConnected: true,
+      isWaitingForPartner: false,
       error: null,
     });
-    
+
     // Update last connected time
     if (this.savedConnection) {
       this.savedConnection.lastConnected = new Date().toISOString();
@@ -287,7 +292,7 @@ class WebRTCService {
       this.savedConnection.totalConnectedTime = this.totalConnectedTime;
       await AsyncStorage.setItem('savedConnection', JSON.stringify(this.savedConnection));
     }
-    
+
     console.log(`Mock: Successfully joined room ${roomCode}`);
   }
 
@@ -496,7 +501,7 @@ class WebRTCService {
     }
   }
 
-  // Mock: Generate room code
+  // Mock: Generate room code and enter waiting state
   public async generateRoomCode(): Promise<string> {
     console.log('Mock: Generating room code...');
 
@@ -516,7 +521,58 @@ class WebRTCService {
 
     console.log(`Mock: Generated room code: ${roomCode}`);
 
+    // Set to waiting for partner state
+    this.updateConnectionState({
+      isConnected: true,
+      roomCode: roomCode,
+      partnerConnected: false,
+      isWaitingForPartner: true,
+      error: null,
+    });
+
+    // Simulate partner joining after random delay (5-15 seconds)
+    const delay = 5000 + Math.random() * 10000;
+    setTimeout(() => {
+      if (this.connectionState.roomCode === roomCode && this.connectionState.isWaitingForPartner) {
+        this.handlePartnerJoined();
+      }
+    }, delay);
+
     return roomCode;
+  }
+
+  // Handle when partner joins the room
+  private handlePartnerJoined(): void {
+    console.log('Mock: Partner has joined the room!');
+
+    // Start connection timer
+    this.startConnectionTimer();
+
+    this.updateConnectionState({
+      partnerConnected: true,
+      isWaitingForPartner: false,
+    });
+  }
+
+  // Save connection with partner name
+  public async saveConnectionWithName(partnerName: string): Promise<void> {
+    if (!this.connectionState.roomCode) {
+      throw new Error('No active room to save');
+    }
+
+    const connection: SavedConnection = {
+      roomCode: this.connectionState.roomCode,
+      partnerName: partnerName,
+      connectionDate: new Date().toISOString(),
+      lastConnected: new Date().toISOString(),
+      currentSessionStart: new Date().toISOString(),
+      totalConnectedTime: this.totalConnectedTime,
+      buzzCallsCount: 0,
+    };
+
+    this.savedConnection = connection;
+    await AsyncStorage.setItem('savedConnection', JSON.stringify(connection));
+    console.log('Saved connection with name:', partnerName);
   }
 
   // Check if connected
@@ -528,7 +584,7 @@ class WebRTCService {
   public getPartnerInfo(): { name?: string; roomCode?: string } | null {
     if (this.connectionState.isConnected && this.connectionState.roomCode) {
       return {
-        name: 'My Love', // Mock partner name
+        name: this.savedConnection?.partnerName || 'My Love',
         roomCode: this.connectionState.roomCode,
       };
     }

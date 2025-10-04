@@ -28,6 +28,7 @@ export default function ConnectionScreen() {
     roomCode: null,
     partnerConnected: false,
     error: null,
+    isWaitingForPartner: false,
   });
   const [inputRoomCode, setInputRoomCode] = useState('');
   const [isGeneratingCode, setIsGeneratingCode] = useState(false);
@@ -36,12 +37,19 @@ export default function ConnectionScreen() {
   const [savedConnection, setSavedConnection] = useState(WebRTCService.getSavedConnection());
   const [showQRCode, setShowQRCode] = useState(false);
   const [showQRScanner, setShowQRScanner] = useState(false);
+  const [showNamePrompt, setShowNamePrompt] = useState(false);
+  const [partnerName, setPartnerName] = useState('');
 
   useEffect(() => {
     // Set up WebRTC event listeners
     WebRTCService.onConnectionStateChange = (state) => {
       setConnectionState(state);
-      
+
+      // Show name prompt when partner joins
+      if (state.partnerConnected && !state.isWaitingForPartner && !savedConnection) {
+        setShowNamePrompt(true);
+      }
+
       // Update saved connection when state changes
       if (state.isConnected && state.roomCode) {
         setSavedConnection(WebRTCService.getSavedConnection());
@@ -190,6 +198,26 @@ export default function ConnectionScreen() {
     }
   };
 
+  const savePartnerName = async () => {
+    if (!partnerName.trim()) {
+      Alert.alert('Lỗi', 'Vui lòng nhập tên cho kết nối này');
+      return;
+    }
+
+    try {
+      await WebRTCService.saveConnectionWithName(partnerName.trim());
+      setSavedConnection(WebRTCService.getSavedConnection());
+      setShowNamePrompt(false);
+      setPartnerName('');
+      Alert.alert(
+        'Đã kết nối! 💕',
+        `Bạn đã kết nối với "${partnerName.trim()}". Kết nối này sẽ được lưu lại.`
+      );
+    } catch (error) {
+      Alert.alert('Lỗi', 'Không thể lưu tên kết nối');
+    }
+  };
+
   const handleForgetConnection = () => {
     Alert.alert(
       'Xóa Kết Nối Đã Lưu?',
@@ -258,36 +286,44 @@ export default function ConnectionScreen() {
         {/* Connection Status */}
         <View style={styles.statusCard}>
           <View style={styles.statusHeader}>
-            {connectionState.isConnected ? (
+            {connectionState.isWaitingForPartner ? (
+              <RefreshCw size={24} color="#f59e0b" strokeWidth={2} />
+            ) : connectionState.isConnected ? (
               <Wifi size={24} color="#4ade80" strokeWidth={2} />
             ) : (
               <WifiOff size={24} color="#ef4444" strokeWidth={2} />
             )}
             <Text style={[
               styles.statusText,
-              { 
-                color: connectionState.isConnected 
-                  ? '#4ade80' 
-                  : connectionState.isConnecting 
-                    ? '#f59e0b' 
-                    : '#ef4444' 
+              {
+                color: connectionState.isWaitingForPartner
+                  ? '#f59e0b'
+                  : connectionState.isConnected
+                    ? '#4ade80'
+                    : connectionState.isConnecting
+                      ? '#f59e0b'
+                      : '#ef4444'
               }
             ]}>
-              {connectionState.isConnected 
-                ? t('connection:connected')
-                : connectionState.isConnecting 
-                  ? t('connection:connecting')
-                  : t('connection:disconnected')
+              {connectionState.isWaitingForPartner
+                ? 'Đang chờ đối tác...'
+                : connectionState.isConnected
+                  ? t('connection:connected')
+                  : connectionState.isConnecting
+                    ? t('connection:connecting')
+                    : t('connection:disconnected')
               }
             </Text>
           </View>
-          
+
           <Text style={styles.statusDescription}>
-            {connectionState.isConnected 
-              ? t('connection:connectedDesc')
-              : connectionState.isConnecting
-                ? t('connection:connectingDesc')
-                : connectionState.error || t('connection:readyToConnect')
+            {connectionState.isWaitingForPartner
+              ? 'Phòng đã được tạo. Đang chờ đối tác kết nối...'
+              : connectionState.isConnected
+                ? t('connection:connectedDesc')
+                : connectionState.isConnecting
+                  ? t('connection:connectingDesc')
+                  : connectionState.error || t('connection:readyToConnect')
             }
           </Text>
 
@@ -516,6 +552,43 @@ export default function ConnectionScreen() {
               onPress={() => setShowQRScanner(false)}
             >
               <Text style={styles.cancelScanButtonText}>Hủy</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Partner Name Prompt Modal */}
+      <Modal
+        visible={showNamePrompt}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => {}}
+      >
+        <View style={styles.namePromptOverlay}>
+          <View style={styles.namePromptContent}>
+            <Heart size={48} color="#ff6b9d" strokeWidth={2} fill="#ff6b9d" />
+
+            <Text style={styles.namePromptTitle}>Đối tác đã kết nối! 💕</Text>
+            <Text style={styles.namePromptSubtitle}>
+              Đặt tên cho kết nối này để dễ nhớ hơn
+            </Text>
+
+            <TextInput
+              style={styles.nameInput}
+              value={partnerName}
+              onChangeText={setPartnerName}
+              placeholder="Ví dụ: Em yêu, Anh ơi, Baby..."
+              placeholderTextColor="#666"
+              autoFocus
+              maxLength={30}
+            />
+
+            <TouchableOpacity
+              style={[styles.saveNameButton, !partnerName.trim() && styles.saveNameButtonDisabled]}
+              onPress={savePartnerName}
+              disabled={!partnerName.trim()}
+            >
+              <Text style={styles.saveNameButtonText}>Lưu & Tiếp tục</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -996,6 +1069,65 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   cancelScanButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#fff',
+  },
+  namePromptOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.95)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  namePromptContent: {
+    backgroundColor: '#111',
+    borderRadius: 24,
+    padding: 32,
+    width: '100%',
+    maxWidth: 400,
+    alignItems: 'center',
+    gap: 16,
+    borderWidth: 1,
+    borderColor: '#333',
+  },
+  namePromptTitle: {
+    fontSize: 24,
+    fontWeight: '700',
+    color: '#fff',
+    textAlign: 'center',
+    marginTop: 8,
+  },
+  namePromptSubtitle: {
+    fontSize: 16,
+    color: '#888',
+    textAlign: 'center',
+    lineHeight: 22,
+  },
+  nameInput: {
+    width: '100%',
+    backgroundColor: '#222',
+    borderRadius: 12,
+    padding: 16,
+    fontSize: 16,
+    color: '#fff',
+    borderWidth: 1,
+    borderColor: '#333',
+    marginTop: 8,
+  },
+  saveNameButton: {
+    width: '100%',
+    backgroundColor: '#ff6b9d',
+    borderRadius: 12,
+    padding: 16,
+    alignItems: 'center',
+    marginTop: 8,
+  },
+  saveNameButtonDisabled: {
+    backgroundColor: '#444',
+    opacity: 0.5,
+  },
+  saveNameButtonText: {
     fontSize: 16,
     fontWeight: '600',
     color: '#fff',

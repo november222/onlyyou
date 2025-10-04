@@ -15,6 +15,7 @@ import { router } from 'expo-router';
 import { ArrowLeft, Plus, Camera, ImageIcon, Trash2, X } from 'lucide-react-native';
 import PhotoService, { Photo } from '@/services/PhotoService';
 import { isFeatureEnabled } from '@/config/features';
+import WebRTCService from '@/services/WebRTCService';
 
 const { width: screenWidth } = Dimensions.get('window');
 const itemSize = (screenWidth - 60) / 3; // 3 columns with padding
@@ -23,10 +24,19 @@ export default function SharedGalleryScreen() {
   const [photos, setPhotos] = useState<Photo[]>([]);
   const [selectedPhoto, setSelectedPhoto] = useState<Photo | null>(null);
   const [showFullScreen, setShowFullScreen] = useState(false);
+  const [partnerName, setPartnerName] = useState<string>('My Love');
 
   useEffect(() => {
     loadPhotos();
+    loadPartnerName();
   }, []);
+
+  const loadPartnerName = () => {
+    const savedConnection = WebRTCService.getSavedConnection();
+    if (savedConnection?.partnerName) {
+      setPartnerName(savedConnection.partnerName);
+    }
+  };
 
   const loadPhotos = async () => {
     if (!isFeatureEnabled('sharedGallery')) return;
@@ -137,7 +147,10 @@ export default function SharedGalleryScreen() {
         <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
           <ArrowLeft size={24} color="#fff" strokeWidth={2} />
         </TouchableOpacity>
-        <Text style={styles.title}>Shared Gallery</Text>
+        <View style={styles.titleContainer}>
+          <Text style={styles.title}>Shared Gallery</Text>
+          <Text style={styles.partnerNameSubtitle}>Với {partnerName} 💕</Text>
+        </View>
         <TouchableOpacity style={styles.addButton} onPress={handleAddPhoto}>
           <Plus size={24} color="#ff6b9d" strokeWidth={2} />
         </TouchableOpacity>
@@ -235,10 +248,19 @@ const styles = StyleSheet.create({
     padding: 8,
     marginLeft: -8,
   },
+  titleContainer: {
+    flex: 1,
+    alignItems: 'center',
+  },
   title: {
     fontSize: 20,
     fontWeight: '700',
     color: '#fff',
+  },
+  partnerNameSubtitle: {
+    fontSize: 12,
+    color: '#ff6b9d',
+    marginTop: 2,
   },
   addButton: {
     padding: 8,
