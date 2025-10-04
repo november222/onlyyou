@@ -585,69 +585,111 @@ export default function CalendarScreen() {
             )}
 
             {modalView === 'timePicker' && (
-              <ScrollView style={styles.pickerContent}>
-                <View style={styles.timePickerContainer}>
-                  <View style={styles.timeSection}>
-                    <Text style={styles.timeSectionTitle}>Giờ</Text>
-                    <View style={styles.timeGrid}>
-                      {Array.from({ length: 24 }, (_, i) => i).map((hour) => {
-                        const isSelected = hour === selectedTime.getHours();
-                        return (
-                          <TouchableOpacity
-                            key={hour}
-                            style={[
-                              styles.timeCell,
-                              isSelected && styles.timeCellSelected,
-                            ]}
-                            onPress={() => {
-                              const newTime = new Date(selectedTime);
-                              newTime.setHours(hour);
-                              setSelectedTime(newTime);
-                            }}
-                          >
-                            <Text
-                              style={[
-                                styles.timeCellText,
-                                isSelected && styles.timeCellTextSelected,
-                              ]}
+              <View style={styles.pickerContent}>
+                <View style={styles.wheelPickerContainer}>
+                  <View style={styles.wheelColumn}>
+                    <Text style={styles.wheelLabel}>Giờ</Text>
+                    <View style={styles.wheelWrapper}>
+                      <View style={styles.wheelHighlight} />
+                      <ScrollView
+                        style={styles.wheelScroll}
+                        contentContainerStyle={styles.wheelScrollContent}
+                        showsVerticalScrollIndicator={false}
+                        snapToInterval={50}
+                        decelerationRate="fast"
+                        onMomentumScrollEnd={(event) => {
+                          const y = event.nativeEvent.contentOffset.y;
+                          const index = Math.round(y / 50);
+                          const newTime = new Date(selectedTime);
+                          newTime.setHours(index);
+                          setSelectedTime(newTime);
+                        }}
+                        ref={(ref) => {
+                          if (ref && modalView === 'timePicker') {
+                            setTimeout(() => {
+                              ref.scrollTo({ y: selectedTime.getHours() * 50, animated: false });
+                            }, 100);
+                          }
+                        }}
+                      >
+                        {Array.from({ length: 24 }, (_, i) => i).map((hour) => {
+                          const isSelected = hour === selectedTime.getHours();
+                          return (
+                            <TouchableOpacity
+                              key={hour}
+                              style={styles.wheelItem}
+                              onPress={() => {
+                                const newTime = new Date(selectedTime);
+                                newTime.setHours(hour);
+                                setSelectedTime(newTime);
+                              }}
                             >
-                              {hour.toString().padStart(2, '0')}
-                            </Text>
-                          </TouchableOpacity>
-                        );
-                      })}
+                              <Text
+                                style={[
+                                  styles.wheelItemText,
+                                  isSelected && styles.wheelItemTextSelected,
+                                ]}
+                              >
+                                {hour.toString().padStart(2, '0')}
+                              </Text>
+                            </TouchableOpacity>
+                          );
+                        })}
+                      </ScrollView>
                     </View>
                   </View>
 
-                  <View style={styles.timeSection}>
-                    <Text style={styles.timeSectionTitle}>Phút</Text>
-                    <View style={styles.timeGrid}>
-                      {Array.from({ length: 12 }, (_, i) => i * 5).map((minute) => {
-                        const isSelected = minute === selectedTime.getMinutes();
-                        return (
-                          <TouchableOpacity
-                            key={minute}
-                            style={[
-                              styles.timeCell,
-                              isSelected && styles.timeCellSelected,
-                            ]}
-                            onPress={() => {
-                              const newTime = new Date(selectedTime);
-                              newTime.setMinutes(minute);
-                              setSelectedTime(newTime);
-                            }}
-                          >
-                            <Text
-                              style={[
-                                styles.timeCellText,
-                                isSelected && styles.timeCellTextSelected,
-                              ]}
+                  <Text style={styles.wheelSeparator}>:</Text>
+
+                  <View style={styles.wheelColumn}>
+                    <Text style={styles.wheelLabel}>Phút</Text>
+                    <View style={styles.wheelWrapper}>
+                      <View style={styles.wheelHighlight} />
+                      <ScrollView
+                        style={styles.wheelScroll}
+                        contentContainerStyle={styles.wheelScrollContent}
+                        showsVerticalScrollIndicator={false}
+                        snapToInterval={50}
+                        decelerationRate="fast"
+                        onMomentumScrollEnd={(event) => {
+                          const y = event.nativeEvent.contentOffset.y;
+                          const index = Math.round(y / 50);
+                          const newTime = new Date(selectedTime);
+                          newTime.setMinutes(index * 5);
+                          setSelectedTime(newTime);
+                        }}
+                        ref={(ref) => {
+                          if (ref && modalView === 'timePicker') {
+                            setTimeout(() => {
+                              ref.scrollTo({ y: (selectedTime.getMinutes() / 5) * 50, animated: false });
+                            }, 100);
+                          }
+                        }}
+                      >
+                        {Array.from({ length: 12 }, (_, i) => i * 5).map((minute) => {
+                          const isSelected = minute === selectedTime.getMinutes();
+                          return (
+                            <TouchableOpacity
+                              key={minute}
+                              style={styles.wheelItem}
+                              onPress={() => {
+                                const newTime = new Date(selectedTime);
+                                newTime.setMinutes(minute);
+                                setSelectedTime(newTime);
+                              }}
                             >
-                              {minute.toString().padStart(2, '0')}
-                            </Text>
-                          </TouchableOpacity>
-                        );
-                      })}
+                              <Text
+                                style={[
+                                  styles.wheelItemText,
+                                  isSelected && styles.wheelItemTextSelected,
+                                ]}
+                              >
+                                {minute.toString().padStart(2, '0')}
+                              </Text>
+                            </TouchableOpacity>
+                          );
+                        })}
+                      </ScrollView>
                     </View>
                   </View>
                 </View>
@@ -662,7 +704,7 @@ export default function CalendarScreen() {
                 >
                   <Text style={styles.pickerConfirmText}>Xác Nhận</Text>
                 </TouchableOpacity>
-              </ScrollView>
+              </View>
             )}
           </View>
         </KeyboardAvoidingView>
@@ -978,46 +1020,68 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#333',
   },
-  timePickerContainer: {
-    gap: 30,
-    marginBottom: 20,
-  },
-  timeSection: {
-    gap: 12,
-  },
-  timeSectionTitle: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: '#fff',
-    marginBottom: 8,
-  },
-  timeGrid: {
+  wheelPickerContainer: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
-  },
-  timeCell: {
-    width: '14%',
-    aspectRatio: 1.5,
     justifyContent: 'center',
     alignItems: 'center',
-    borderRadius: 8,
-    backgroundColor: '#1a1a1a',
-    borderWidth: 1,
-    borderColor: '#333',
+    gap: 20,
+    marginBottom: 30,
   },
-  timeCellSelected: {
-    backgroundColor: '#4ade80',
-    borderColor: '#4ade80',
+  wheelColumn: {
+    alignItems: 'center',
+    gap: 10,
   },
-  timeCellText: {
+  wheelLabel: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#fff',
+    color: '#888',
+    textTransform: 'uppercase',
   },
-  timeCellTextSelected: {
-    color: '#000',
+  wheelWrapper: {
+    height: 200,
+    width: 100,
+    position: 'relative',
+  },
+  wheelHighlight: {
+    position: 'absolute',
+    top: '50%',
+    left: 0,
+    right: 0,
+    height: 50,
+    marginTop: -25,
+    backgroundColor: 'rgba(74, 222, 128, 0.1)',
+    borderTopWidth: 2,
+    borderBottomWidth: 2,
+    borderColor: '#4ade80',
+    zIndex: 1,
+    pointerEvents: 'none',
+  },
+  wheelScroll: {
+    flex: 1,
+  },
+  wheelScrollContent: {
+    paddingVertical: 75,
+  },
+  wheelItem: {
+    height: 50,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  wheelItemText: {
+    fontSize: 28,
+    fontWeight: '400',
+    color: '#666',
+  },
+  wheelItemTextSelected: {
+    fontSize: 32,
     fontWeight: '700',
+    color: '#4ade80',
+  },
+  wheelSeparator: {
+    fontSize: 32,
+    fontWeight: '700',
+    color: '#4ade80',
+    marginTop: 35,
   },
   datePreview: {
     fontSize: 24,
