@@ -157,16 +157,26 @@ export default function ConnectionScreen() {
         'Bạn đã kết nối với người yêu của mình.',
         [{ text: 'Tuyệt vời!' }]
       );
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to join room:', error);
-      Alert.alert(
-        'Tham gia thất bại', 
-        'Không thể tham gia phòng. Vui lòng kiểm tra mã và thử lại.',
-        [
-          { text: 'Thử lại', onPress: joinRoom },
-          { text: 'Hủy', style: 'cancel' }
-        ]
-      );
+      const errorMessage = error?.message || 'Không thể tham gia phòng';
+
+      if (errorMessage.includes('không hợp lệ') || errorMessage.includes('invalid')) {
+        Alert.alert(
+          'Mã phòng không hợp lệ',
+          'Mã phòng bạn nhập không đúng định dạng hoặc không tồn tại. Vui lòng kiểm tra lại.',
+          [{ text: 'OK' }]
+        );
+      } else {
+        Alert.alert(
+          'Tham gia thất bại',
+          errorMessage,
+          [
+            { text: 'Thử lại', onPress: joinRoom },
+            { text: 'Hủy', style: 'cancel' }
+          ]
+        );
+      }
     } finally {
       setIsJoining(false);
     }
@@ -231,6 +241,34 @@ export default function ConnectionScreen() {
             WebRTCService.clearSavedConnection();
             setSavedConnection(null);
             Alert.alert('Đã xóa', 'Thông tin kết nối đã lưu đã được xóa.');
+          },
+        },
+      ]
+    );
+  };
+
+  const handleEndSession = async () => {
+    if (!savedConnection) return;
+
+    Alert.alert(
+      'Cắt đứt phiên kết nối này?',
+      `Điều này sẽ kết thúc vĩnh viễn phiên kết nối với "${savedConnection.partnerName}". Lịch sử phiên này sẽ được lưu vào trang Profile.`,
+      [
+        { text: 'Hủy', style: 'cancel' },
+        {
+          text: 'Cắt đứt',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await WebRTCService.endSessionAndSaveHistory();
+              setSavedConnection(null);
+              Alert.alert(
+                'Đã kết thúc phiên 💔',
+                'Phiên kết nối đã được lưu vào lịch sử. Bạn có thể xem lại trong trang Profile.'
+              );
+            } catch (error) {
+              Alert.alert('Lỗi', 'Không thể kết thúc phiên kết nối');
+            }
           },
         },
       ]
@@ -337,10 +375,11 @@ export default function ConnectionScreen() {
           )}
 
           {/* Saved Connection Info */}
-          {savedConnection && (
+          {savedConnection && !connectionState.isConnected && (
             <View style={styles.savedConnectionInfo}>
-              <Text style={styles.savedConnectionLabel}>Kết nối đã lưu:</Text>
-              <TouchableOpacity onPress={handleReconnect}>
+              <Text style={styles.savedConnectionLabel}>Kết nối đã lưu với:</Text>
+              <Text style={styles.savedPartnerName}>{savedConnection.partnerName} 💕</Text>
+              <TouchableOpacity onPress={() => copyRoomCode(savedConnection.roomCode)}>
                 <Text style={styles.savedConnectionValue}>{savedConnection.roomCode}</Text>
               </TouchableOpacity>
               <Text style={styles.savedConnectionDate}>
@@ -349,6 +388,9 @@ export default function ConnectionScreen() {
               <TouchableOpacity style={styles.reconnectButton} onPress={handleReconnect}>
                 <RefreshCw size={16} color="#4ade80" strokeWidth={2} />
                 <Text style={styles.reconnectButtonText}>Kết nối lại</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.endSessionButton} onPress={handleEndSession}>
+                <Text style={styles.endSessionButtonText}>Cắt đứt phiên kết nối này</Text>
               </TouchableOpacity>
             </View>
           )}
@@ -846,6 +888,12 @@ const styles = StyleSheet.create({
     color: '#888',
     marginBottom: 4,
   },
+  savedPartnerName: {
+    fontSize: 18,
+    color: '#ff6b9d',
+    fontWeight: '700',
+    marginBottom: 8,
+  },
   savedConnectionValue: {
     fontSize: 16,
     color: '#4ade80',
@@ -864,10 +912,25 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 6,
     paddingVertical: 4,
+    marginBottom: 12,
   },
   reconnectButtonText: {
     fontSize: 14,
     color: '#4ade80',
+    fontWeight: '500',
+  },
+  endSessionButton: {
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#666',
+    alignItems: 'center',
+    marginTop: 4,
+  },
+  endSessionButtonText: {
+    fontSize: 13,
+    color: '#888',
     fontWeight: '500',
   },
   serverStatus: {

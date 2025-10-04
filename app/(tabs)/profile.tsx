@@ -139,6 +139,25 @@ export default function ProfileScreen() {
     }
   };
 
+  const loadSessionHistory = async () => {
+    try {
+      const history = await WebRTCService.getSessionHistory();
+      // Convert to ConnectionSession format
+      const sessions: ConnectionSession[] = history.map((session) => ({
+        id: session.id,
+        startDate: new Date(session.startDate),
+        endDate: new Date(session.endDate),
+        duration: session.totalDuration,
+        roomCode: `${session.partnerName} (${session.roomCode})`,
+        isActive: false,
+        buzzCallsCount: session.buzzCallsCount,
+      }));
+      setAllConnectionSessions(sessions);
+    } catch (error) {
+      console.error('Failed to load session history:', error);
+    }
+  };
+
   const HistorySessionCard = ({ 
     item, 
     onPress,
@@ -218,10 +237,11 @@ export default function ProfileScreen() {
     // Get current connection state
     const currentState = WebRTCService.getConnectionState();
     setConnectionState(currentState);
-    
+
     // Load initial data
     loadConnectionData();
     loadPhotosCount();
+    loadSessionHistory();
     
     // Get total connected time from service
     const totalTime = WebRTCService.getTotalConnectedTime();

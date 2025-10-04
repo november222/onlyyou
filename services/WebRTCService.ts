@@ -28,6 +28,16 @@ export interface SavedConnection {
   currentSessionStart?: string;
   totalConnectedTime?: number;
 }
+
+export interface SessionHistory {
+  id: string;
+  partnerName: string;
+  roomCode: string;
+  startDate: string;
+  endDate: string;
+  totalDuration: number;
+  buzzCallsCount: number;
+}
 class WebRTCService {
   // Mock data for frontend development
   private mockMessages: WebRTCMessage[] = [
@@ -259,13 +269,26 @@ class WebRTCService {
 
     this.updateConnectionState({ isConnecting: true, error: null });
 
+    // Validate room code format
+    const cleanCode = roomCode.replace(/-/g, '');
+    if (cleanCode.length < 4) {
+      this.updateConnectionState({ isConnecting: false, error: 'Mã phòng không hợp lệ' });
+      throw new Error('Mã phòng không hợp lệ');
+    }
+
+    // Validate format: should be 16 alphanumeric characters
+    if (cleanCode.length !== 16 || !/^[A-Z0-9]+$/i.test(cleanCode)) {
+      this.updateConnectionState({ isConnecting: false, error: 'Mã phòng không đúng định dạng' });
+      throw new Error('Mã phòng không đúng định dạng. Vui lòng nhập đúng 16 ký tự.');
+    }
+
     // Simulate connection delay
     await new Promise(resolve => setTimeout(resolve, 2000));
 
-    // Validate room code format (basic validation)
-    const cleanCode = roomCode.replace(/-/g, '');
-    if (cleanCode.length < 4) {
-      throw new Error('Mã phòng không hợp lệ');
+    // Mock: Random 20% chance the room doesn't exist
+    if (Math.random() < 0.2) {
+      this.updateConnectionState({ isConnecting: false, error: 'Mã phòng không tồn tại' });
+      throw new Error('Mã phòng không tồn tại. Vui lòng kiểm tra lại mã từ đối tác.');
     }
 
     // Start connection timer
@@ -483,21 +506,87 @@ class WebRTCService {
     try {
       // Stop timer if running
       await this.stopConnectionTimer();
-      
+
       await AsyncStorage.removeItem('savedConnection');
       await AsyncStorage.removeItem('totalConnectedTime');
       this.savedConnection = null;
       this.totalConnectedTime = 0;
-      
+
       if (this.reconnectTimer) {
         clearTimeout(this.reconnectTimer);
         this.reconnectTimer = null;
       }
-      
+
       this.disconnect();
       console.log('Cleared saved connection');
     } catch (error) {
       console.error('Failed to clear saved connection:', error);
+    }
+  }
+
+  // End session and save to history
+  public async endSessionAndSaveHistory(): Promise<void> {
+    if (!this.savedConnection) {
+      throw new Error('No active session to end');
+    }
+
+    try {
+      // Stop timer if running
+      await this.stopConnectionTimer();
+
+      // Create session history entry
+      const sessionHistory: SessionHistory = {
+        id: Date.now().toString(),
+        partnerName: this.savedConnection.partnerName,
+        roomCode: this.savedConnection.roomCode,
+        startDate: this.savedConnection.connectionDate,
+        endDate: new Date().toISOString(),
+        totalDuration: this.totalConnectedTime,
+        buzzCallsCount: this.savedConnection.buzzCallsCount || 0,
+      };
+
+      // Load existing history
+      const historyJson = await AsyncStorage.getItem('sessionHistory');
+      const history: SessionHistory[] = historyJson ? JSON.parse(historyJson) : [];
+
+      // Add new session to history
+      history.unshift(sessionHistory); // Add to beginning
+
+      // Keep only last 50 sessions
+      if (history.length > 50) {
+        history.splice(50);
+      }
+
+      // Save updated history
+      await AsyncStorage.setItem('sessionHistory', JSON.stringify(history));
+
+      // Clear current connection
+      await AsyncStorage.removeItem('savedConnection');
+      await AsyncStorage.removeItem('totalConnectedTime');
+      this.savedConnection = null;
+      this.totalConnectedTime = 0;
+
+      if (this.reconnectTimer) {
+        clearTimeout(this.reconnectTimer);
+        this.reconnectTimer = null;
+      }
+
+      this.disconnect();
+      console.log('Session ended and saved to history');
+    } catch (error) {
+      console.error('Failed to end session:', error);
+      throw error;
+    }
+  }
+
+  // Get session history
+  public async getSessionHistory(): Promise<SessionHistory[]> {
+    try {
+      const historyJson = await AsyncStorage.getItem('sessionHistory');
+      return historyJson ? JSON.parse(historyJson) : [];
+    } catch (error) {
+      console.error('Failed to load session history:', error);
+      return [];
     }
   }
 
