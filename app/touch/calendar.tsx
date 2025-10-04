@@ -75,15 +75,15 @@ export default function CalendarScreen() {
   };
 
   const formatDate = (dateObj: Date): string => {
-    const day = String(dateObj.getDate()).padStart(2, '0');
-    const month = String(dateObj.getMonth() + 1).padStart(2, '0');
+    const day = dateObj.getDate().toString().padStart(2, '0');
+    const month = (dateObj.getMonth() + 1).toString().padStart(2, '0');
     const year = dateObj.getFullYear();
     return `${day}/${month}/${year}`;
   };
 
   const formatTime = (timeObj: Date): string => {
-    const hours = String(timeObj.getHours()).padStart(2, '0');
-    const minutes = String(timeObj.getMinutes()).padStart(2, '0');
+    const hours = timeObj.getHours().toString().padStart(2, '0');
+    const minutes = timeObj.getMinutes().toString().padStart(2, '0');
     return `${hours}:${minutes}`;
   };
 
@@ -124,25 +124,39 @@ export default function CalendarScreen() {
   };
 
   const openDatePicker = () => {
+    console.log('Opening date picker, current date:', date);
     if (date) {
       try {
-        setSelectedDate(parseDate(date));
+        const parsed = parseDate(date);
+        console.log('Parsed date:', parsed);
+        setSelectedDate(parsed);
       } catch (e) {
+        console.log('Error parsing date:', e);
         setSelectedDate(new Date());
       }
+    } else {
+      setSelectedDate(new Date());
     }
     setShowDatePicker(true);
+    console.log('showDatePicker set to true');
   };
 
   const openTimePicker = () => {
+    console.log('Opening time picker, current time:', time);
     if (time) {
       try {
-        setSelectedTime(parseTime(time));
+        const parsed = parseTime(time);
+        console.log('Parsed time:', parsed);
+        setSelectedTime(parsed);
       } catch (e) {
+        console.log('Error parsing time:', e);
         setSelectedTime(new Date());
       }
+    } else {
+      setSelectedTime(new Date());
     }
     setShowTimePicker(true);
+    console.log('showTimePicker set to true');
   };
 
   const handleAddItem = async () => {
@@ -458,6 +472,7 @@ export default function CalendarScreen() {
         transparent={true}
         animationType="fade"
         onRequestClose={() => setShowDatePicker(false)}
+        statusBarTranslucent={true}
       >
         <View style={styles.pickerOverlay}>
           <View style={styles.pickerModal}>
@@ -474,7 +489,7 @@ export default function CalendarScreen() {
                   <Text style={styles.datePickerLabel}>Ngày:</Text>
                   <TextInput
                     style={styles.datePickerInput}
-                    value={String(selectedDate.getDate())}
+                    value={selectedDate.getDate().toString()}
                     onChangeText={(val) => {
                       const day = parseInt(val) || 1;
                       const newDate = new Date(selectedDate);
@@ -492,7 +507,7 @@ export default function CalendarScreen() {
                   <Text style={styles.datePickerLabel}>Tháng:</Text>
                   <TextInput
                     style={styles.datePickerInput}
-                    value={String(selectedDate.getMonth() + 1)}
+                    value={(selectedDate.getMonth() + 1).toString()}
                     onChangeText={(val) => {
                       const month = parseInt(val) || 1;
                       const newDate = new Date(selectedDate);
@@ -510,7 +525,7 @@ export default function CalendarScreen() {
                   <Text style={styles.datePickerLabel}>Năm:</Text>
                   <TextInput
                     style={styles.datePickerInput}
-                    value={String(selectedDate.getFullYear())}
+                    value={selectedDate.getFullYear().toString()}
                     onChangeText={(val) => {
                       const year = parseInt(val) || 2025;
                       const newDate = new Date(selectedDate);
@@ -549,6 +564,7 @@ export default function CalendarScreen() {
         transparent={true}
         animationType="fade"
         onRequestClose={() => setShowTimePicker(false)}
+        statusBarTranslucent={true}
       >
         <View style={styles.pickerOverlay}>
           <View style={styles.pickerModal}>
@@ -819,10 +835,11 @@ const styles = StyleSheet.create({
   },
   pickerOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+    backgroundColor: 'rgba(0, 0, 0, 0.9)',
     justifyContent: 'center',
     alignItems: 'center',
     padding: 20,
+    zIndex: 9999,
   },
   pickerModal: {
     backgroundColor: '#1a1a1a',
