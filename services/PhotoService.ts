@@ -3,6 +3,7 @@ import * as FileSystem from 'expo-file-system';
 import { Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import TimelineService from './TimelineService';
+import { rateLimiter, RATE_LIMITS } from './RateLimiter';
 
 export interface Photo {
   id: string;
@@ -56,6 +57,13 @@ class PhotoService {
     }
 
     try {
+      const rateLimitCheck = rateLimiter.canPerformAction('photo_upload', RATE_LIMITS.PHOTO_UPLOAD);
+      if (!rateLimitCheck.allowed) {
+        return {
+          success: false,
+          error: rateLimitCheck.reason || 'Vui lòng đợi trước khi tải ảnh tiếp theo',
+        };
+      }
       // Request permissions
       const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
       
@@ -107,6 +115,8 @@ class PhotoService {
       // Save to storage
       await this.savePhoto(photo);
 
+      rateLimiter.recordAction('photo_upload');
+
       // Add to timeline
       await TimelineService.addEvent({
         id: photo.id,
@@ -146,6 +156,13 @@ class PhotoService {
     }
 
     try {
+      const rateLimitCheck = rateLimiter.canPerformAction('photo_upload', RATE_LIMITS.PHOTO_UPLOAD);
+      if (!rateLimitCheck.allowed) {
+        return {
+          success: false,
+          error: rateLimitCheck.reason || 'Vui lòng đợi trước khi chụp ảnh tiếp theo',
+        };
+      }
       // Request camera permissions
       const permissionResult = await ImagePicker.requestCameraPermissionsAsync();
       
@@ -195,6 +212,8 @@ class PhotoService {
       // Save to storage
       await this.savePhoto(photo);
 
+      rateLimiter.recordAction('photo_upload');
+
       // Add to timeline
       await TimelineService.addEvent({
         id: photo.id,
@@ -241,15 +260,22 @@ class PhotoService {
   // Delete photo
   public async deletePhoto(photoId: string): Promise<void> {
     try {
+      const rateLimitCheck = rateLimiter.canPerformAction('photo_delete', RATE_LIMITS.PHOTO_DELETE);
+      if (!rateLimitCheck.allowed) {
+        throw new Error(rateLimitCheck.reason || 'Vui lòng đợi trước khi xóa ảnh tiếp theo');
+      }
+
       const photosData = await AsyncStorage.getItem(this.STORAGE_KEY);
       if (!photosData) return;
-      
+
       const photos = JSON.parse(photosData);
       const photoToDelete = photos.find((photo: Photo) => photo.id === photoId);
       const filteredPhotos = photos.filter((photo: Photo) => photo.id !== photoId);
-      
+
       await AsyncStorage.setItem(this.STORAGE_KEY, JSON.stringify(filteredPhotos));
-      
+
+      rateLimiter.recordAction('photo_delete');
+
       // Delete physical file
       if (photoToDelete && photoToDelete.uri.startsWith(this.PHOTOS_DIR)) {
         try {
@@ -259,10 +285,10 @@ class PhotoService {
           console.error('Failed to delete photo file:', error);
         }
       }
-      
+
       // Also remove from timeline
       await TimelineService.deleteEvent(photoId);
-      
+
       console.log('Photo deleted:', photoId);
     } catch (error) {
       console.error('Failed to delete photo:', error);

@@ -1,4 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { rateLimiter, RATE_LIMITS } from './RateLimiter';
 
 export interface CalItem {
   id: string;
@@ -22,6 +23,14 @@ class CalendarService {
   // Add calendar item
   public async addItem(title: string, date: string, time?: string, note?: string): Promise<CalResult> {
     try {
+      const rateLimitCheck = rateLimiter.canPerformAction('calendar_add', RATE_LIMITS.CALENDAR_ADD);
+      if (!rateLimitCheck.allowed) {
+        return {
+          success: false,
+          error: rateLimitCheck.reason || 'Vui lòng đợi trước khi thêm sự kiện tiếp theo',
+        };
+      }
+
       if (!title.trim()) {
         return {
           success: false,
@@ -47,6 +56,8 @@ class CalendarService {
       };
 
       await this.saveItem(item);
+
+      rateLimiter.recordAction('calendar_add');
 
       console.log('Calendar item added:', item.title, item.date);
 
@@ -150,6 +161,14 @@ class CalendarService {
   // Delete calendar item
   public async deleteItem(id: string): Promise<CalResult> {
     try {
+      const rateLimitCheck = rateLimiter.canPerformAction('calendar_delete', RATE_LIMITS.CALENDAR_DELETE);
+      if (!rateLimitCheck.allowed) {
+        return {
+          success: false,
+          error: rateLimitCheck.reason || 'Vui lòng đợi trước khi xóa tiếp',
+        };
+      }
+
       const itemsData = await AsyncStorage.getItem(this.STORAGE_KEY);
       if (!itemsData) {
         return {
@@ -157,12 +176,14 @@ class CalendarService {
           error: 'Item not found',
         };
       }
-      
+
       const items = JSON.parse(itemsData);
       const filteredItems = items.filter((item: CalItem) => item.id !== id);
-      
+
       await AsyncStorage.setItem(this.STORAGE_KEY, JSON.stringify(filteredItems));
-      
+
+      rateLimiter.recordAction('calendar_delete');
+
       console.log('Calendar item deleted:', id);
       
       return {

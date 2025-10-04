@@ -1,6 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Linking, Platform, Alert } from 'react-native';
 import TimelineService from './TimelineService';
+import { rateLimiter, RATE_LIMITS } from './RateLimiter';
 
 export type BuzzType = 'ping' | 'love' | 'miss';
 
@@ -335,12 +336,11 @@ class BuzzService {
   // Send buzz using template
   public async sendBuzz(templateId: string, note?: string, receiverId: string = 'partner_user'): Promise<BuzzResult> {
     try {
-      // Check cooldown
-      const cooldownCheck = await this.checkCooldown();
-      if (!cooldownCheck.canSend) {
+      const rateLimitCheck = rateLimiter.canPerformAction('buzz_send', RATE_LIMITS.BUZZ);
+      if (!rateLimitCheck.allowed) {
         return {
           success: false,
-          error: `Please wait ${Math.ceil(cooldownCheck.remainingTime / 1000)}s before sending another buzz`,
+          error: rateLimitCheck.reason || 'Vui lòng đợi trước khi gửi buzz tiếp theo',
         };
       }
 
@@ -383,8 +383,7 @@ class BuzzService {
         userId: buzzEvent.senderId,
       });
 
-      // Set cooldown
-      await this.setCooldown();
+      rateLimiter.recordAction('buzz_send');
 
       // TODO: Send via WebSocket/API
       // await this.apiSendBuzz(buzzEvent);
