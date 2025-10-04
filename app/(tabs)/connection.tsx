@@ -15,7 +15,7 @@ import {
   Image,
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Heart, Shield, Wifi, WifiOff, Copy, Key, Plus, RefreshCw, Trash2, QrCode, X } from 'lucide-react-native';
+import { Heart, Shield, Wifi, WifiOff, Copy, Key, Plus, RefreshCw, Trash2, QrCode, X, Scan } from 'lucide-react-native';
 import WebRTCService, { ConnectionState } from '@/services/WebRTCService';
 import { router } from 'expo-router';
 
@@ -35,6 +35,7 @@ export default function ConnectionScreen() {
   const [isJoining, setIsJoining] = useState(false);
   const [savedConnection, setSavedConnection] = useState(WebRTCService.getSavedConnection());
   const [showQRCode, setShowQRCode] = useState(false);
+  const [showQRScanner, setShowQRScanner] = useState(false);
 
   useEffect(() => {
     // Set up WebRTC event listeners
@@ -187,11 +188,6 @@ export default function ConnectionScreen() {
       // In a real app, this would copy to clipboard using @react-native-clipboard/clipboard
       Alert.alert('Đã sao chép! 📋', `Mã phòng "${roomCode}" đã được sao chép.`);
     }
-  };
-
-  const simulateNetworkIssue = () => {
-    WebRTCService.simulateNetworkIssue();
-    Alert.alert('Mô phỏng sự cố mạng', 'Kết nối sẽ cố gắng kết nối lại...');
   };
 
   const handleForgetConnection = () => {
@@ -375,8 +371,8 @@ export default function ConnectionScreen() {
                 placeholderTextColor="#666"
                 autoCapitalize="characters"
               />
-              <TouchableOpacity 
-                style={styles.joinButton} 
+              <TouchableOpacity
+                style={styles.joinButton}
                 onPress={joinRoom}
                 disabled={!inputRoomCode.trim() || isConnectingToServer || isJoining}
               >
@@ -387,6 +383,16 @@ export default function ConnectionScreen() {
                 )}
               </TouchableOpacity>
             </View>
+
+            {/* Scan QR Code Button */}
+            <TouchableOpacity
+              style={styles.scanQRButton}
+              onPress={() => setShowQRScanner(true)}
+              disabled={isConnectingToServer}
+            >
+              <Scan size={20} color="#4ade80" strokeWidth={2} />
+              <Text style={styles.scanQRButtonText}>Quét mã QR</Text>
+            </TouchableOpacity>
           </View>
         )}
 
@@ -413,12 +419,6 @@ export default function ConnectionScreen() {
               </TouchableOpacity>
             </View>
 
-            {/* Debug Actions */}
-            {__DEV__ && <View style={styles.debugActions}>
-              <TouchableOpacity style={styles.debugButton} onPress={simulateNetworkIssue}>
-                <Text style={styles.debugButtonText}>Mô Phỏng Mất Mạng</Text>
-              </TouchableOpacity>
-            </View>}
 
             {/* Forget Connection */}
             {savedConnection && (
@@ -482,6 +482,40 @@ export default function ConnectionScreen() {
               onPress={() => setShowQRCode(false)}
             >
               <Text style={styles.closeQrButtonText}>Đóng</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+
+      {/* QR Scanner Modal */}
+      <Modal
+        visible={showQRScanner}
+        transparent={true}
+        animationType="slide"
+        onRequestClose={() => setShowQRScanner(false)}
+      >
+        <View style={styles.scannerModalOverlay}>
+          <View style={styles.scannerModalContent}>
+            <View style={styles.scannerModalHeader}>
+              <Text style={styles.scannerModalTitle}>Quét Mã QR</Text>
+              <TouchableOpacity onPress={() => setShowQRScanner(false)}>
+                <X size={24} color="#fff" strokeWidth={2} />
+              </TouchableOpacity>
+            </View>
+
+            <View style={styles.scannerContainer}>
+              <View style={styles.scannerPlaceholder}>
+                <Scan size={80} color="#4ade80" strokeWidth={1.5} />
+                <Text style={styles.scannerHint}>Hướng máy ảnh vào mã QR</Text>
+                <Text style={styles.scannerSubHint}>Chức năng quét QR sẽ được kích hoạt khi bạn cho phép truy cập camera</Text>
+              </View>
+            </View>
+
+            <TouchableOpacity
+              style={styles.cancelScanButton}
+              onPress={() => setShowQRScanner(false)}
+            >
+              <Text style={styles.cancelScanButtonText}>Hủy</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -776,20 +810,6 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: '#f59e0b',
   },
-  debugActions: {
-    marginBottom: 12,
-  },
-  debugButton: {
-    backgroundColor: '#f59e0b',
-    borderRadius: 8,
-    padding: 12,
-    alignItems: 'center',
-  },
-  debugButtonText: {
-    color: '#fff',
-    fontSize: 14,
-    fontWeight: '600',
-  },
   forgetActions: {
     marginBottom: 12,
   },
@@ -898,6 +918,84 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   closeQrButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#fff',
+  },
+  scanQRButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'transparent',
+    borderRadius: 12,
+    padding: 16,
+    gap: 8,
+    borderWidth: 1,
+    borderColor: '#4ade80',
+    marginTop: 12,
+  },
+  scanQRButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#4ade80',
+  },
+  scannerModalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.95)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  scannerModalContent: {
+    backgroundColor: '#111',
+    borderRadius: 24,
+    padding: 24,
+    width: '100%',
+    maxWidth: 400,
+    borderWidth: 1,
+    borderColor: '#333',
+  },
+  scannerModalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 24,
+  },
+  scannerModalTitle: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#fff',
+  },
+  scannerContainer: {
+    alignItems: 'center',
+    marginBottom: 24,
+    minHeight: 300,
+    justifyContent: 'center',
+  },
+  scannerPlaceholder: {
+    alignItems: 'center',
+    gap: 16,
+    padding: 20,
+  },
+  scannerHint: {
+    fontSize: 16,
+    color: '#fff',
+    textAlign: 'center',
+    fontWeight: '500',
+  },
+  scannerSubHint: {
+    fontSize: 14,
+    color: '#888',
+    textAlign: 'center',
+    lineHeight: 20,
+  },
+  cancelScanButton: {
+    backgroundColor: '#333',
+    borderRadius: 12,
+    padding: 16,
+    alignItems: 'center',
+  },
+  cancelScanButtonText: {
     fontSize: 16,
     fontWeight: '600',
     color: '#fff',
