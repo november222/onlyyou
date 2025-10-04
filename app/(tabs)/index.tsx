@@ -19,6 +19,7 @@ import CallScreen from '../../components/CallScreen';
 import { isFeatureEnabled } from '../../config/features';
 import BuzzService, { BuzzTemplate } from '@/services/BuzzService';
 import { usePremium } from '@/providers/PremiumProvider';
+import { rateLimiter, RATE_LIMITS } from '@/services/RateLimiter';
 
 export default function TouchScreen() {
   const { t } = useTranslation();
@@ -82,8 +83,11 @@ export default function TouchScreen() {
 
   const loadBuzzCooldown = async () => {
     if (isFeatureEnabled('buzz')) {
-      const status = await BuzzService.getCooldownStatus();
-      setBuzzCooldown(status);
+      const rateLimitCheck = rateLimiter.canPerformAction('buzz_send', RATE_LIMITS.BUZZ);
+      setBuzzCooldown({
+        canSend: rateLimitCheck.allowed,
+        remainingTime: rateLimitCheck.waitTime ? rateLimitCheck.waitTime * 1000 : 0,
+      });
     }
   };
 

@@ -33,8 +33,6 @@ export interface BuzzResult {
 class BuzzService {
   private readonly STORAGE_KEY = 'onlyyou_buzz_history';
   private readonly TEMPLATES_KEY = 'onlyyou_buzz_templates';
-  private readonly COOLDOWN_KEY = 'onlyyou_buzz_cooldown';
-  private readonly COOLDOWN_DURATION = 30000; // 30 seconds
   private readonly API_BASE = 'https://api.onlyyou.app'; // Replace with actual API
 
   // Event callback for buzz templates changes
@@ -404,41 +402,6 @@ class BuzzService {
     }
   }
 
-  // Check cooldown for any buzz
-  private async checkCooldown(): Promise<{ canSend: boolean; remainingTime: number }> {
-    try {
-      const cooldownData = await AsyncStorage.getItem(this.COOLDOWN_KEY);
-      if (!cooldownData) {
-        return { canSend: true, remainingTime: 0 };
-      }
-
-      const lastSent = parseInt(cooldownData);
-      
-      if (!lastSent || isNaN(lastSent)) {
-        return { canSend: true, remainingTime: 0 };
-      }
-
-      const timeSinceLastSent = Date.now() - lastSent;
-      const remainingTime = this.COOLDOWN_DURATION - timeSinceLastSent;
-
-      return {
-        canSend: remainingTime <= 0,
-        remainingTime: Math.max(0, remainingTime),
-      };
-    } catch (error) {
-      console.error('Failed to check cooldown:', error);
-      return { canSend: true, remainingTime: 0 };
-    }
-  }
-
-  // Set cooldown for buzz sending
-  private async setCooldown(): Promise<void> {
-    try {
-      await AsyncStorage.setItem(this.COOLDOWN_KEY, Date.now().toString());
-    } catch (error) {
-      console.error('Failed to set cooldown:', error);
-    }
-  }
 
   // Save buzz event to storage
   private async saveBuzzEvent(event: BuzzEvent): Promise<void> {
@@ -476,9 +439,13 @@ class BuzzService {
     }
   }
 
-  // Get current cooldown status
+  // Get current cooldown status (deprecated - use RateLimiter directly)
   public async getCooldownStatus(): Promise<{ canSend: boolean; remainingTime: number }> {
-    return await this.checkCooldown();
+    const rateLimitCheck = rateLimiter.canPerformAction('buzz_send', RATE_LIMITS.BUZZ);
+    return {
+      canSend: rateLimitCheck.allowed,
+      remainingTime: rateLimitCheck.waitTime ? rateLimitCheck.waitTime * 1000 : 0,
+    };
   }
 
   // Notify listeners that buzz templates have changed
