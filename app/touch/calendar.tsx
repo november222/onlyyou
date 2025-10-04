@@ -483,61 +483,92 @@ export default function CalendarScreen() {
             )}
 
             {modalView === 'datePicker' && (
-              <View style={styles.pickerContent}>
-                <View style={styles.datePickerGrid}>
-                  <View style={styles.datePickerRow}>
-                    <Text style={styles.datePickerLabel}>Ngày:</Text>
-                    <TextInput
-                      style={styles.datePickerInput}
-                      value={selectedDate.getDate().toString()}
-                      onChangeText={(val) => {
-                        const day = parseInt(val) || 1;
-                        const newDate = new Date(selectedDate);
-                        newDate.setDate(Math.min(31, Math.max(1, day)));
-                        setSelectedDate(newDate);
-                      }}
-                      keyboardType="numeric"
-                      maxLength={2}
-                      placeholder="DD"
-                      placeholderTextColor="#666"
-                    />
-                  </View>
+              <ScrollView style={styles.pickerContent}>
+                <View style={styles.calendarHeader}>
+                  <TouchableOpacity
+                    style={styles.calendarNavButton}
+                    onPress={() => {
+                      const newDate = new Date(selectedDate);
+                      newDate.setMonth(newDate.getMonth() - 1);
+                      setSelectedDate(newDate);
+                    }}
+                  >
+                    <Text style={styles.calendarNavText}>←</Text>
+                  </TouchableOpacity>
 
-                  <View style={styles.datePickerRow}>
-                    <Text style={styles.datePickerLabel}>Tháng:</Text>
-                    <TextInput
-                      style={styles.datePickerInput}
-                      value={(selectedDate.getMonth() + 1).toString()}
-                      onChangeText={(val) => {
-                        const month = parseInt(val) || 1;
-                        const newDate = new Date(selectedDate);
-                        newDate.setMonth(Math.min(12, Math.max(1, month)) - 1);
-                        setSelectedDate(newDate);
-                      }}
-                      keyboardType="numeric"
-                      maxLength={2}
-                      placeholder="MM"
-                      placeholderTextColor="#666"
-                    />
-                  </View>
+                  <Text style={styles.calendarHeaderText}>
+                    Tháng {selectedDate.getMonth() + 1}, {selectedDate.getFullYear()}
+                  </Text>
 
-                  <View style={styles.datePickerRow}>
-                    <Text style={styles.datePickerLabel}>Năm:</Text>
-                    <TextInput
-                      style={styles.datePickerInput}
-                      value={selectedDate.getFullYear().toString()}
-                      onChangeText={(val) => {
-                        const year = parseInt(val) || 2025;
-                        const newDate = new Date(selectedDate);
-                        newDate.setFullYear(year);
-                        setSelectedDate(newDate);
-                      }}
-                      keyboardType="numeric"
-                      maxLength={4}
-                      placeholder="YYYY"
-                      placeholderTextColor="#666"
-                    />
-                  </View>
+                  <TouchableOpacity
+                    style={styles.calendarNavButton}
+                    onPress={() => {
+                      const newDate = new Date(selectedDate);
+                      newDate.setMonth(newDate.getMonth() + 1);
+                      setSelectedDate(newDate);
+                    }}
+                  >
+                    <Text style={styles.calendarNavText}>→</Text>
+                  </TouchableOpacity>
+                </View>
+
+                <View style={styles.calendarWeekdays}>
+                  {['CN', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7'].map((day) => (
+                    <View key={day} style={styles.calendarWeekdayCell}>
+                      <Text style={styles.calendarWeekdayText}>{day}</Text>
+                    </View>
+                  ))}
+                </View>
+
+                <View style={styles.calendarGrid}>
+                  {(() => {
+                    const year = selectedDate.getFullYear();
+                    const month = selectedDate.getMonth();
+                    const firstDay = new Date(year, month, 1).getDay();
+                    const daysInMonth = new Date(year, month + 1, 0).getDate();
+                    const days = [];
+
+                    for (let i = 0; i < firstDay; i++) {
+                      days.push(
+                        <View key={`empty-${i}`} style={styles.calendarDayCell} />
+                      );
+                    }
+
+                    for (let day = 1; day <= daysInMonth; day++) {
+                      const isSelected = day === selectedDate.getDate();
+                      const isToday = day === new Date().getDate() &&
+                                      month === new Date().getMonth() &&
+                                      year === new Date().getFullYear();
+
+                      days.push(
+                        <TouchableOpacity
+                          key={day}
+                          style={[
+                            styles.calendarDayCell,
+                            isSelected && styles.calendarDaySelected,
+                            isToday && !isSelected && styles.calendarDayToday,
+                          ]}
+                          onPress={() => {
+                            const newDate = new Date(selectedDate);
+                            newDate.setDate(day);
+                            setSelectedDate(newDate);
+                          }}
+                        >
+                          <Text
+                            style={[
+                              styles.calendarDayText,
+                              isSelected && styles.calendarDayTextSelected,
+                              isToday && !isSelected && styles.calendarDayTextToday,
+                            ]}
+                          >
+                            {day}
+                          </Text>
+                        </TouchableOpacity>
+                      );
+                    }
+
+                    return days;
+                  })()}
                 </View>
 
                 <Text style={styles.datePreview}>
@@ -550,7 +581,7 @@ export default function CalendarScreen() {
                 >
                   <Text style={styles.pickerConfirmText}>Xác Nhận</Text>
                 </TouchableOpacity>
-              </View>
+              </ScrollView>
             )}
 
             {modalView === 'timePicker' && (
@@ -818,6 +849,79 @@ const styles = StyleSheet.create({
   },
   pickerContent: {
     padding: 20,
+  },
+  calendarHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 20,
+    paddingHorizontal: 10,
+  },
+  calendarNavButton: {
+    width: 40,
+    height: 40,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#1a1a1a',
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#333',
+  },
+  calendarNavText: {
+    fontSize: 24,
+    color: '#fff',
+    fontWeight: '600',
+  },
+  calendarHeaderText: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#fff',
+  },
+  calendarWeekdays: {
+    flexDirection: 'row',
+    marginBottom: 10,
+  },
+  calendarWeekdayCell: {
+    flex: 1,
+    alignItems: 'center',
+    paddingVertical: 8,
+  },
+  calendarWeekdayText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#888',
+  },
+  calendarGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  calendarDayCell: {
+    width: '13%',
+    aspectRatio: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderRadius: 8,
+    backgroundColor: '#1a1a1a',
+  },
+  calendarDaySelected: {
+    backgroundColor: '#ff6b9d',
+  },
+  calendarDayToday: {
+    borderWidth: 2,
+    borderColor: '#4ade80',
+  },
+  calendarDayText: {
+    fontSize: 16,
+    color: '#fff',
+  },
+  calendarDayTextSelected: {
+    fontWeight: '700',
+    color: '#fff',
+  },
+  calendarDayTextToday: {
+    color: '#4ade80',
+    fontWeight: '600',
   },
   datePickerGrid: {
     gap: 16,
