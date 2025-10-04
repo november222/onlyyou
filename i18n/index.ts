@@ -95,48 +95,42 @@ const resources = {
   },
 };
 
-// Initialize i18next
-const initI18n = async () => {
-  await i18n
-    .use(initReactI18next)
-    .init({
-      resources,
-      fallbackLng: 'en',
-      supportedLngs,
-      ns: ['common', 'auth', 'settings', 'history', 'onboarding', 'profile', 'connection', 'messages'],
-      defaultNS: 'common',
-      interpolation: {
-        escapeValue: false,
-      },
-      react: {
-        useSuspense: false,
-      },
-    });
-
-  return i18n;
-};
+// Initialize i18next synchronously
+i18n
+  .use(initReactI18next)
+  .init({
+    resources,
+    fallbackLng: 'en',
+    supportedLngs,
+    lng: 'en',
+    ns: ['common', 'auth', 'settings', 'history', 'onboarding', 'profile', 'connection', 'messages'],
+    defaultNS: 'common',
+    interpolation: {
+      escapeValue: false,
+    },
+    react: {
+      useSuspense: false,
+    },
+  });
 
 // Initialize language from storage or device locale
 export const initLanguage = async () => {
   try {
-    // Ensure i18n is initialized first
-    await initI18n();
-    
     // Try to get saved language
     const savedLanguage = await AsyncStorage.getItem('lang');
-    
+
     if (savedLanguage && supportedLngs.includes(savedLanguage)) {
       await i18n.changeLanguage(savedLanguage);
       return savedLanguage;
     }
-    
+
     // Fallback to device locale
     const deviceLanguage = Localization.getLocales()[0]?.languageCode || 'en';
     const languageToUse = supportedLngs.includes(deviceLanguage) ? deviceLanguage : 'en';
-    
+
     await i18n.changeLanguage(languageToUse);
     await AsyncStorage.setItem('lang', languageToUse);
-    
+
     return languageToUse;
   } catch (error) {
     console.error('Failed to initialize language:', error);
