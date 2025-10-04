@@ -21,6 +21,7 @@ import BuzzService, { BuzzTemplate } from '@/services/BuzzService';
 import { usePremium } from '@/providers/PremiumProvider';
 import { rateLimiter, RATE_LIMITS } from '@/services/RateLimiter';
 import * as Haptics from 'expo-haptics';
+import { notificationService } from '@/services/NotificationService';
 
 export default function TouchScreen() {
   const { t } = useTranslation();
@@ -67,6 +68,35 @@ export default function TouchScreen() {
     // Get initial connection state
     const currentState = WebRTCService.getConnectionState();
     setConnectionState(currentState);
+
+    // Setup notification listeners
+    if (Platform.OS !== 'web') {
+      notificationService.registerForPushNotifications();
+
+      const notificationListener = notificationService.addNotificationReceivedListener(
+        (notification) => {
+          console.log('Notification received:', notification);
+        }
+      );
+
+      const responseListener = notificationService.addNotificationResponseReceivedListener(
+        (response) => {
+          console.log('Notification clicked:', response);
+          const { type } = response.notification.request.content.data;
+          if (type === 'buzz') {
+            Alert.alert('Opening Buzz', 'Navigate to buzz screen here');
+          }
+        }
+      );
+
+      return () => {
+        WebRTCService.onConnectionStateChange = null;
+        BuzzService.onBuzzTemplatesChanged = null;
+        clearInterval(cooldownTimer);
+        notificationListener.remove();
+        responseListener.remove();
+      };
+    }
 
     return () => {
       WebRTCService.onConnectionStateChange = null;
@@ -149,6 +179,48 @@ export default function TouchScreen() {
     if (Platform.OS !== 'web') {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     }
+  };
+
+  const testPushNotification = async () => {
+    if (Platform.OS === 'web') {
+      Alert.alert('Not Supported', 'Push notifications are not available on web');
+      return;
+    }
+
+    Alert.alert(
+      '🔔 Test Push Notification',
+      'Thông báo sẽ xuất hiện sau 5 giây. Bạn có thể thoát app để test!',
+      [
+        { text: 'Hủy', style: 'cancel' },
+        {
+          text: 'Gửi Test',
+          onPress: async () => {
+            await notificationService.scheduleTestBuzzNotification(5);
+            Alert.alert('✅ Scheduled!', 'Thông báo sẽ hiện sau 5 giây. Có thể minimize app để test!');
+          }
+        }
+      ]
+    );
+  };
+
+  const testInstantNotification = async () => {
+    if (Platform.OS === 'web') {
+      Alert.alert('Not Supported', 'Notifications are not available on web');
+      return;
+    }
+
+    await notificationService.sendLocalBuzzNotification({
+      title: '💕 Buzz từ Touch!',
+      body: 'Missing you right now 🥺',
+      data: {
+        type: 'buzz',
+        emoji: '💕',
+        senderId: 'test-partner',
+        senderName: 'Touch',
+      },
+    });
+
+    Alert.alert('✅ Sent!', 'Check your notification tray');
   };
 
   const startVoiceCall = async () => {
@@ -303,12 +375,28 @@ export default function TouchScreen() {
             </Text>
           )}
 
-          <TouchableOpacity
-            style={styles.testButton}
-            onPress={simulateReceiveBuzz}
-          >
-            <Text style={styles.testButtonText}>🧪 Test: Nhận Buzz</Text>
-          </TouchableOpacity>
+          <View style={styles.testButtonsRow}>
+            <TouchableOpacity
+              style={styles.testButton}
+              onPress={simulateReceiveBuzz}
+            >
+              <Text style={styles.testButtonText}>🧪 In-App Buzz</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.testButton}
+              onPress={testInstantNotification}
+            >
+              <Text style={styles.testButtonText}>🔔 Instant Push</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.testButton}
+              onPress={testPushNotification}
+            >
+              <Text style={styles.testButtonText}>⏰ Delayed Push</Text>
+            </TouchableOpacity>
+          </View>
         </View>
       )}
 
@@ -601,17 +689,24 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginTop: 8,
   },
-  testButton: {
+  testButtonsRow: {
+    flexDirection: 'row',
+    gap: 8,
     marginTop: 12,
-    paddingVertical: 10,
-    paddingHorizontal: 20,
+    justifyContent: 'center',
+    flexWrap: 'wrap',
+  },
+  testButton: {
+    paddingVertical: 8,
+    paddingHorizontal: 14,
     backgroundColor: '#3b82f6',
-    borderRadius: 12,
-    alignSelf: 'center',
+    borderRadius: 10,
+    minWidth: 100,
   },
   testButtonText: {
-    fontSize: 13,
+    fontSize: 11,
     color: '#fff',
     fontWeight: '600',
+    textAlign: 'center',
   },
 });

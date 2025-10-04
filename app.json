@@ -28,6 +28,11 @@
     },
     "android": {
       "softwareKeyboardLayoutMode": "resize",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/images/icon.png",
+        "backgroundColor": "#FF1493"
+      },
+      "package": "com.onlyyou.app",
       "permissions": [
         "INTERNET",
         "CAMERA",
@@ -36,6 +41,7 @@
         "BLUETOOTH_ADMIN",
         "MODIFY_AUDIO_SETTINGS"
       ],
+      "googleServicesFile": "./google-services.json",
       "intentFilters": [
         {
           "action": "VIEW",
@@ -65,12 +71,27 @@
       "expo-web-browser",
       "expo-localization",
       [
+        "expo-notifications",
+        {
+          "icon": "./assets/images/icon.png",
+          "color": "#FF1493",
+          "sounds": [],
+          "mode": "production"
+        }
+      ],
+      [
         "expo-image-picker",
         {
           "photosPermission": "The app accesses your photos to let you share them with your partner."
         }
       ]
     ],
+    "notification": {
+      "icon": "./assets/images/icon.png",
+      "color": "#FF1493",
+      "androidMode": "default",
+      "androidCollapsedTitle": "New buzz from your partner"
+    },
     "experiments": {
       "typedRoutes": true
     }
