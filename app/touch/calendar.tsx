@@ -33,6 +33,12 @@ export default function CalendarScreen() {
   const [note, setNote] = useState('');
   const [partnerName, setPartnerName] = useState<string>('My Love');
 
+  // Date/Time picker state
+  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
+  const [selectedTime, setSelectedTime] = useState<Date>(new Date());
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [showTimePicker, setShowTimePicker] = useState(false);
+
   useEffect(() => {
     loadCalendarItems();
     loadPartnerName();
@@ -64,6 +70,79 @@ export default function CalendarScreen() {
     setTime('');
     setNote('');
     setEditingItem(null);
+    setSelectedDate(new Date());
+    setSelectedTime(new Date());
+  };
+
+  const formatDate = (dateObj: Date): string => {
+    const day = String(dateObj.getDate()).padStart(2, '0');
+    const month = String(dateObj.getMonth() + 1).padStart(2, '0');
+    const year = dateObj.getFullYear();
+    return `${day}/${month}/${year}`;
+  };
+
+  const formatTime = (timeObj: Date): string => {
+    const hours = String(timeObj.getHours()).padStart(2, '0');
+    const minutes = String(timeObj.getMinutes()).padStart(2, '0');
+    return `${hours}:${minutes}`;
+  };
+
+  const parseDate = (dateStr: string): Date => {
+    // Parse DD/MM/YYYY to Date
+    const [day, month, year] = dateStr.split('/');
+    return new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+  };
+
+  const parseTime = (timeStr: string): Date => {
+    // Parse HH:MM to Date
+    const [hours, minutes] = timeStr.split(':');
+    const date = new Date();
+    date.setHours(parseInt(hours), parseInt(minutes));
+    return date;
+  };
+
+  const handleDateChange = (event: any, selected?: Date) => {
+    if (Platform.OS === 'android') {
+      setShowDatePicker(false);
+    }
+
+    if (selected) {
+      setSelectedDate(selected);
+      setDate(formatDate(selected));
+    }
+  };
+
+  const handleTimeChange = (event: any, selected?: Date) => {
+    if (Platform.OS === 'android') {
+      setShowTimePicker(false);
+    }
+
+    if (selected) {
+      setSelectedTime(selected);
+      setTime(formatTime(selected));
+    }
+  };
+
+  const openDatePicker = () => {
+    if (date) {
+      try {
+        setSelectedDate(parseDate(date));
+      } catch (e) {
+        setSelectedDate(new Date());
+      }
+    }
+    setShowDatePicker(true);
+  };
+
+  const openTimePicker = () => {
+    if (time) {
+      try {
+        setSelectedTime(parseTime(time));
+      } catch (e) {
+        setSelectedTime(new Date());
+      }
+    }
+    setShowTimePicker(true);
   };
 
   const validateDateTime = (): boolean => {
@@ -335,30 +414,30 @@ export default function CalendarScreen() {
               
               <View style={styles.formGroup}>
                 <Text style={styles.formLabel}>Ngày *</Text>
-                <TextInput
-                  style={styles.formInput}
-                  value={date}
-                  onChangeText={setDate}
-                  placeholder="DD/MM/YYYY (Ví dụ: 15/01/2025)"
-                  placeholderTextColor="#666"
-                  maxLength={10}
-                  keyboardType="numeric"
-                />
-                <Text style={styles.formHint}>Định dạng: DD/MM/YYYY</Text>
+                <TouchableOpacity
+                  style={styles.datePickerButton}
+                  onPress={openDatePicker}
+                >
+                  <CalendarIcon size={20} color="#ff6b9d" strokeWidth={2} />
+                  <Text style={[styles.datePickerText, !date && styles.placeholderText]}>
+                    {date || 'Chọn ngày'}
+                  </Text>
+                </TouchableOpacity>
+                <Text style={styles.formHint}>Nhấn để chọn ngày từ lịch</Text>
               </View>
 
               <View style={styles.formGroup}>
                 <Text style={styles.formLabel}>Thời gian (không bắt buộc)</Text>
-                <TextInput
-                  style={styles.formInput}
-                  value={time}
-                  onChangeText={setTime}
-                  placeholder="HH:MM (Ví dụ: 14:30)"
-                  placeholderTextColor="#666"
-                  maxLength={5}
-                  keyboardType="numeric"
-                />
-                <Text style={styles.formHint}>Định dạng 24 giờ: HH:MM</Text>
+                <TouchableOpacity
+                  style={styles.datePickerButton}
+                  onPress={openTimePicker}
+                >
+                  <Clock size={20} color="#4ade80" strokeWidth={2} />
+                  <Text style={[styles.datePickerText, !time && styles.placeholderText]}>
+                    {time || 'Chọn thời gian'}
+                  </Text>
+                </TouchableOpacity>
+                <Text style={styles.formHint}>Nhấn để chọn giờ và phút</Text>
               </View>
               
               <View style={styles.formGroup}>
@@ -387,6 +466,170 @@ export default function CalendarScreen() {
             </ScrollView>
           </View>
         </KeyboardAvoidingView>
+      </Modal>
+
+      {/* Date Picker Modal */}
+      <Modal
+        visible={showDatePicker}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setShowDatePicker(false)}
+      >
+        <View style={styles.pickerOverlay}>
+          <View style={styles.pickerModal}>
+            <View style={styles.pickerHeader}>
+              <Text style={styles.pickerTitle}>Chọn Ngày</Text>
+              <TouchableOpacity onPress={() => setShowDatePicker(false)}>
+                <X size={24} color="#fff" strokeWidth={2} />
+              </TouchableOpacity>
+            </View>
+
+            <View style={styles.pickerContent}>
+              <View style={styles.datePickerGrid}>
+                <View style={styles.datePickerRow}>
+                  <Text style={styles.datePickerLabel}>Ngày:</Text>
+                  <TextInput
+                    style={styles.datePickerInput}
+                    value={String(selectedDate.getDate())}
+                    onChangeText={(val) => {
+                      const day = parseInt(val) || 1;
+                      const newDate = new Date(selectedDate);
+                      newDate.setDate(Math.min(31, Math.max(1, day)));
+                      setSelectedDate(newDate);
+                    }}
+                    keyboardType="numeric"
+                    maxLength={2}
+                    placeholder="DD"
+                    placeholderTextColor="#666"
+                  />
+                </View>
+
+                <View style={styles.datePickerRow}>
+                  <Text style={styles.datePickerLabel}>Tháng:</Text>
+                  <TextInput
+                    style={styles.datePickerInput}
+                    value={String(selectedDate.getMonth() + 1)}
+                    onChangeText={(val) => {
+                      const month = parseInt(val) || 1;
+                      const newDate = new Date(selectedDate);
+                      newDate.setMonth(Math.min(12, Math.max(1, month)) - 1);
+                      setSelectedDate(newDate);
+                    }}
+                    keyboardType="numeric"
+                    maxLength={2}
+                    placeholder="MM"
+                    placeholderTextColor="#666"
+                  />
+                </View>
+
+                <View style={styles.datePickerRow}>
+                  <Text style={styles.datePickerLabel}>Năm:</Text>
+                  <TextInput
+                    style={styles.datePickerInput}
+                    value={String(selectedDate.getFullYear())}
+                    onChangeText={(val) => {
+                      const year = parseInt(val) || 2025;
+                      const newDate = new Date(selectedDate);
+                      newDate.setFullYear(year);
+                      setSelectedDate(newDate);
+                    }}
+                    keyboardType="numeric"
+                    maxLength={4}
+                    placeholder="YYYY"
+                    placeholderTextColor="#666"
+                  />
+                </View>
+              </View>
+
+              <Text style={styles.datePreview}>
+                {formatDate(selectedDate)}
+              </Text>
+
+              <TouchableOpacity
+                style={styles.pickerConfirmButton}
+                onPress={() => {
+                  setDate(formatDate(selectedDate));
+                  setShowDatePicker(false);
+                }}
+              >
+                <Text style={styles.pickerConfirmText}>Xác Nhận</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Time Picker Modal */}
+      <Modal
+        visible={showTimePicker}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setShowTimePicker(false)}
+      >
+        <View style={styles.pickerOverlay}>
+          <View style={styles.pickerModal}>
+            <View style={styles.pickerHeader}>
+              <Text style={styles.pickerTitle}>Chọn Thời Gian</Text>
+              <TouchableOpacity onPress={() => setShowTimePicker(false)}>
+                <X size={24} color="#fff" strokeWidth={2} />
+              </TouchableOpacity>
+            </View>
+
+            <View style={styles.pickerContent}>
+              <View style={styles.timePickerGrid}>
+                <View style={styles.timePickerRow}>
+                  <Text style={styles.datePickerLabel}>Giờ:</Text>
+                  <TextInput
+                    style={styles.datePickerInput}
+                    value={String(selectedTime.getHours()).padStart(2, '0')}
+                    onChangeText={(val) => {
+                      const hours = parseInt(val) || 0;
+                      const newTime = new Date(selectedTime);
+                      newTime.setHours(Math.min(23, Math.max(0, hours)));
+                      setSelectedTime(newTime);
+                    }}
+                    keyboardType="numeric"
+                    maxLength={2}
+                    placeholder="HH"
+                    placeholderTextColor="#666"
+                  />
+                </View>
+
+                <View style={styles.timePickerRow}>
+                  <Text style={styles.datePickerLabel}>Phút:</Text>
+                  <TextInput
+                    style={styles.datePickerInput}
+                    value={String(selectedTime.getMinutes()).padStart(2, '0')}
+                    onChangeText={(val) => {
+                      const minutes = parseInt(val) || 0;
+                      const newTime = new Date(selectedTime);
+                      newTime.setMinutes(Math.min(59, Math.max(0, minutes)));
+                      setSelectedTime(newTime);
+                    }}
+                    keyboardType="numeric"
+                    maxLength={2}
+                    placeholder="MM"
+                    placeholderTextColor="#666"
+                  />
+                </View>
+              </View>
+
+              <Text style={styles.datePreview}>
+                {formatTime(selectedTime)}
+              </Text>
+
+              <TouchableOpacity
+                style={styles.pickerConfirmButton}
+                onPress={() => {
+                  setTime(formatTime(selectedTime));
+                  setShowTimePicker(false);
+                }}
+              >
+                <Text style={styles.pickerConfirmText}>Xác Nhận</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
       </Modal>
     </SafeAreaView>
   );
@@ -553,6 +796,24 @@ const styles = StyleSheet.create({
     marginTop: 6,
     fontStyle: 'italic',
   },
+  datePickerButton: {
+    backgroundColor: '#111',
+    borderRadius: 12,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: '#333',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  datePickerText: {
+    fontSize: 16,
+    color: '#fff',
+    flex: 1,
+  },
+  placeholderText: {
+    color: '#666',
+  },
   formTextArea: {
     minHeight: 100,
     textAlignVertical: 'top',
@@ -570,6 +831,96 @@ const styles = StyleSheet.create({
   saveButtonText: {
     fontSize: 16,
     fontWeight: '600',
+    color: '#fff',
+  },
+  pickerOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  pickerModal: {
+    backgroundColor: '#1a1a1a',
+    borderRadius: 16,
+    width: '100%',
+    maxWidth: 400,
+    borderWidth: 1,
+    borderColor: '#333',
+  },
+  pickerHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: '#333',
+  },
+  pickerTitle: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#fff',
+  },
+  pickerContent: {
+    padding: 20,
+  },
+  datePickerGrid: {
+    gap: 16,
+    marginBottom: 20,
+  },
+  datePickerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  datePickerLabel: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#fff',
+    width: 60,
+  },
+  datePickerInput: {
+    flex: 1,
+    backgroundColor: '#111',
+    borderRadius: 8,
+    padding: 12,
+    color: '#fff',
+    fontSize: 18,
+    fontWeight: '600',
+    textAlign: 'center',
+    borderWidth: 1,
+    borderColor: '#333',
+  },
+  timePickerGrid: {
+    flexDirection: 'row',
+    gap: 16,
+    marginBottom: 20,
+  },
+  timePickerRow: {
+    flex: 1,
+    gap: 8,
+  },
+  datePreview: {
+    fontSize: 24,
+    fontWeight: '700',
+    color: '#4ade80',
+    textAlign: 'center',
+    marginBottom: 20,
+    padding: 16,
+    backgroundColor: '#111',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#333',
+  },
+  pickerConfirmButton: {
+    backgroundColor: '#ff6b9d',
+    borderRadius: 12,
+    padding: 16,
+    alignItems: 'center',
+  },
+  pickerConfirmText: {
+    fontSize: 16,
+    fontWeight: '700',
     color: '#fff',
   },
 });
