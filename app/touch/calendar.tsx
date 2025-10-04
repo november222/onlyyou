@@ -271,7 +271,7 @@ export default function CalendarScreen() {
 
   const formatDateDisplay = (dateString: string) => {
     try {
-      const date = new Date(dateString);
+      const date = parseDate(dateString);
       return date.toLocaleDateString('vi-VN', {
         weekday: 'long',
         day: '2-digit',
