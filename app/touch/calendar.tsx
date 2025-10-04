@@ -36,8 +36,9 @@ export default function CalendarScreen() {
   // Date/Time picker state
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [selectedTime, setSelectedTime] = useState<Date>(new Date());
-  const [showDatePicker, setShowDatePicker] = useState(false);
-  const [showTimePicker, setShowTimePicker] = useState(false);
+
+  // Modal view state: 'form' | 'datePicker' | 'timePicker'
+  const [modalView, setModalView] = useState<'form' | 'datePicker' | 'timePicker'>('form');
 
   useEffect(() => {
     loadCalendarItems();
@@ -72,6 +73,7 @@ export default function CalendarScreen() {
     setEditingItem(null);
     setSelectedDate(new Date());
     setSelectedTime(new Date());
+    setModalView('form');
   };
 
   const formatDate = (dateObj: Date): string => {
@@ -124,39 +126,39 @@ export default function CalendarScreen() {
   };
 
   const openDatePicker = () => {
-    console.log('Opening date picker, current date:', date);
     if (date) {
       try {
-        const parsed = parseDate(date);
-        console.log('Parsed date:', parsed);
-        setSelectedDate(parsed);
+        setSelectedDate(parseDate(date));
       } catch (e) {
-        console.log('Error parsing date:', e);
         setSelectedDate(new Date());
       }
     } else {
       setSelectedDate(new Date());
     }
-    setShowDatePicker(true);
-    console.log('showDatePicker set to true');
+    setModalView('datePicker');
   };
 
   const openTimePicker = () => {
-    console.log('Opening time picker, current time:', time);
     if (time) {
       try {
-        const parsed = parseTime(time);
-        console.log('Parsed time:', parsed);
-        setSelectedTime(parsed);
+        setSelectedTime(parseTime(time));
       } catch (e) {
-        console.log('Error parsing time:', e);
         setSelectedTime(new Date());
       }
     } else {
       setSelectedTime(new Date());
     }
-    setShowTimePicker(true);
-    console.log('showTimePicker set to true');
+    setModalView('timePicker');
+  };
+
+  const confirmDatePicker = () => {
+    setDate(formatDate(selectedDate));
+    setModalView('form');
+  };
+
+  const confirmTimePicker = () => {
+    setTime(formatTime(selectedTime));
+    setModalView('form');
   };
 
   const handleAddItem = async () => {
@@ -263,6 +265,7 @@ export default function CalendarScreen() {
 
   const openAddModal = () => {
     resetForm();
+    setModalView('form');
     setShowAddModal(true);
   };
 
@@ -383,8 +386,22 @@ export default function CalendarScreen() {
         >
           <View style={styles.addModal}>
             <View style={styles.modalHeader}>
+              <TouchableOpacity
+                style={styles.backButton}
+                onPress={() => {
+                  if (modalView !== 'form') {
+                    setModalView('form');
+                  } else {
+                    setShowAddModal(false);
+                  }
+                }}
+              >
+                <ArrowLeft size={24} color="#888" strokeWidth={2} />
+              </TouchableOpacity>
               <Text style={styles.modalTitle}>
-                {editingItem ? 'Edit Event' : 'Add Event'}
+                {modalView === 'datePicker' ? 'Chọn Ngày' :
+                 modalView === 'timePicker' ? 'Chọn Thời Gian' :
+                 editingItem ? 'Edit Event' : 'Add Event'}
               </Text>
               <TouchableOpacity
                 style={styles.closeButton}
@@ -393,11 +410,12 @@ export default function CalendarScreen() {
                 <X size={24} color="#888" strokeWidth={2} />
               </TouchableOpacity>
             </View>
-            
-            <ScrollView 
-              style={styles.modalContent}
-              keyboardShouldPersistTaps="handled"
-            >
+
+            {modalView === 'form' && (
+              <ScrollView
+                style={styles.modalContent}
+                keyboardShouldPersistTaps="handled"
+              >
               <View style={styles.formGroup}>
                 <Text style={styles.formLabel}>Title *</Text>
                 <TextInput
@@ -461,175 +479,134 @@ export default function CalendarScreen() {
                   {editingItem ? 'Update Event' : 'Add Event'}
                 </Text>
               </TouchableOpacity>
-            </ScrollView>
+              </ScrollView>
+            )}
+
+            {modalView === 'datePicker' && (
+              <View style={styles.pickerContent}>
+                <View style={styles.datePickerGrid}>
+                  <View style={styles.datePickerRow}>
+                    <Text style={styles.datePickerLabel}>Ngày:</Text>
+                    <TextInput
+                      style={styles.datePickerInput}
+                      value={selectedDate.getDate().toString()}
+                      onChangeText={(val) => {
+                        const day = parseInt(val) || 1;
+                        const newDate = new Date(selectedDate);
+                        newDate.setDate(Math.min(31, Math.max(1, day)));
+                        setSelectedDate(newDate);
+                      }}
+                      keyboardType="numeric"
+                      maxLength={2}
+                      placeholder="DD"
+                      placeholderTextColor="#666"
+                    />
+                  </View>
+
+                  <View style={styles.datePickerRow}>
+                    <Text style={styles.datePickerLabel}>Tháng:</Text>
+                    <TextInput
+                      style={styles.datePickerInput}
+                      value={(selectedDate.getMonth() + 1).toString()}
+                      onChangeText={(val) => {
+                        const month = parseInt(val) || 1;
+                        const newDate = new Date(selectedDate);
+                        newDate.setMonth(Math.min(12, Math.max(1, month)) - 1);
+                        setSelectedDate(newDate);
+                      }}
+                      keyboardType="numeric"
+                      maxLength={2}
+                      placeholder="MM"
+                      placeholderTextColor="#666"
+                    />
+                  </View>
+
+                  <View style={styles.datePickerRow}>
+                    <Text style={styles.datePickerLabel}>Năm:</Text>
+                    <TextInput
+                      style={styles.datePickerInput}
+                      value={selectedDate.getFullYear().toString()}
+                      onChangeText={(val) => {
+                        const year = parseInt(val) || 2025;
+                        const newDate = new Date(selectedDate);
+                        newDate.setFullYear(year);
+                        setSelectedDate(newDate);
+                      }}
+                      keyboardType="numeric"
+                      maxLength={4}
+                      placeholder="YYYY"
+                      placeholderTextColor="#666"
+                    />
+                  </View>
+                </View>
+
+                <Text style={styles.datePreview}>
+                  {formatDate(selectedDate)}
+                </Text>
+
+                <TouchableOpacity
+                  style={styles.pickerConfirmButton}
+                  onPress={confirmDatePicker}
+                >
+                  <Text style={styles.pickerConfirmText}>Xác Nhận</Text>
+                </TouchableOpacity>
+              </View>
+            )}
+
+            {modalView === 'timePicker' && (
+              <View style={styles.pickerContent}>
+                <View style={styles.timePickerGrid}>
+                  <View style={styles.timePickerRow}>
+                    <Text style={styles.datePickerLabel}>Giờ:</Text>
+                    <TextInput
+                      style={styles.datePickerInput}
+                      value={selectedTime.getHours().toString().padStart(2, '0')}
+                      onChangeText={(val) => {
+                        const hours = parseInt(val) || 0;
+                        const newTime = new Date(selectedTime);
+                        newTime.setHours(Math.min(23, Math.max(0, hours)));
+                        setSelectedTime(newTime);
+                      }}
+                      keyboardType="numeric"
+                      maxLength={2}
+                      placeholder="HH"
+                      placeholderTextColor="#666"
+                    />
+                  </View>
+
+                  <View style={styles.timePickerRow}>
+                    <Text style={styles.datePickerLabel}>Phút:</Text>
+                    <TextInput
+                      style={styles.datePickerInput}
+                      value={selectedTime.getMinutes().toString().padStart(2, '0')}
+                      onChangeText={(val) => {
+                        const minutes = parseInt(val) || 0;
+                        const newTime = new Date(selectedTime);
+                        newTime.setMinutes(Math.min(59, Math.max(0, minutes)));
+                        setSelectedTime(newTime);
+                      }}
+                      keyboardType="numeric"
+                      maxLength={2}
+                      placeholder="MM"
+                      placeholderTextColor="#666"
+                    />
+                  </View>
+                </View>
+
+                <Text style={styles.datePreview}>
+                  {formatTime(selectedTime)}
+                </Text>
+
+                <TouchableOpacity
+                  style={styles.pickerConfirmButton}
+                  onPress={confirmTimePicker}
+                >
+                  <Text style={styles.pickerConfirmText}>Xác Nhận</Text>
+                </TouchableOpacity>
+              </View>
+            )}
           </View>
         </KeyboardAvoidingView>
-      </Modal>
-
-      {/* Date Picker Modal */}
-      <Modal
-        visible={showDatePicker}
-        transparent={true}
-        animationType="fade"
-        onRequestClose={() => setShowDatePicker(false)}
-        statusBarTranslucent={true}
-      >
-        <View style={styles.pickerOverlay}>
-          <View style={styles.pickerModal}>
-            <View style={styles.pickerHeader}>
-              <Text style={styles.pickerTitle}>Chọn Ngày</Text>
-              <TouchableOpacity onPress={() => setShowDatePicker(false)}>
-                <X size={24} color="#fff" strokeWidth={2} />
-              </TouchableOpacity>
-            </View>
-
-            <View style={styles.pickerContent}>
-              <View style={styles.datePickerGrid}>
-                <View style={styles.datePickerRow}>
-                  <Text style={styles.datePickerLabel}>Ngày:</Text>
-                  <TextInput
-                    style={styles.datePickerInput}
-                    value={selectedDate.getDate().toString()}
-                    onChangeText={(val) => {
-                      const day = parseInt(val) || 1;
-                      const newDate = new Date(selectedDate);
-                      newDate.setDate(Math.min(31, Math.max(1, day)));
-                      setSelectedDate(newDate);
-                    }}
-                    keyboardType="numeric"
-                    maxLength={2}
-                    placeholder="DD"
-                    placeholderTextColor="#666"
-                  />
-                </View>
-
-                <View style={styles.datePickerRow}>
-                  <Text style={styles.datePickerLabel}>Tháng:</Text>
-                  <TextInput
-                    style={styles.datePickerInput}
-                    value={(selectedDate.getMonth() + 1).toString()}
-                    onChangeText={(val) => {
-                      const month = parseInt(val) || 1;
-                      const newDate = new Date(selectedDate);
-                      newDate.setMonth(Math.min(12, Math.max(1, month)) - 1);
-                      setSelectedDate(newDate);
-                    }}
-                    keyboardType="numeric"
-                    maxLength={2}
-                    placeholder="MM"
-                    placeholderTextColor="#666"
-                  />
-                </View>
-
-                <View style={styles.datePickerRow}>
-                  <Text style={styles.datePickerLabel}>Năm:</Text>
-                  <TextInput
-                    style={styles.datePickerInput}
-                    value={selectedDate.getFullYear().toString()}
-                    onChangeText={(val) => {
-                      const year = parseInt(val) || 2025;
-                      const newDate = new Date(selectedDate);
-                      newDate.setFullYear(year);
-                      setSelectedDate(newDate);
-                    }}
-                    keyboardType="numeric"
-                    maxLength={4}
-                    placeholder="YYYY"
-                    placeholderTextColor="#666"
-                  />
-                </View>
-              </View>
-
-              <Text style={styles.datePreview}>
-                {formatDate(selectedDate)}
-              </Text>
-
-              <TouchableOpacity
-                style={styles.pickerConfirmButton}
-                onPress={() => {
-                  setDate(formatDate(selectedDate));
-                  setShowDatePicker(false);
-                }}
-              >
-                <Text style={styles.pickerConfirmText}>Xác Nhận</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
-      </Modal>
-
-      {/* Time Picker Modal */}
-      <Modal
-        visible={showTimePicker}
-        transparent={true}
-        animationType="fade"
-        onRequestClose={() => setShowTimePicker(false)}
-        statusBarTranslucent={true}
-      >
-        <View style={styles.pickerOverlay}>
-          <View style={styles.pickerModal}>
-            <View style={styles.pickerHeader}>
-              <Text style={styles.pickerTitle}>Chọn Thời Gian</Text>
-              <TouchableOpacity onPress={() => setShowTimePicker(false)}>
-                <X size={24} color="#fff" strokeWidth={2} />
-              </TouchableOpacity>
-            </View>
-
-            <View style={styles.pickerContent}>
-              <View style={styles.timePickerGrid}>
-                <View style={styles.timePickerRow}>
-                  <Text style={styles.datePickerLabel}>Giờ:</Text>
-                  <TextInput
-                    style={styles.datePickerInput}
-                    value={selectedTime.getHours().toString().padStart(2, '0')}
-                    onChangeText={(val) => {
-                      const hours = parseInt(val) || 0;
-                      const newTime = new Date(selectedTime);
-                      newTime.setHours(Math.min(23, Math.max(0, hours)));
-                      setSelectedTime(newTime);
-                    }}
-                    keyboardType="numeric"
-                    maxLength={2}
-                    placeholder="HH"
-                    placeholderTextColor="#666"
-                  />
-                </View>
-
-                <View style={styles.timePickerRow}>
-                  <Text style={styles.datePickerLabel}>Phút:</Text>
-                  <TextInput
-                    style={styles.datePickerInput}
-                    value={selectedTime.getMinutes().toString().padStart(2, '0')}
-                    onChangeText={(val) => {
-                      const minutes = parseInt(val) || 0;
-                      const newTime = new Date(selectedTime);
-                      newTime.setMinutes(Math.min(59, Math.max(0, minutes)));
-                      setSelectedTime(newTime);
-                    }}
-                    keyboardType="numeric"
-                    maxLength={2}
-                    placeholder="MM"
-                    placeholderTextColor="#666"
-                  />
-                </View>
-              </View>
-
-              <Text style={styles.datePreview}>
-                {formatTime(selectedTime)}
-              </Text>
-
-              <TouchableOpacity
-                style={styles.pickerConfirmButton}
-                onPress={() => {
-                  setTime(formatTime(selectedTime));
-                  setShowTimePicker(false);
-                }}
-              >
-                <Text style={styles.pickerConfirmText}>Xác Nhận</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
       </Modal>
     </SafeAreaView>
   );
@@ -760,6 +737,12 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: '#333',
   },
+  backButton: {
+    width: 40,
+    height: 40,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
   modalTitle: {
     fontSize: 20,
     fontWeight: '700',
@@ -831,35 +814,6 @@ const styles = StyleSheet.create({
   saveButtonText: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#fff',
-  },
-  pickerOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.9)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 20,
-    zIndex: 9999,
-  },
-  pickerModal: {
-    backgroundColor: '#1a1a1a',
-    borderRadius: 16,
-    width: '100%',
-    maxWidth: 400,
-    borderWidth: 1,
-    borderColor: '#333',
-  },
-  pickerHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: 20,
-    borderBottomWidth: 1,
-    borderBottomColor: '#333',
-  },
-  pickerTitle: {
-    fontSize: 20,
-    fontWeight: '700',
     color: '#fff',
   },
   pickerContent: {
