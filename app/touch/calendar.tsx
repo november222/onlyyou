@@ -655,18 +655,18 @@ export default function CalendarScreen() {
                           const y = event.nativeEvent.contentOffset.y;
                           const index = Math.round(y / 50);
                           const newTime = new Date(selectedTime);
-                          newTime.setMinutes(index * 5);
+                          newTime.setMinutes(index);
                           setSelectedTime(newTime);
                         }}
                         ref={(ref) => {
                           if (ref && modalView === 'timePicker') {
                             setTimeout(() => {
-                              ref.scrollTo({ y: (selectedTime.getMinutes() / 5) * 50, animated: false });
+                              ref.scrollTo({ y: selectedTime.getMinutes() * 50, animated: false });
                             }, 100);
                           }
                         }}
                       >
-                        {Array.from({ length: 12 }, (_, i) => i * 5).map((minute) => {
+                        {Array.from({ length: 60 }, (_, i) => i).map((minute) => {
                           const isSelected = minute === selectedTime.getMinutes();
                           return (
                             <TouchableOpacity
