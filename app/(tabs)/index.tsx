@@ -100,18 +100,28 @@ export default function TouchScreen() {
 
   const sendBuzz = async (templateId: string) => {
     if (!isFeatureEnabled('buzz')) return;
-    
+
     if (!connectionState.isConnected) {
       Alert.alert('Not Connected', 'Please connect with your partner before sending buzz');
       return;
     }
-    
+
+    const recentCount = rateLimiter.getActionCount('buzz_send', 10 * 60 * 1000);
+
+    if (recentCount >= 8 && recentCount < 10) {
+      Alert.alert(
+        '⚠️ Cảnh Báo Spam',
+        `Bạn đã gửi ${recentCount}/10 buzz trong 10 phút. Nếu gửi đủ 10 lần, bạn sẽ bị khóa 10 phút!`,
+        [{ text: 'Đã Hiểu' }]
+      );
+    }
+
     const result = await BuzzService.sendBuzz(templateId);
-    
+
     if (result.success) {
       const template = buzzTemplates.find(t => t.id === templateId);
       Alert.alert('Buzz Sent! 💕', `Sent "${template?.text}" to your partner`);
-      loadBuzzCooldown(); // Refresh cooldown status
+      loadBuzzCooldown();
     } else {
       Alert.alert('Cannot Send', result.error || 'Please try again');
     }
@@ -260,7 +270,9 @@ export default function TouchScreen() {
                 )}
                 {!buzzCooldown.canSend && (
                   <Text style={styles.buzzCooldownText}>
-                    {Math.ceil(buzzCooldown.remainingTime / 1000)}s
+                    {buzzCooldown.remainingTime > 60000
+                      ? `${Math.floor(buzzCooldown.remainingTime / 60000)}m`
+                      : `${Math.ceil(buzzCooldown.remainingTime / 1000)}s`}
                   </Text>
                 )}
               </TouchableOpacity>
@@ -268,7 +280,9 @@ export default function TouchScreen() {
           </ScrollView>
           {!buzzCooldown.canSend && (
             <Text style={styles.cooldownMessage}>
-              Wait {Math.ceil(buzzCooldown.remainingTime / 1000)}s before sending another buzz
+              {buzzCooldown.remainingTime > 60000
+                ? `⚠️ Đã bị khóa do spam! Chờ ${Math.floor(buzzCooldown.remainingTime / 60000)} phút ${Math.ceil((buzzCooldown.remainingTime % 60000) / 1000)} giây`
+                : `Chờ ${Math.ceil(buzzCooldown.remainingTime / 1000)} giây trước khi gửi buzz tiếp`}
             </Text>
           )}
         </View>

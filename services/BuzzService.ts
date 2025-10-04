@@ -381,13 +381,17 @@ class BuzzService {
         userId: buzzEvent.senderId,
       });
 
-      rateLimiter.recordAction('buzz_send');
+      const recordResult = rateLimiter.recordAction('buzz_send', RATE_LIMITS.BUZZ);
 
       // TODO: Send via WebSocket/API
       // await this.apiSendBuzz(buzzEvent);
       // this.socketSendBuzz(buzzEvent);
 
       console.log(`Buzz sent: ${template.text}`);
+
+      if (recordResult.isSpamWarning) {
+        console.warn('⚠️ Spam detected: 10 minute penalty applied');
+      }
 
       return {
         success: true,

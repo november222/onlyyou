@@ -2,6 +2,8 @@ interface RateLimitConfig {
   maxActions: number;
   windowMs: number;
   cooldownMs?: number;
+  spamThreshold?: number;
+  spamPenaltyMs?: number;
 }
 
 interface ActionRecord {
@@ -13,6 +15,7 @@ class RateLimiter {
   private static instance: RateLimiter;
   private actionRecords: Map<string, ActionRecord[]> = new Map();
   private cooldowns: Map<string, number> = new Map();
+  private spamWarnings: Map<string, boolean> = new Map();
 
   private constructor() {}
 
@@ -23,15 +26,18 @@ class RateLimiter {
     return RateLimiter.instance;
   }
 
-  canPerformAction(actionKey: string, config: RateLimitConfig): { allowed: boolean; reason?: string; waitTime?: number } {
+  canPerformAction(actionKey: string, config: RateLimitConfig): { allowed: boolean; reason?: string; waitTime?: number; isSpamWarning?: boolean } {
     const now = Date.now();
 
     const cooldownEnd = this.cooldowns.get(actionKey);
     if (cooldownEnd && now < cooldownEnd) {
       const waitTime = Math.ceil((cooldownEnd - now) / 1000);
+      const isLongCooldown = (cooldownEnd - now) > 60000;
       return {
         allowed: false,
-        reason: `Vui lòng đợi ${waitTime} giây trước khi thực hiện lại`,
+        reason: isLongCooldown
+          ? `⚠️ Bạn đã spam quá nhiều! Vui lòng đợi ${Math.ceil(waitTime / 60)} phút ${waitTime % 60} giây`
+          : `Vui lòng đợi ${waitTime} giây trước khi thực hiện lại`,
         waitTime
       };
     }
@@ -64,7 +70,7 @@ class RateLimiter {
     return { allowed: true };
   }
 
-  recordAction(actionKey: string): void {
+  recordAction(actionKey: string, config?: RateLimitConfig): { isSpamWarning?: boolean } {
     const now = Date.now();
     const records = this.actionRecords.get(actionKey) || [];
 
@@ -75,7 +81,22 @@ class RateLimiter {
 
     this.actionRecords.set(actionKey, records);
 
+    let isSpamWarning = false;
+
+    if (config?.spamThreshold && config?.spamPenaltyMs) {
+      const spamWindow = 10 * 60 * 1000;
+      const recentActions = records.filter(r => now - r.timestamp < spamWindow);
+
+      if (recentActions.length >= config.spamThreshold) {
+        this.cooldowns.set(actionKey, now + config.spamPenaltyMs);
+        isSpamWarning = true;
+        this.spamWarnings.set(actionKey, true);
+      }
+    }
+
     this.cleanup(actionKey, now);
+
+    return { isSpamWarning };
   }
 
   private cleanup(actionKey: string, now: number): void {
@@ -104,13 +125,21 @@ class RateLimiter {
     return Math.max(0, config.maxActions - totalActions);
   }
 
+  getActionCount(actionKey: string, windowMs: number): number {
+    const now = Date.now();
+    const records = this.actionRecords.get(actionKey) || [];
+    return records.filter(r => now - r.timestamp < windowMs).length;
+  }
+
   reset(actionKey?: string): void {
     if (actionKey) {
       this.actionRecords.delete(actionKey);
       this.cooldowns.delete(actionKey);
+      this.spamWarnings.delete(actionKey);
     } else {
       this.actionRecords.clear();
       this.cooldowns.clear();
+      this.spamWarnings.clear();
     }
   }
 }
@@ -122,6 +151,8 @@ export const RATE_LIMITS = {
     maxActions: 1,
     windowMs: 30 * 1000,
     cooldownMs: 0,
+    spamThreshold: 10,
+    spamPenaltyMs: 10 * 60 * 1000,
   },
   CALENDAR_ADD: {
     maxActions: 10,
