@@ -20,7 +20,7 @@ export default function TabLayout() {
   const ActiveComponent = tabs.find(tab => tab.key === activeTab)?.component || ProfileScreen;
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
+    <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
 
       {/* Content */}
       <View style={styles.content}>
