@@ -230,12 +230,13 @@ class AuthService {
     try {
       this.updateAuthState({ isLoading: true });
 
+      console.log('Platform.OS:', Platform.OS);
+      console.log('window exists:', typeof window !== 'undefined');
+
       let redirectUrl = 'onlyyou://auth/callback';
 
-      if (Platform.OS === 'web') {
-        if (typeof window !== 'undefined' && window.location) {
-          redirectUrl = `${window.location.protocol}//${window.location.host}/auth/callback`;
-        }
+      if (typeof window !== 'undefined' && window.location) {
+        redirectUrl = `${window.location.protocol}//${window.location.host}/auth/callback`;
       }
 
       console.log('Starting Google OAuth with redirect URL:', redirectUrl);
@@ -244,7 +245,7 @@ class AuthService {
         provider: 'google',
         options: {
           redirectTo: redirectUrl,
-          skipBrowserRedirect: Platform.OS !== 'web',
+          skipBrowserRedirect: false,
         },
       });
 
@@ -254,7 +255,7 @@ class AuthService {
         throw error;
       }
 
-      if (Platform.OS === 'web') {
+      if (typeof window !== 'undefined') {
         return;
       }
 
