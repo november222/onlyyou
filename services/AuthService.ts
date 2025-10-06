@@ -238,6 +238,8 @@ class AuthService {
         }
       }
 
+      console.log('Starting Google OAuth with redirect URL:', redirectUrl);
+
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
@@ -245,6 +247,8 @@ class AuthService {
           skipBrowserRedirect: Platform.OS !== 'web',
         },
       });
+
+      console.log('OAuth response:', { data, error });
 
       if (error) {
         throw error;
@@ -287,8 +291,11 @@ class AuthService {
       }
     } catch (error: any) {
       console.error('Google sign in failed:', error);
+      console.error('Error details:', JSON.stringify(error, null, 2));
       this.updateAuthState({ isLoading: false });
-      throw new Error('Đăng nhập Google thất bại. Vui lòng thử lại.');
+
+      const errorMessage = error?.message || error?.error_description || 'Đăng nhập Google thất bại. Vui lòng thử lại.';
+      throw new Error(errorMessage);
     }
   }
 
