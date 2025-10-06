@@ -4,66 +4,43 @@ import {
   Text,
   StyleSheet,
   TouchableOpacity,
-  Alert,
   ActivityIndicator,
-  TextInput,
-  KeyboardAvoidingView,
   Platform,
-  ScrollView,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { Stack } from 'expo-router';
-import { Heart, Mail, Lock } from 'lucide-react-native';
+import { Heart } from 'lucide-react-native';
 import AuthService from '@/services/AuthService';
 import { useTranslation } from 'react-i18next';
 
 export default function LoginScreen() {
-  const [isLoading, setIsLoading] = useState(false);
-  const [isSignUp, setIsSignUp] = useState(false);
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [name, setName] = useState('');
+  const [isLoadingGoogle, setIsLoadingGoogle] = useState(false);
+  const [isLoadingApple, setIsLoadingApple] = useState(false);
   const [error, setError] = useState('');
   const { t } = useTranslation();
 
   const handleGoogleSignIn = async () => {
     try {
-      setIsLoading(true);
+      setError('');
+      setIsLoadingGoogle(true);
       await AuthService.signInWithGoogle();
       router.replace('/(tabs)/profile');
     } catch (error) {
-      Alert.alert(t('auth.signInFailed'), error instanceof Error ? error.message : t('common.error'));
-    } finally {
-      setIsLoading(false);
+      setError(error instanceof Error ? error.message : 'Đăng nhập thất bại');
+      setIsLoadingGoogle(false);
     }
   };
 
-  const handleEmailAuth = async () => {
+  const handleAppleSignIn = async () => {
     try {
       setError('');
-      setIsLoading(true);
-
-      if (!email || !password) {
-        setError('Vui lòng nhập đầy đủ thông tin');
-        return;
-      }
-
-      if (isSignUp) {
-        if (!name) {
-          setError('Vui lòng nhập tên của bạn');
-          return;
-        }
-        await AuthService.signUpWithEmail(email, password, name);
-      } else {
-        await AuthService.signInWithEmail(email, password);
-      }
-
+      setIsLoadingApple(true);
+      await AuthService.signInWithApple();
       router.replace('/(tabs)/profile');
     } catch (error) {
-      setError(error instanceof Error ? error.message : 'Đã có lỗi xảy ra');
-    } finally {
-      setIsLoading(false);
+      setError(error instanceof Error ? error.message : 'Đăng nhập thất bại');
+      setIsLoadingApple(false);
     }
   };
 
@@ -71,128 +48,57 @@ export default function LoginScreen() {
     <>
       <Stack.Screen options={{ headerShown: false, title: '' }} />
       <SafeAreaView style={styles.container}>
-        <KeyboardAvoidingView
-          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-          style={{ flex: 1 }}
-        >
-          <ScrollView
-            contentContainerStyle={styles.scrollContent}
-            keyboardShouldPersistTaps="handled"
-          >
-            <View style={styles.content}>
-          {/* Header */}
+        <View style={styles.content}>
           <View style={styles.header}>
-            <Heart size={48} color="#ff6b9d" strokeWidth={2} fill="#ff6b9d" />
+            <Heart size={64} color="#ff6b9d" strokeWidth={2} fill="#ff6b9d" />
             <Text style={styles.title}>{t('auth:title')}</Text>
             <Text style={styles.subtitle}>{t('auth:subtitle')}</Text>
           </View>
 
-          {/* Email Form */}
-          <View style={styles.formSection}>
-            {isSignUp && (
-              <View style={styles.inputContainer}>
-                <Text style={styles.inputLabel}>Tên</Text>
-                <TextInput
-                  style={styles.input}
-                  placeholder="Nhập tên của bạn"
-                  placeholderTextColor="#666"
-                  value={name}
-                  onChangeText={setName}
-                  autoCapitalize="words"
-                />
-              </View>
-            )}
-
-            <View style={styles.inputContainer}>
-              <Text style={styles.inputLabel}>Email</Text>
-              <TextInput
-                style={styles.input}
-                placeholder="email@example.com"
-                placeholderTextColor="#666"
-                value={email}
-                onChangeText={setEmail}
-                keyboardType="email-address"
-                autoCapitalize="none"
-                autoComplete="email"
-              />
-            </View>
-
-            <View style={styles.inputContainer}>
-              <Text style={styles.inputLabel}>Mật khẩu</Text>
-              <TextInput
-                style={styles.input}
-                placeholder="Nhập mật khẩu"
-                placeholderTextColor="#666"
-                value={password}
-                onChangeText={setPassword}
-                secureTextEntry
-                autoCapitalize="none"
-              />
-            </View>
-
-            {error ? <Text style={styles.errorText}>{error}</Text> : null}
-
+          <View style={styles.buttonSection}>
             <TouchableOpacity
-              style={[styles.primaryButton, isLoading && styles.disabledButton]}
-              onPress={handleEmailAuth}
-              disabled={isLoading}
+              style={[styles.googleButton, isLoadingGoogle && styles.disabledButton]}
+              onPress={handleGoogleSignIn}
+              disabled={isLoadingGoogle || isLoadingApple}
             >
-              {isLoading ? (
+              {isLoadingGoogle ? (
                 <ActivityIndicator size="small" color="#fff" />
               ) : (
-                <Text style={styles.primaryButtonText}>
-                  {isSignUp ? 'Đăng ký' : 'Đăng nhập'}
-                </Text>
+                <>
+                  <View style={styles.googleIcon}>
+                    <Text style={styles.googleIconText}>G</Text>
+                  </View>
+                  <Text style={styles.buttonText}>Tiếp tục với Google</Text>
+                </>
               )}
             </TouchableOpacity>
 
-            <TouchableOpacity
-              style={styles.switchButton}
-              onPress={() => {
-                setIsSignUp(!isSignUp);
-                setError('');
-              }}
-            >
-              <Text style={styles.switchButtonText}>
-                {isSignUp
-                  ? 'Đã có tài khoản? Đăng nhập'
-                  : 'Chưa có tài khoản? Đăng ký'}
-              </Text>
-            </TouchableOpacity>
-          </View>
-
-          {/* Divider */}
-          <View style={styles.divider}>
-            <View style={styles.dividerLine} />
-            <Text style={styles.dividerText}>hoặc</Text>
-            <View style={styles.dividerLine} />
-          </View>
-
-          {/* Google Sign In */}
-          <TouchableOpacity
-            style={[styles.googleButton, isLoading && styles.disabledButton]}
-            onPress={handleGoogleSignIn}
-            disabled={isLoading}
-          >
-            {isLoading ? (
-              <ActivityIndicator size="small" color="#fff" />
-            ) : (
-              <>
-                <Mail size={20} color="#fff" strokeWidth={2} />
-                <Text style={styles.googleButtonText}>Đăng nhập với Google</Text>
-              </>
+            {Platform.OS !== 'web' && (
+              <TouchableOpacity
+                style={[styles.appleButton, isLoadingApple && styles.disabledButton]}
+                onPress={handleAppleSignIn}
+                disabled={isLoadingGoogle || isLoadingApple}
+              >
+                {isLoadingApple ? (
+                  <ActivityIndicator size="small" color="#fff" />
+                ) : (
+                  <>
+                    <Text style={styles.appleIcon}></Text>
+                    <Text style={styles.buttonText}>Tiếp tục với Apple</Text>
+                  </>
+                )}
+              </TouchableOpacity>
             )}
-          </TouchableOpacity>
 
-          {/* Footer */}
+            {error ? <Text style={styles.errorText}>{error}</Text> : null}
+          </View>
+
           <View style={styles.footer}>
             <Text style={styles.footerText}>
               {t('auth:termsText')}
             </Text>
           </View>
-            </View>
-          </ScrollView>
-        </KeyboardAvoidingView>
+        </View>
       </SafeAreaView>
     </>
   );
@@ -203,108 +109,90 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#000',
   },
-  scrollContent: {
-    flexGrow: 1,
-    justifyContent: 'center',
-  },
   content: {
+    flex: 1,
     paddingHorizontal: 32,
-    paddingVertical: 40,
+    justifyContent: 'space-between',
+    paddingTop: 80,
+    paddingBottom: 40,
   },
   header: {
     alignItems: 'center',
-    marginBottom: 60,
   },
   title: {
-    fontSize: 32,
+    fontSize: 36,
     fontWeight: '700',
     color: '#fff',
-    marginTop: 16,
-    marginBottom: 8,
+    marginTop: 24,
+    marginBottom: 12,
   },
   subtitle: {
     fontSize: 16,
     color: '#888',
     textAlign: 'center',
-    lineHeight: 22,
+    lineHeight: 24,
+    paddingHorizontal: 20,
   },
-  formSection: {
+  buttonSection: {
     gap: 16,
-    marginBottom: 24,
-  },
-  inputContainer: {
-    gap: 8,
-  },
-  inputLabel: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#fff',
-  },
-  input: {
-    backgroundColor: '#1a1a1a',
-    borderWidth: 1,
-    borderColor: '#333',
-    borderRadius: 12,
-    paddingVertical: 14,
-    paddingHorizontal: 16,
-    fontSize: 16,
-    color: '#fff',
-  },
-  errorText: {
-    fontSize: 14,
-    color: '#ff4444',
-    marginTop: -8,
-  },
-  primaryButton: {
-    backgroundColor: '#ff6b9d',
-    paddingVertical: 16,
-    borderRadius: 12,
-    alignItems: 'center',
-    marginTop: 8,
-  },
-  primaryButtonText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#fff',
-  },
-  switchButton: {
-    paddingVertical: 8,
-    alignItems: 'center',
-  },
-  switchButtonText: {
-    fontSize: 14,
-    color: '#888',
-  },
-  divider: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginVertical: 24,
-    gap: 12,
-  },
-  dividerLine: {
-    flex: 1,
-    height: 1,
-    backgroundColor: '#333',
-  },
-  dividerText: {
-    fontSize: 14,
-    color: '#666',
   },
   googleButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#4285f4',
+    backgroundColor: '#fff',
     paddingVertical: 16,
     paddingHorizontal: 24,
-    borderRadius: 12,
+    borderRadius: 16,
     gap: 12,
-    marginBottom: 40,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 3,
   },
-  googleButtonText: {
+  googleIcon: {
+    width: 24,
+    height: 24,
+    backgroundColor: '#4285f4',
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  googleIconText: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#fff',
+  },
+  appleButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#fff',
+    paddingVertical: 16,
+    paddingHorizontal: 24,
+    borderRadius: 16,
+    gap: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 3,
+  },
+  appleIcon: {
+    fontSize: 24,
+    color: '#000',
+  },
+  buttonText: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#fff',
+    color: '#000',
+  },
+  errorText: {
+    fontSize: 14,
+    color: '#ff4444',
+    textAlign: 'center',
+    marginTop: 8,
   },
   disabledButton: {
     opacity: 0.6,
