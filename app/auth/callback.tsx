@@ -17,7 +17,7 @@ export default function AuthCallbackScreen() {
 
         if (accessToken && refreshToken) {
           const { supabase } = await import('@/lib/supabase');
-          const { error } = await supabase.auth.setSession({
+          const { data, error } = await supabase.auth.setSession({
             access_token: accessToken,
             refresh_token: refreshToken,
           });
@@ -28,11 +28,23 @@ export default function AuthCallbackScreen() {
             return;
           }
 
-          await new Promise(resolve => setTimeout(resolve, 500));
-          router.replace('/(tabs)/profile');
+          if (data.session) {
+            await new Promise(resolve => setTimeout(resolve, 1000));
+
+            const authState = AuthService.getAuthState();
+            if (authState.isAuthenticated) {
+              router.replace('/(tabs)/profile');
+            } else {
+              router.replace('/auth/login');
+            }
+          } else {
+            router.replace('/auth/login');
+          }
         } else {
           router.replace('/auth/login');
         }
+      } else {
+        router.replace('/auth/login');
       }
     } catch (error) {
       console.error('Callback error:', error);

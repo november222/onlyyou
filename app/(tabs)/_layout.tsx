@@ -1,7 +1,9 @@
-import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, TouchableOpacity, StyleSheet, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MessageCircle, Settings, Heart, User } from 'lucide-react-native';
+import { router } from 'expo-router';
+import AuthService from '@/services/AuthService';
 import ProfileScreen from './profile';
 import MessagesScreen from './index';
 import ConnectionScreen from './connection';
@@ -16,6 +18,44 @@ const tabs = [
 
 export default function TabLayout() {
   const [activeTab, setActiveTab] = useState('connection');
+  const [isCheckingAuth, setIsCheckingAuth] = useState(true);
+
+  useEffect(() => {
+    const authState = AuthService.getAuthState();
+
+    if (!authState.isLoading) {
+      if (!authState.isAuthenticated) {
+        router.replace('/auth/login');
+      } else {
+        setIsCheckingAuth(false);
+      }
+    } else {
+      const handleAuthChange = (state: typeof authState) => {
+        if (!state.isLoading) {
+          if (!state.isAuthenticated) {
+            router.replace('/auth/login');
+          } else {
+            setIsCheckingAuth(false);
+          }
+          AuthService.onAuthStateChange = null;
+        }
+      };
+
+      AuthService.onAuthStateChange = handleAuthChange;
+
+      return () => {
+        AuthService.onAuthStateChange = null;
+      };
+    }
+  }, []);
+
+  if (isCheckingAuth) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#ff6b9d" />
+      </View>
+    );
+  }
 
   const ActiveComponent = tabs.find(tab => tab.key === activeTab)?.component || ProfileScreen;
 
@@ -64,6 +104,12 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#000',
+  },
+  loadingContainer: {
+    flex: 1,
+    backgroundColor: '#000',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   bottomNavBar: {
     backgroundColor: '#111',

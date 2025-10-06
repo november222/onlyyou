@@ -1,42 +1,57 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { router } from 'expo-router';
 import { View, ActivityIndicator, StyleSheet } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import AuthService, { AuthState } from '@/services/AuthService';
 
 export default function IndexScreen() {
+  const [isChecking, setIsChecking] = useState(true);
+
   useEffect(() => {
-    const checkFirstLaunch = async () => {
+    let isMounted = true;
+
+    const checkAuthAndNavigate = async () => {
       try {
-        // Check if this is the first launch
         const hasSeenOnboarding = await AsyncStorage.getItem('hasSeenOnboarding');
-        
+
         if (!hasSeenOnboarding) {
-          // First time user - show onboarding
-          router.replace('/onboarding');
+          if (isMounted) router.replace('/onboarding');
           return;
         }
-        
-        // Not first time - check authentication status
+
+        const handleAuthStateChange = (authState: AuthState) => {
+          if (!isMounted) return;
+
+          if (!authState.isLoading) {
+            AuthService.onAuthStateChange = null;
+
+            if (authState.isAuthenticated) {
+              router.replace('/(tabs)/profile');
+            } else {
+              router.replace('/auth/login');
+            }
+          }
+        };
+
         const authState = AuthService.getAuthState();
-        
-        if (authState.isAuthenticated) {
-          // User is logged in, go to main app
-          router.replace('/(tabs)/profile');
+
+        if (authState.isLoading) {
+          AuthService.onAuthStateChange = handleAuthStateChange;
         } else {
-          // User not logged in, show login
-          router.replace('/auth/login');
+          handleAuthStateChange(authState);
         }
       } catch (error) {
-        console.error('Error checking first launch:', error);
-        // Fallback to login screen
-        router.replace('/auth/login');
+        console.error('Error checking auth:', error);
+        if (isMounted) router.replace('/auth/login');
       }
     };
 
-    const timer = setTimeout(checkFirstLaunch, 1000);
+    checkAuthAndNavigate();
 
-    return () => clearTimeout(timer);
+    return () => {
+      isMounted = false;
+      AuthService.onAuthStateChange = null;
+    };
   }, []);
 
   return (
