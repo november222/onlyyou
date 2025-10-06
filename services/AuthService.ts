@@ -230,12 +230,13 @@ class AuthService {
     try {
       this.updateAuthState({ isLoading: true });
 
+      const isWeb = Platform.OS === 'web';
       console.log('Platform.OS:', Platform.OS);
-      console.log('window exists:', typeof window !== 'undefined');
+      console.log('isWeb:', isWeb);
 
       let redirectUrl = 'onlyyou://auth/callback';
 
-      if (typeof window !== 'undefined' && window.location) {
+      if (isWeb && typeof window !== 'undefined' && window.location) {
         redirectUrl = `${window.location.protocol}//${window.location.host}/auth/callback`;
       }
 
@@ -245,31 +246,42 @@ class AuthService {
         provider: 'google',
         options: {
           redirectTo: redirectUrl,
-          skipBrowserRedirect: false,
+          skipBrowserRedirect: isWeb,
         },
       });
 
       console.log('OAuth response:', { data, error });
 
       if (error) {
+        console.error('OAuth error:', error);
         throw error;
       }
 
-      if (typeof window !== 'undefined') {
+      if (isWeb) {
         return;
       }
 
       if (data?.url) {
+        console.log('Opening auth session with URL:', data.url);
         const result = await WebBrowser.openAuthSessionAsync(
           data.url,
-          'onlyyou://auth/callback'
+          redirectUrl
         );
 
-        if (result.type === 'success') {
+        console.log('Auth session result:', result);
+
+        if (result.type === 'success' && result.url) {
           const url = result.url;
+          console.log('Success URL:', url);
+
           const params = new URL(url).searchParams;
           const accessToken = params.get('access_token');
           const refreshToken = params.get('refresh_token');
+
+          console.log('Tokens present:', {
+            hasAccessToken: !!accessToken,
+            hasRefreshToken: !!refreshToken
+          });
 
           if (accessToken && refreshToken) {
             const { data: sessionData, error: sessionError } =
@@ -279,15 +291,25 @@ class AuthService {
               });
 
             if (sessionError) {
+              console.error('Session error:', sessionError);
               throw sessionError;
             }
 
             if (sessionData.session) {
+              console.log('Session created successfully');
               await this.handleSessionChange(sessionData.session);
             }
+          } else {
+            throw new Error('Không nhận được tokens từ Google');
           }
-        } else {
+        } else if (result.type === 'cancel') {
+          console.log('User cancelled auth');
           this.updateAuthState({ isLoading: false });
+          throw new Error('Đã hủy đăng nhập');
+        } else {
+          console.log('Auth failed with type:', result.type);
+          this.updateAuthState({ isLoading: false });
+          throw new Error('Đăng nhập thất bại');
         }
       }
     } catch (error: any) {
