@@ -5,7 +5,6 @@ import {
   StyleSheet,
   TouchableOpacity,
   ActivityIndicator,
-  Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
@@ -15,32 +14,19 @@ import AuthService from '@/services/AuthService';
 import { useTranslation } from 'react-i18next';
 
 export default function LoginScreen() {
-  const [isLoadingGoogle, setIsLoadingGoogle] = useState(false);
-  const [isLoadingApple, setIsLoadingApple] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const { t } = useTranslation();
 
   const handleGoogleSignIn = async () => {
     try {
       setError('');
-      setIsLoadingGoogle(true);
+      setIsLoading(true);
       await AuthService.signInWithGoogle();
       router.replace('/(tabs)/profile');
     } catch (error) {
       setError(error instanceof Error ? error.message : 'Đăng nhập thất bại');
-      setIsLoadingGoogle(false);
-    }
-  };
-
-  const handleAppleSignIn = async () => {
-    try {
-      setError('');
-      setIsLoadingApple(true);
-      await AuthService.signInWithApple();
-      router.replace('/(tabs)/profile');
-    } catch (error) {
-      setError(error instanceof Error ? error.message : 'Đăng nhập thất bại');
-      setIsLoadingApple(false);
+      setIsLoading(false);
     }
   };
 
@@ -57,11 +43,11 @@ export default function LoginScreen() {
 
           <View style={styles.buttonSection}>
             <TouchableOpacity
-              style={[styles.googleButton, isLoadingGoogle && styles.disabledButton]}
+              style={[styles.googleButton, isLoading && styles.disabledButton]}
               onPress={handleGoogleSignIn}
-              disabled={isLoadingGoogle || isLoadingApple}
+              disabled={isLoading}
             >
-              {isLoadingGoogle ? (
+              {isLoading ? (
                 <ActivityIndicator size="small" color="#fff" />
               ) : (
                 <>
@@ -72,23 +58,6 @@ export default function LoginScreen() {
                 </>
               )}
             </TouchableOpacity>
-
-            {Platform.OS !== 'web' && (
-              <TouchableOpacity
-                style={[styles.appleButton, isLoadingApple && styles.disabledButton]}
-                onPress={handleAppleSignIn}
-                disabled={isLoadingGoogle || isLoadingApple}
-              >
-                {isLoadingApple ? (
-                  <ActivityIndicator size="small" color="#fff" />
-                ) : (
-                  <>
-                    <Text style={styles.appleIcon}></Text>
-                    <Text style={styles.buttonText}>Tiếp tục với Apple</Text>
-                  </>
-                )}
-              </TouchableOpacity>
-            )}
 
             {error ? <Text style={styles.errorText}>{error}</Text> : null}
           </View>
@@ -163,25 +132,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '700',
     color: '#fff',
-  },
-  appleButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#fff',
-    paddingVertical: 16,
-    paddingHorizontal: 24,
-    borderRadius: 16,
-    gap: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 3,
-  },
-  appleIcon: {
-    fontSize: 24,
-    color: '#000',
   },
   buttonText: {
     fontSize: 16,
