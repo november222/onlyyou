@@ -19,7 +19,7 @@ import { Heart, Shield, Wifi, WifiOff, Copy, Key, Plus, RefreshCw, Trash2, QrCod
 import WebRTCService, { ConnectionState } from '@/services/WebRTCService';
 import AuthService from '@/services/AuthService';
 import { router } from 'expo-router';
-import { BarCodeScanner } from 'expo-barcode-scanner';
+// Lazy-load barcode scanner to avoid native module errors without rebuild
 import * as Linking from 'expo-linking';
 
 export default function ConnectionScreen() {
@@ -45,6 +45,7 @@ export default function ConnectionScreen() {
   const [hasQRPermission, setHasQRPermission] = useState<null | boolean>(null);
   const [hasRequestedQRPermission, setHasRequestedQRPermission] = useState(false);
   const [qrScanned, setQrScanned] = useState(false);
+  const [ScannerComp, setScannerComp] = useState<null | React.ComponentType<any>>(null);
 
   useEffect(() => {
     // Set up WebRTC event listeners
@@ -83,19 +84,23 @@ export default function ConnectionScreen() {
     };
   }, []);
 
-  // Request camera permission when opening the scanner
+  // Request camera permission when opening the scanner (lazy import to avoid native module crash)
   useEffect(() => {
     let cancelled = false;
     const ensurePermission = async () => {
       if (showQRScanner) {
         try {
-          const { status } = await BarCodeScanner.requestPermissionsAsync();
+          const mod = await import('expo-barcode-scanner');
+          if (cancelled) return;
+          setScannerComp(() => mod.BarCodeScanner);
+          const { status } = await mod.BarCodeScanner.requestPermissionsAsync();
           if (!cancelled) {
             setHasQRPermission(status === 'granted');
             setHasRequestedQRPermission(true);
           }
         } catch (e) {
           if (!cancelled) {
+            setScannerComp(null);
             setHasQRPermission(false);
             setHasRequestedQRPermission(true);
           }
@@ -105,6 +110,7 @@ export default function ConnectionScreen() {
         setQrScanned(false);
         setHasRequestedQRPermission(false);
         setHasQRPermission(null);
+        setScannerComp(null);
       }
     };
     ensurePermission();
@@ -694,10 +700,17 @@ export default function ConnectionScreen() {
                 <X size={24} color="#fff" strokeWidth={2} />
               </TouchableOpacity>
             </View>
-            <BarCodeScanner
-              style={styles.fullscreenScanner}
-              onBarCodeScanned={qrScanned ? undefined : handleBarCodeScanned}
-            />
+            {ScannerComp ? (
+              <ScannerComp
+                style={styles.fullscreenScanner}
+                onBarCodeScanned={qrScanned ? undefined : handleBarCodeScanned}
+              />
+            ) : (
+              <View style={styles.scannerPlaceholder}>
+                <ActivityIndicator size="large" color="#fff" />
+                <Text style={styles.scannerHint}>Đang tải module camera...</Text>
+              </View>
+            )}
           </View>
         ) : hasQRPermission === false ? (
           <View style={styles.fullscreenScannerOverlay}>

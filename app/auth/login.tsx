@@ -24,7 +24,7 @@ export default function LoginScreen() {
     try {
       const success = await AuthService.signInWithGoogle();
       if (success && AuthService.isAuthenticated()) {
-        router.replace('/(tabs)');
+        router.replace('/(tabs)/profile');
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Dang nhap that bai');
@@ -39,7 +39,7 @@ export default function LoginScreen() {
     try {
       const success = await AuthService.signInWithApple();
       if (success && AuthService.isAuthenticated()) {
-        router.replace('/(tabs)');
+        router.replace('/(tabs)/profile');
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Dang nhap that bai');
@@ -173,4 +173,3 @@ const styles = StyleSheet.create({
     lineHeight: 18,
   },
 });
-
