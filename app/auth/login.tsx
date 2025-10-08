@@ -19,7 +19,10 @@ export default function LoginScreen() {
   const { t } = useTranslation();
 
   const handleGoogleSignIn = async () => {
+    setError('');
+    setIsLoadingGoogle(true);
     try {
+<<<<<<< HEAD
       setError('');
       setIsLoading(true);
       await AuthService.signInWithGoogle();
@@ -27,6 +30,31 @@ export default function LoginScreen() {
     } catch (error) {
       setError(error instanceof Error ? error.message : 'Đăng nhập thất bại');
       setIsLoading(false);
+=======
+      const success = await AuthService.signInWithGoogle();
+      if (success && AuthService.isAuthenticated()) {
+        router.replace('/(tabs)');
+      }
+    } catch (error) {
+      setError(error instanceof Error ? error.message : 'Dang nhap that bai');
+    } finally {
+      setIsLoadingGoogle(false);
+    }
+  };
+
+  const handleAppleSignIn = async () => {
+    setError('');
+    setIsLoadingApple(true);
+    try {
+      const success = await AuthService.signInWithApple();
+      if (success && AuthService.isAuthenticated()) {
+        router.replace('/(tabs)');
+      }
+    } catch (error) {
+      setError(error instanceof Error ? error.message : 'Dang nhap that bai');
+    } finally {
+      setIsLoadingApple(false);
+>>>>>>> 8e67d9a (feat(auth): harden OAuth + gated WebRTC init; fix routing to /(tabs); add token parsing; create profile fallback; auth guards for deep links and tabs)
     }
   };
 

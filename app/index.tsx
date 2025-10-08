@@ -26,7 +26,7 @@ export default function IndexScreen() {
             AuthService.onAuthStateChange = null;
 
             if (authState.isAuthenticated) {
-              router.replace('/(tabs)/profile');
+              router.replace('/(tabs)');
             } else {
               router.replace('/auth/login');
             }

@@ -4,6 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { MessageCircle, Settings, Heart, User } from 'lucide-react-native';
 import { router } from 'expo-router';
 import AuthService from '@/services/AuthService';
+import WebRTCService from '@/services/WebRTCService';
 import ProfileScreen from './profile';
 import MessagesScreen from './index';
 import ConnectionScreen from './connection';
@@ -17,7 +18,7 @@ const tabs = [
 ];
 
 export default function TabLayout() {
-  const [activeTab, setActiveTab] = useState('connection');
+  const [activeTab, setActiveTab] = useState('profile');
   const [isCheckingAuth, setIsCheckingAuth] = useState(true);
 
   useEffect(() => {
@@ -28,14 +29,19 @@ export default function TabLayout() {
         router.replace('/auth/login');
       } else {
         setIsCheckingAuth(false);
+        // Initialize WebRTC after confirming authentication
+        WebRTCService.init().catch(() => {});
       }
     } else {
       const handleAuthChange = (state: typeof authState) => {
         if (!state.isLoading) {
           if (!state.isAuthenticated) {
             router.replace('/auth/login');
+            // Clear any persisted WebRTC state on sign out
+            WebRTCService.clearSavedConnection().catch(() => {});
           } else {
             setIsCheckingAuth(false);
+            WebRTCService.init().catch(() => {});
           }
           AuthService.onAuthStateChange = null;
         }

@@ -33,7 +33,7 @@ export default function AuthCallbackScreen() {
 
             const authState = AuthService.getAuthState();
             if (authState.isAuthenticated) {
-              router.replace('/(tabs)/profile');
+              router.replace('/(tabs)');
             } else {
               router.replace('/auth/login');
             }

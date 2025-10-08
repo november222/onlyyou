@@ -17,6 +17,7 @@ import {
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Heart, Shield, Wifi, WifiOff, Copy, Key, Plus, RefreshCw, Trash2, QrCode, X, Scan } from 'lucide-react-native';
 import WebRTCService, { ConnectionState } from '@/services/WebRTCService';
+import AuthService from '@/services/AuthService';
 import { router } from 'expo-router';
 
 export default function ConnectionScreen() {
@@ -63,8 +64,12 @@ export default function ConnectionScreen() {
     const saved = WebRTCService.getSavedConnection();
     setSavedConnection(saved);
 
-    // Auto-connect to signaling server
-    if (!currentState.isConnected && !currentState.isConnecting) {
+    // Auto-connect to signaling server (only when authenticated)
+    if (
+      AuthService.isAuthenticated() &&
+      !currentState.isConnected &&
+      !currentState.isConnecting
+    ) {
       connectToServer();
     }
 

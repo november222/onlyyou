@@ -56,8 +56,13 @@ export default function RootLayout() {
       try {
         // Initialize services in sequence
         await AuthService.init();
-        await WebRTCService.init();
         await initLanguage();
+
+        // Only initialize WebRTC after user is authenticated
+        const authState = AuthService.getAuthState();
+        if (authState.isAuthenticated) {
+          await WebRTCService.init();
+        }
 
         // Handle app state changes for connection timer
         const handleAppStateChange = (nextAppState: string) => {
@@ -80,6 +85,15 @@ export default function RootLayout() {
 
             // Try to join the room
             try {
+              // Require authentication before joining via deep link
+              if (!AuthService.isAuthenticated()) {
+                Alert.alert(
+                  'Yêu cầu đăng nhập',
+                  'Vui lòng đăng nhập trước khi kết nối phòng.',
+                  [{ text: 'OK' }]
+                );
+                return;
+              }
               await WebRTCService.connectToSignalingServer();
               await WebRTCService.joinRoom(roomCode);
 
