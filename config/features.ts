@@ -6,7 +6,7 @@ export const features = {
   sharedGallery: true,
   dailyPing: true,
   timeline: true,
-  album: true,
+  album: false,
   privacyLock: true,
   premiumMock: true,
   simpleCallLink: true, // thay VoIP bằng tel:/facetime:
