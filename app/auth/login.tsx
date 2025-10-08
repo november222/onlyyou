@@ -7,14 +7,14 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { router } from 'expo-router';
-import { Stack } from 'expo-router';
+import { router, Stack } from 'expo-router';
 import { Heart } from 'lucide-react-native';
 import AuthService from '@/services/AuthService';
 import { useTranslation } from 'react-i18next';
 
 export default function LoginScreen() {
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoadingGoogle, setIsLoadingGoogle] = useState(false);
+  const [isLoadingApple, setIsLoadingApple] = useState(false);
   const [error, setError] = useState('');
   const { t } = useTranslation();
 
@@ -22,21 +22,12 @@ export default function LoginScreen() {
     setError('');
     setIsLoadingGoogle(true);
     try {
-<<<<<<< HEAD
-      setError('');
-      setIsLoading(true);
-      await AuthService.signInWithGoogle();
-      router.replace('/(tabs)/profile');
-    } catch (error) {
-      setError(error instanceof Error ? error.message : 'Đăng nhập thất bại');
-      setIsLoading(false);
-=======
       const success = await AuthService.signInWithGoogle();
       if (success && AuthService.isAuthenticated()) {
         router.replace('/(tabs)');
       }
-    } catch (error) {
-      setError(error instanceof Error ? error.message : 'Dang nhap that bai');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Dang nhap that bai');
     } finally {
       setIsLoadingGoogle(false);
     }
@@ -50,11 +41,10 @@ export default function LoginScreen() {
       if (success && AuthService.isAuthenticated()) {
         router.replace('/(tabs)');
       }
-    } catch (error) {
-      setError(error instanceof Error ? error.message : 'Dang nhap that bai');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Dang nhap that bai');
     } finally {
       setIsLoadingApple(false);
->>>>>>> 8e67d9a (feat(auth): harden OAuth + gated WebRTC init; fix routing to /(tabs); add token parsing; create profile fallback; auth guards for deep links and tabs)
     }
   };
 
@@ -71,11 +61,11 @@ export default function LoginScreen() {
 
           <View style={styles.buttonSection}>
             <TouchableOpacity
-              style={[styles.googleButton, isLoading && styles.disabledButton]}
+              style={[styles.googleButton, isLoadingGoogle && styles.disabledButton]}
               onPress={handleGoogleSignIn}
-              disabled={isLoading}
+              disabled={isLoadingGoogle}
             >
-              {isLoading ? (
+              {isLoadingGoogle ? (
                 <ActivityIndicator size="small" color="#fff" />
               ) : (
                 <>
@@ -91,9 +81,7 @@ export default function LoginScreen() {
           </View>
 
           <View style={styles.footer}>
-            <Text style={styles.footerText}>
-              {t('auth:termsText')}
-            </Text>
+            <Text style={styles.footerText}>{t('auth:termsText')}</Text>
           </View>
         </View>
       </SafeAreaView>
@@ -185,3 +173,4 @@ const styles = StyleSheet.create({
     lineHeight: 18,
   },
 });
+
