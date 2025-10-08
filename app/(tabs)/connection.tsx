@@ -13,6 +13,7 @@ import {
   Platform,
   Modal,
   Image,
+  NativeModules,
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Heart, Shield, Wifi, WifiOff, Copy, Key, Plus, RefreshCw, Trash2, QrCode, X, Scan } from 'lucide-react-native';
@@ -84,11 +85,19 @@ export default function ConnectionScreen() {
     };
   }, []);
 
-  // Request camera permission when opening the scanner (lazy import to avoid native module crash)
+  // Request camera permission when opening the scanner (guarded + lazy import)
   useEffect(() => {
     let cancelled = false;
     const ensurePermission = async () => {
       if (showQRScanner) {
+        const hasNative = !!(NativeModules as any)?.ExpoBarCodeScanner;
+        if (!hasNative) {
+          // No native module available – show guidance UI instead of importing
+          setScannerComp(null);
+          setHasQRPermission(false);
+          setHasRequestedQRPermission(true);
+          return;
+        }
         try {
           const mod = await import('expo-barcode-scanner');
           if (cancelled) return;
