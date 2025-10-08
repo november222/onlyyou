@@ -62,6 +62,7 @@ export default function ProfileScreen() {
     roomCode: null,
     partnerConnected: false,
     error: null,
+    isWaitingForPartner: false,
   });
   const [showPremiumModal, setShowPremiumModal] = useState(false);
   const [showHistoryModal, setShowHistoryModal] = useState(false);
@@ -577,7 +578,9 @@ export default function ProfileScreen() {
                 </View>
                 <View style={styles.albumRight}>
                   <Text style={styles.albumCount}>{photosCount}</Text>
-                {Math.floor((totalConnectedTime + currentSessionDuration) / (60 * 60 * 24))}
+                  <Text style={styles.albumDays}>
+                    {Math.floor((totalConnectedTime + currentSessionDuration) / (60 * 60 * 24))}
+                  </Text>
                 </View>
               </View>
               <Text style={styles.albumSubtitle}>
@@ -892,6 +895,10 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     color: '#10b981',
+  },
+  albumDays: {
+    fontSize: 12,
+    color: '#888',
   },
   albumSubtitle: {
     fontSize: 14,
