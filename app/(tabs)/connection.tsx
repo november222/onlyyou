@@ -19,6 +19,8 @@ import { Heart, Shield, Wifi, WifiOff, Copy, Key, Plus, RefreshCw, Trash2, QrCod
 import WebRTCService, { ConnectionState } from '@/services/WebRTCService';
 import AuthService from '@/services/AuthService';
 import { router } from 'expo-router';
+import { BarCodeScanner } from 'expo-barcode-scanner';
+import * as Linking from 'expo-linking';
 
 export default function ConnectionScreen() {
   const { t } = useTranslation();
@@ -40,6 +42,9 @@ export default function ConnectionScreen() {
   const [showQRScanner, setShowQRScanner] = useState(false);
   const [showNamePrompt, setShowNamePrompt] = useState(false);
   const [partnerName, setPartnerName] = useState('');
+  const [hasQRPermission, setHasQRPermission] = useState<null | boolean>(null);
+  const [hasRequestedQRPermission, setHasRequestedQRPermission] = useState(false);
+  const [qrScanned, setQrScanned] = useState(false);
 
   useEffect(() => {
     // Set up WebRTC event listeners
@@ -77,6 +82,74 @@ export default function ConnectionScreen() {
       WebRTCService.onConnectionStateChange = null;
     };
   }, []);
+
+  // Request camera permission when opening the scanner
+  useEffect(() => {
+    let cancelled = false;
+    const ensurePermission = async () => {
+      if (showQRScanner) {
+        try {
+          const { status } = await BarCodeScanner.requestPermissionsAsync();
+          if (!cancelled) {
+            setHasQRPermission(status === 'granted');
+            setHasRequestedQRPermission(true);
+          }
+        } catch (e) {
+          if (!cancelled) {
+            setHasQRPermission(false);
+            setHasRequestedQRPermission(true);
+          }
+        }
+      } else {
+        // reset state when modal closes
+        setQrScanned(false);
+        setHasRequestedQRPermission(false);
+        setHasQRPermission(null);
+      }
+    };
+    ensurePermission();
+    return () => {
+      cancelled = true;
+    };
+  }, [showQRScanner]);
+
+  const handleBarCodeScanned = async ({ data }: { data: string }) => {
+    if (qrScanned) return;
+    setQrScanned(true);
+    try {
+      let code = '';
+      if (typeof data === 'string') {
+        if (data.startsWith('onlyyou://')) {
+          const parsed = Linking.parse(data);
+          // expecting scheme onlyyou://connect/<ROOMCODE>
+          if (parsed?.path) {
+            const parts = parsed.path.split('/');
+            code = parts[parts.length - 1] || '';
+          }
+        } else {
+          code = data;
+        }
+      }
+
+      code = (code || '').trim();
+      if (!code) {
+        throw new Error('QR không chứa mã phòng.');
+      }
+
+      // Reflect code in input UI
+      setInputRoomCode(code);
+
+      // Attempt to join room
+      await WebRTCService.joinRoom(code);
+      setShowQRScanner(false);
+      Alert.alert('Thành công', 'Đã đọc mã QR và kết nối phòng.');
+    } catch (err) {
+      console.error('QR scan failed:', err);
+      Alert.alert('Quét thất bại', err instanceof Error ? err.message : 'Không thể đọc mã QR');
+      // allow re-scan
+      setQrScanned(false);
+    }
+  };
 
   const connectToServer = async () => {
     if (isConnectingToServer) return;
@@ -610,6 +683,37 @@ export default function ConnectionScreen() {
           </View>
         </View>
       </Modal>
+
+      {/* QR Scanner Overlay (functional) */}
+      {showQRScanner && (
+        hasQRPermission === true ? (
+          <View style={styles.fullscreenScannerOverlay}>
+            <View style={styles.scannerModalHeader}>
+              <Text style={styles.scannerModalTitle}>Quét Mã QR</Text>
+              <TouchableOpacity onPress={() => setShowQRScanner(false)}>
+                <X size={24} color="#fff" strokeWidth={2} />
+              </TouchableOpacity>
+            </View>
+            <BarCodeScanner
+              style={styles.fullscreenScanner}
+              onBarCodeScanned={qrScanned ? undefined : handleBarCodeScanned}
+            />
+          </View>
+        ) : hasQRPermission === false ? (
+          <View style={styles.fullscreenScannerOverlay}>
+            <View style={styles.scannerPlaceholder}>
+              <Scan size={80} color="#f59e0b" strokeWidth={1.5} />
+              <Text style={styles.scannerHint}>Cần quyền truy cập camera để quét QR</Text>
+              <TouchableOpacity style={styles.openSettingsButton} onPress={() => Linking.openSettings()}>
+                <Text style={styles.openSettingsText}>Mở cài đặt</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.cancelScanButton} onPress={() => setShowQRScanner(false)}>
+                <Text style={styles.cancelScanButtonText}>Đóng</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        ) : null
+      )}
 
       {/* Partner Name Prompt Modal */}
       <Modal
@@ -1156,6 +1260,17 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     lineHeight: 20,
   },
+  openSettingsButton: {
+    backgroundColor: '#4ade80',
+    borderRadius: 12,
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+  },
+  openSettingsText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#000',
+  },
   cancelScanButton: {
     backgroundColor: '#333',
     borderRadius: 12,
@@ -1225,5 +1340,23 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     color: '#fff',
+  },
+  fullscreenScannerOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0,0,0,0.96)',
+    justifyContent: 'flex-start',
+    padding: 16,
+  },
+  fullscreenScanner: {
+    width: '100%',
+    height: 360,
+    borderRadius: 16,
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: '#333',
   },
 });
