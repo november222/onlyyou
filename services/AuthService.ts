@@ -36,11 +36,17 @@ class AuthService {
     if (this.initialized) return;
     this.initialized = true;
 
-    supabase.auth.onAuthStateChange(async (event, session) => {
+    supabase.auth.onAuthStateChange((event, session) => {
       console.log('Auth event:', event);
 
       if (event === 'SIGNED_IN' && session) {
-        await this.handleSessionChange(session);
+        // Defer heavy work outside native callback context
+        setTimeout(() => {
+          this.handleSessionChange(session).catch((err) => {
+            console.error('SIGNED_IN handler failed:', err);
+            this.updateAuthState({ isLoading: false });
+          });
+        }, 0);
       } else if (event === 'SIGNED_OUT') {
         this.updateAuthState({
           isAuthenticated: false,
@@ -48,7 +54,12 @@ class AuthService {
           isLoading: false,
         });
       } else if (event === 'TOKEN_REFRESHED' && session) {
-        await this.handleSessionChange(session);
+        // Avoid doing synchronous work on token refresh; schedule it
+        setTimeout(() => {
+          this.handleSessionChange(session).catch((err) => {
+            console.error('TOKEN_REFRESHED handler failed:', err);
+          });
+        }, 0);
       }
     });
 
@@ -142,7 +153,17 @@ class AuthService {
 
   private updateAuthState(updates: Partial<AuthState>) {
     this.authState = { ...this.authState, ...updates };
-    this.onAuthStateChange?.(this.authState);
+    // Notify listeners on next tick to avoid running inside native callbacks
+    const snapshot = this.authState;
+    if (this.onAuthStateChange) {
+      setTimeout(() => {
+        try {
+          this.onAuthStateChange?.(snapshot);
+        } catch (err) {
+          console.error('Auth state listener error:', err);
+        }
+      }, 0);
+    }
   }
 
   private extractOAuthTokens(url: string): { accessToken: string; refreshToken: string } | null {
