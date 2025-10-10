@@ -20,6 +20,9 @@ import {
   QrCode,
   Sparkles,
   Timer,
+  Zap,
+  Camera,
+  Calendar,
 } from 'lucide-react-native';
 import AuthService from '@/services/AuthService';
 import { useTranslation } from 'react-i18next';
@@ -56,29 +59,29 @@ export default function OnboardingScreen() {
     },
     {
       id: '2',
-      icon: <QrCode size={80} color="#22c55e" strokeWidth={1.5} />,
-      title: 'Quét QR hoặc nhập mã',
-      subtitle: 'Kết nối nhanh chóng',
+      icon: <Zap size={80} color="#f59e0b" strokeWidth={1.5} />,
+      title: 'Buzz yêu thương',
+      subtitle: 'Chạm để gửi tín hiệu',
       description:
-        'Tạo mã phòng và chia sẻ. Quét QR để tham gia tức thì.',
-      color: '#22c55e',
+        'Gửi Buzz để nhắc nhớ và kết nối nhau mọi lúc. Nhanh gọn, đầy cảm xúc.',
+      color: '#f59e0b',
     },
     {
       id: '3',
-      icon: <Sparkles size={80} color="#f472b6" strokeWidth={1.5} />,
-      title: 'L‑day & kỷ niệm',
-      subtitle: 'Đếm ngày bên nhau',
+      icon: <Camera size={80} color="#10b981" strokeWidth={1.5} />,
+      title: 'Chia sẻ hình ảnh',
+      subtitle: 'Lưu giữ khoảnh khắc chung',
       description:
-        'Tự động tính L‑day từ ngày bắt đầu. Bạn có thể chỉnh ngày kỷ niệm.',
-      color: '#f472b6',
+        'Chụp hoặc chọn ảnh từ thư viện, lưu vào album dùng chung để cùng xem lại.',
+      color: '#10b981',
     },
     {
       id: '4',
-      icon: <Timer size={80} color="#3b82f6" strokeWidth={1.5} />,
-      title: 'Thời gian kết nối',
-      subtitle: 'Lịch sử & thống kê',
+      icon: <Calendar size={80} color="#3b82f6" strokeWidth={1.5} />,
+      title: 'Lịch chung',
+      subtitle: 'Hẹn hò & nhắc việc',
       description:
-        'Theo dõi thời gian đã kết nối và các phiên gần đây để thêm động lực mỗi ngày.',
+        'Lên lịch hẹn, ngày kỷ niệm và việc chung để không bỏ lỡ điều quan trọng.',
       color: '#3b82f6',
     },
     {
