@@ -12,7 +12,7 @@ import {
   ScrollView,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Heart, Wifi, WifiOff } from 'lucide-react-native';
+import { Heart, Wifi, WifiOff, Zap } from 'lucide-react-native';
 import { router } from 'expo-router';
 import WebRTCService, { WebRTCMessage, ConnectionState } from '../../services/WebRTCService';
 import CallScreen from '../../components/CallScreen';
@@ -250,6 +250,28 @@ export default function TouchScreen() {
       {/* Buzz Buttons */}
       {isFeatureEnabled('buzz') && (
         <View style={styles.buzzContainer}>
+          <View style={{ alignItems: 'center', marginBottom: 12 }}>
+            <TouchableOpacity
+              activeOpacity={0.85}
+              style={[
+                styles.bigBuzzButton,
+                (!connectionState.isConnected || !buzzCooldown.canSend) && styles.bigBuzzButtonDisabled,
+              ]}
+              onPress={() => {
+                if (buzzTemplates[0]) {
+                  sendBuzz(buzzTemplates[0].id);
+                }
+              }}
+              disabled={!connectionState.isConnected || !buzzCooldown.canSend}
+            >
+              <View style={styles.bigBuzzInnerGlow} />
+              <Zap size={30} color="#fff" strokeWidth={2.5} />
+              <Text style={styles.bigBuzzLabel}>Buzz</Text>
+            </TouchableOpacity>
+            {!buzzCooldown.canSend && (
+              <Text style={styles.cooldownLargeText}>Chờ {Math.ceil(buzzCooldown.remainingTime / 1000)}s</Text>
+            )}
+          </View>
           <Text style={styles.buzzTitle}>Quick Buzz 💕</Text>
           <ScrollView 
             horizontal 
@@ -571,5 +593,39 @@ const styles = StyleSheet.create({
     color: '#f59e0b',
     textAlign: 'center',
     marginTop: 8,
+  },
+  bigBuzzButton: {
+    width: 110,
+    height: 110,
+    borderRadius: 55,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#ff6b9d',
+    shadowColor: '#ff6b9d',
+    shadowOpacity: 0.55,
+    shadowRadius: 16,
+    shadowOffset: { width: 0, height: 8 },
+    elevation: 8,
+  },
+  bigBuzzInnerGlow: {
+    position: 'absolute',
+    width: 96,
+    height: 96,
+    borderRadius: 48,
+    backgroundColor: 'rgba(255,255,255,0.08)',
+  },
+  bigBuzzLabel: {
+    marginTop: 6,
+    color: '#fff',
+    fontWeight: '700',
+    fontSize: 14,
+  },
+  bigBuzzButtonDisabled: {
+    opacity: 0.6,
+  },
+  cooldownLargeText: {
+    marginTop: 6,
+    color: '#888',
+    fontSize: 12,
   },
 });
