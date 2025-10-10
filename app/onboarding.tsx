@@ -11,15 +11,15 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { 
-  Heart, 
-  Shield, 
-  MessageCircle, 
-  Phone, 
-  Video, 
+import {
+  Heart,
+  Shield,
   Lock,
   ChevronRight,
-  ArrowRight 
+  ArrowRight,
+  QrCode,
+  Sparkles,
+  Timer,
 } from 'lucide-react-native';
 import AuthService from '@/services/AuthService';
 import { useTranslation } from 'react-i18next';
@@ -84,45 +84,51 @@ export default function OnboardingScreen() {
   const scrollX = useRef(new Animated.Value(0)).current;
   const { t } = useTranslation();
 
+  // Updated slides to reflect current features and mock state
   const slides: OnboardingSlide[] = [
     {
       id: '1',
       icon: <Heart size={80} color="#ff6b9d" strokeWidth={1.5} fill="#ff6b9d" />,
-      title: t('auth:title'),
-      subtitle: t('onboarding:madeForTwo'),
-      description: t('onboarding:madeForTwoDesc'),
+      title: 'Kết nối đôi',
+      subtitle: 'Chỉ dành cho 2 người',
+      description:
+        'Tạo phòng và kết nối an toàn giữa hai bạn. Không nhóm, không người lạ.',
       color: '#ff6b9d',
     },
     {
       id: '2',
-      icon: <Shield size={80} color="#4ade80" strokeWidth={1.5} />,
-      title: t('onboarding:encrypted'),
-      subtitle: 'Your Privacy Matters',
-      description: t('onboarding:encryptedDesc'),
-      color: '#4ade80',
+      icon: <QrCode size={80} color="#22c55e" strokeWidth={1.5} />,
+      title: 'Quét QR hoặc nhập mã',
+      subtitle: 'Kết nối nhanh chóng',
+      description:
+        'Tạo mã phòng và chia sẻ. Quét QR để tham gia tức thì.',
+      color: '#22c55e',
     },
     {
       id: '3',
-      icon: <MessageCircle size={80} color="#3b82f6" strokeWidth={1.5} />,
-      title: t('onboarding:messaging'),
-      subtitle: 'Stay Connected Always',
-      description: t('onboarding:messagingDesc'),
-      color: '#3b82f6',
+      icon: <Sparkles size={80} color="#f472b6" strokeWidth={1.5} />,
+      title: 'L‑day & kỷ niệm',
+      subtitle: 'Đếm ngày bên nhau',
+      description:
+        'Tự động tính L‑day từ ngày bắt đầu. Bạn có thể chỉnh ngày kỷ niệm.',
+      color: '#f472b6',
     },
     {
       id: '4',
-      icon: <Phone size={80} color="#f59e0b" strokeWidth={1.5} />,
-      title: t('onboarding:calls'),
-      subtitle: 'Hear Each Other\'s Voice',
-      description: t('onboarding:callsDesc'),
-      color: '#f59e0b',
+      icon: <Timer size={80} color="#3b82f6" strokeWidth={1.5} />,
+      title: 'Thời gian kết nối',
+      subtitle: 'Lịch sử & thống kê',
+      description:
+        'Theo dõi thời gian đã kết nối và các phiên gần đây để thêm động lực mỗi ngày.',
+      color: '#3b82f6',
     },
     {
       id: '5',
       icon: <Lock size={80} color="#8b5cf6" strokeWidth={1.5} />,
-      title: t('onboarding:private'),
-      subtitle: 'No Data Collection',
-      description: t('onboarding:privateDesc'),
+      title: 'Riêng tư & bảo mật',
+      subtitle: 'Bạn làm chủ dữ liệu',
+      description:
+        'Ứng dụng được thiết kế cho riêng hai bạn với khóa riêng tư và dữ liệu cục bộ.',
       color: '#8b5cf6',
     },
   ];
@@ -139,41 +145,22 @@ export default function OnboardingScreen() {
 
   const handleGetStarted = async () => {
     try {
-      // Mark onboarding as seen
       await AsyncStorage.setItem('hasSeenOnboarding', 'true');
-      
-      // Check if user is authenticated
-      const authState = AuthService.getAuthState();
-      
-      if (authState.isAuthenticated) {
-        router.replace('/(tabs)');
-      } else {
-        router.replace('/auth/login');
-      }
+      // While focusing on UI/UX, go straight to tabs
+      router.replace('/(tabs)/profile');
     } catch (error) {
       console.error('Error saving onboarding status:', error);
-      // Fallback to login
-      router.replace('/auth/login');
+      router.replace('/(tabs)/profile');
     }
   };
 
   const handleSkip = async () => {
     try {
-      // Mark onboarding as seen
       await AsyncStorage.setItem('hasSeenOnboarding', 'true');
-      
-      // Check if user is authenticated
-      const authState = AuthService.getAuthState();
-      
-      if (authState.isAuthenticated) {
-        router.replace('/(tabs)');
-      } else {
-        router.replace('/auth/login');
-      }
+      router.replace('/(tabs)/profile');
     } catch (error) {
       console.error('Error saving onboarding status:', error);
-      // Fallback to login
-      router.replace('/auth/login');
+      router.replace('/(tabs)/profile');
     }
   };
 
