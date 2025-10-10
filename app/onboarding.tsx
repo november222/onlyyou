@@ -21,7 +21,6 @@ import {
   Sparkles,
   Timer,
 } from 'lucide-react-native';
-import { Video, ResizeMode } from 'expo-av';
 import AuthService from '@/services/AuthService';
 import { useTranslation } from 'react-i18next';
 
@@ -129,17 +128,7 @@ export default function OnboardingScreen() {
       <View style={styles.slideContent}>
         {/* Icon */}
         <View style={[styles.iconContainer, { backgroundColor: `${item.color}15` }]}>
-          {index === 0 ? (
-            <Video
-              source={require('../assets/images/enimated_logo.mp4')}
-              style={{ width: 160, height: 160 }}
-              resizeMode={ResizeMode.CONTAIN}
-              shouldPlay={currentIndex === 0}
-              isLooping
-            />
-          ) : (
-            item.icon
-          )}
+          {item.icon}
         </View>
 
         {/* Text Content */}
