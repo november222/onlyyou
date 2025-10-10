@@ -325,7 +325,7 @@ export default function TouchScreen() {
               if (!isPremium) {
                 Alert.alert(
                   'Tính Năng Premium 👑',
-                  'Buzz Call là tính năng dành cho người dùng Premium.',
+                  'Custom buzz là tính năng dành cho người dùng Premium.',
                   [
                     { text: 'Để Sau', style: 'cancel' },
                     { text: 'Nâng Cấp', onPress: () => router.push('/premium') },
@@ -338,7 +338,7 @@ export default function TouchScreen() {
             disabled={!connectionState.isConnected}
           >
             <Text style={styles.touchButtonIcon}>⚡</Text>
-            <Text style={styles.touchButtonText}>Buzz Call</Text>
+            <Text style={styles.touchButtonText}>Custom buzz</Text>
             {!isPremium && <Text style={styles.touchButtonPremiumBadge}>👑 Premium</Text>}
             {!connectionState.isConnected && <Text style={styles.touchButtonDisabledText}>Cần kết nối</Text>}
           </TouchableOpacity>
