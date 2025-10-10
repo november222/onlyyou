@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { MessageCircle, Settings, Heart, User } from 'lucide-react-native';
+import { Sparkles, Settings, Heart, User } from 'lucide-react-native';
 import { router } from 'expo-router';
 import AuthService from '@/services/AuthService';
 import WebRTCService from '@/services/WebRTCService';
@@ -12,7 +12,7 @@ import SettingsScreen from './settings';
 
 const tabs = [
   { key: 'connection', title: 'Connect', icon: Heart, component: ConnectionScreen },
-  { key: 'messages', title: 'Touch', icon: MessageCircle, component: MessagesScreen },
+  { key: 'messages', title: 'Touch', icon: Sparkles, component: MessagesScreen },
   { key: 'profile', title: 'Profile', icon: User, component: ProfileScreen },
   { key: 'settings', title: 'Set', icon: Settings, component: SettingsScreen },
 ];
