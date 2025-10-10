@@ -617,6 +617,13 @@ export default function ConnectionScreen() {
             chỉ có bạn và người đặc biệt của bạn. 💕
           </Text>
         </View>
+
+        {/* Onboarding shortcut */}
+        <View style={{ alignItems: 'center', marginTop: 8, marginBottom: 12 }}>
+          <TouchableOpacity style={styles.onboardingButton} onPress={() => router.push('/onboarding')}>
+            <Text style={styles.onboardingButtonText}>Xem giới thiệu</Text>
+          </TouchableOpacity>
+        </View>
         </ScrollView>
       </KeyboardAvoidingView>
 
@@ -1137,6 +1144,19 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     color: '#4ade80',
+  },
+  onboardingButton: {
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#444',
+    backgroundColor: 'transparent',
+  },
+  onboardingButtonText: {
+    fontSize: 14,
+    color: '#888',
+    fontWeight: '600',
   },
   qrModalOverlay: {
     flex: 1,
