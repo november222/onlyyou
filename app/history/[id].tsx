@@ -9,7 +9,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router, useLocalSearchParams } from 'expo-router';
-import { ArrowLeft, Calendar, Timer, Wifi, WifiOff, Zap, Clock, CirclePlay as PlayCircle, CircleStop as StopCircle, Heart, MessageCircle, Phone, Video, Trash2, Crown } from 'lucide-react-native';
+import { ArrowLeft, Calendar, Timer, Wifi, WifiOff, Zap, Clock, CirclePlay as PlayCircle, CircleStop as StopCircle, Heart, Sparkles, Phone, Video, Trash2, Crown } from 'lucide-react-native';
 
 interface ConnectionSession {
   id: string;
@@ -285,7 +285,7 @@ export default function SessionDetailScreen() {
           
           <View style={styles.statsGrid}>
             <View style={styles.statItem}>
-              <MessageCircle size={20} color="#3b82f6" strokeWidth={2} />
+              <Sparkles size={20} color="#f472b6" strokeWidth={2} />
               <Text style={styles.statLabel}>Tin nhắn</Text>
               <Text style={styles.statValue}>Đang phát triển</Text>
             </View>

@@ -35,48 +35,7 @@ interface OnboardingSlide {
   color: string;
 }
 
-const slides: OnboardingSlide[] = [
-  {
-    id: '1',
-    icon: <Heart size={80} color="#ff6b9d" strokeWidth={1.5} fill="#ff6b9d" />,
-    title: 'Only You',
-    subtitle: 'Made for Two Hearts',
-    description: 'A private messaging app designed exclusively for couples. No groups, no strangers - just you and your special person.',
-    color: '#ff6b9d',
-  },
-  {
-    id: '2',
-    icon: <Shield size={80} color="#4ade80" strokeWidth={1.5} />,
-    title: 'End-to-End Encrypted',
-    subtitle: 'Your Privacy Matters',
-    description: 'All your messages and calls are encrypted with military-grade security. Only you and your partner can read your conversations.',
-    color: '#4ade80',
-  },
-  {
-    id: '3',
-    icon: <MessageCircle size={80} color="#3b82f6" strokeWidth={1.5} />,
-    title: 'Real-time Messaging',
-    subtitle: 'Stay Connected Always',
-    description: 'Send messages instantly with beautiful animations and read receipts. Express your love with emojis and heartfelt words.',
-    color: '#3b82f6',
-  },
-  {
-    id: '4',
-    icon: <Phone size={80} color="#f59e0b" strokeWidth={1.5} />,
-    title: 'Voice & Video Calls',
-    subtitle: 'Hear Each Other\'s Voice',
-    description: 'Crystal clear voice and video calls with your loved one. Feel close even when you\'re apart.',
-    color: '#f59e0b',
-  },
-  {
-    id: '5',
-    icon: <Lock size={80} color="#8b5cf6" strokeWidth={1.5} />,
-    title: 'Completely Private',
-    subtitle: 'No Data Collection',
-    description: 'We don\'t store your messages or personal data. Your conversations stay between you and your partner forever.',
-    color: '#8b5cf6',
-  },
-];
+// Removed old static slides (avoid referencing icons not supported on this version)
 
 export default function OnboardingScreen() {
   const [currentIndex, setCurrentIndex] = useState(0);

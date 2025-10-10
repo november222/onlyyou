@@ -33,7 +33,7 @@ import {
   X,
   History,
   Shield,
-  MessageCircle,
+  Sparkles,
   Heart,
   Camera,
   FileText
@@ -73,7 +73,7 @@ const TimelineEventCard = ({ event }: { event: Event }) => {
       case 'buzz':
         return <Zap size={20} color="#f59e0b" strokeWidth={2} />;
       case 'ping':
-        return <MessageCircle size={20} color="#3b82f6" strokeWidth={2} />;
+        return <Sparkles size={20} color="#f472b6" strokeWidth={2} />;
       case 'photo':
         return <Camera size={20} color="#10b981" strokeWidth={2} />;
       case 'note':
