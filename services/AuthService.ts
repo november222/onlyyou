@@ -2,6 +2,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { supabase } from '@/lib/supabase';
 import type { Session } from '@supabase/supabase-js';
 import * as WebBrowser from 'expo-web-browser';
+import * as AuthSession from 'expo-auth-session';
 import { Platform } from 'react-native';
 
 WebBrowser.maybeCompleteAuthSession();
@@ -319,13 +320,12 @@ class AuthService {
     try {
       this.updateAuthState({ isLoading: true });
 
-      let redirectUrl = 'onlyyou://auth/callback';
-
-      if (Platform.OS === 'web') {
-        if (typeof window !== 'undefined' && window.location) {
-          redirectUrl = `${window.location.protocol}//${window.location.host}/auth/callback`;
-        }
-      }
+      const useProxy = Platform.OS !== 'web' && (AuthSession as any)?.makeRedirectUri ? true : false;
+      const redirectUrl = Platform.OS === 'web'
+        ? (typeof window !== 'undefined' && window.location
+            ? `${window.location.protocol}//${window.location.host}/auth/callback`
+            : '/auth/callback')
+        : AuthSession.makeRedirectUri({ scheme: 'onlyyou', useProxy });
 
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
@@ -349,10 +349,7 @@ class AuthService {
         throw new Error('Khong nhan duoc URL xac thuc Google.');
       }
 
-      const result = await WebBrowser.openAuthSessionAsync(
-        data.url,
-        'onlyyou://auth/callback'
-      );
+      const result = await WebBrowser.openAuthSessionAsync(data.url, redirectUrl);
 
       if (result.type !== 'success' || !result.url) {
         if (result.type === 'dismiss' || result.type === 'cancel') {
@@ -362,16 +359,24 @@ class AuthService {
         throw new Error('Dang nhap Google khong hoan tat.');
       }
 
-      const tokens = this.extractOAuthTokens(result.url);
-
-      if (!tokens) {
-        throw new Error('Khong the doc thong tin dang nhap Google.');
+      // Supabase uses PKCE on native; exchange auth code for a session
+      let authCode: string | null = null;
+      try {
+        const parsed = AuthSession.parse(result.url);
+        authCode = (parsed as any)?.params?.code || null;
+      } catch {
+        // Fallback parse
+        try {
+          const u = new URL(result.url);
+          authCode = u.searchParams.get('code');
+        } catch {}
       }
 
-      const { data: sessionData, error: sessionError } = await supabase.auth.setSession({
-        access_token: tokens.accessToken,
-        refresh_token: tokens.refreshToken,
-      });
+      if (!authCode) {
+        throw new Error('Không tìm thấy mã xác thực (code) từ Google.');
+      }
+
+      const { data: sessionData, error: sessionError } = await supabase.auth.exchangeCodeForSession({ authCode });
 
       if (sessionError) {
         throw sessionError;
@@ -403,13 +408,12 @@ class AuthService {
     try {
       this.updateAuthState({ isLoading: true });
 
-      let redirectUrl = 'onlyyou://auth/callback';
-
-      if (Platform.OS === 'web') {
-        if (typeof window !== 'undefined' && window.location) {
-          redirectUrl = `${window.location.protocol}//${window.location.host}/auth/callback`;
-        }
-      }
+      const useProxy = Platform.OS !== 'web' && (AuthSession as any)?.makeRedirectUri ? true : false;
+      const redirectUrl = Platform.OS === 'web'
+        ? (typeof window !== 'undefined' && window.location
+            ? `${window.location.protocol}//${window.location.host}/auth/callback`
+            : '/auth/callback')
+        : AuthSession.makeRedirectUri({ scheme: 'onlyyou', useProxy });
 
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'apple',
@@ -433,10 +437,7 @@ class AuthService {
         throw new Error('Khong nhan duoc URL xac thuc Apple.');
       }
 
-      const result = await WebBrowser.openAuthSessionAsync(
-        data.url,
-        'onlyyou://auth/callback'
-      );
+      const result = await WebBrowser.openAuthSessionAsync(data.url, redirectUrl);
 
       if (result.type !== 'success' || !result.url) {
         if (result.type === 'dismiss' || result.type === 'cancel') {
@@ -446,16 +447,23 @@ class AuthService {
         throw new Error('Dang nhap Apple khong hoan tat.');
       }
 
-      const tokens = this.extractOAuthTokens(result.url);
-
-      if (!tokens) {
-        throw new Error('Khong the doc thong tin dang nhap Apple.');
+      // Exchange PKCE code for session
+      let authCode: string | null = null;
+      try {
+        const parsed = AuthSession.parse(result.url);
+        authCode = (parsed as any)?.params?.code || null;
+      } catch {
+        try {
+          const u = new URL(result.url);
+          authCode = u.searchParams.get('code');
+        } catch {}
       }
 
-      const { data: sessionData, error: sessionError } = await supabase.auth.setSession({
-        access_token: tokens.accessToken,
-        refresh_token: tokens.refreshToken,
-      });
+      if (!authCode) {
+        throw new Error('Không tìm thấy mã xác thực (code) từ Apple.');
+      }
+
+      const { data: sessionData, error: sessionError } = await supabase.auth.exchangeCodeForSession({ authCode });
 
       if (sessionError) {
         throw sessionError;
