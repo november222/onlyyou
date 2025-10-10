@@ -327,6 +327,7 @@ class AuthService {
             : '/auth/callback')
         : AuthSession.makeRedirectUri({ scheme: 'onlyyou', useProxy });
 
+      console.log('Auth (Google) redirectUrl:', redirectUrl);
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
@@ -349,6 +350,7 @@ class AuthService {
         throw new Error('Khong nhan duoc URL xac thuc Google.');
       }
 
+      console.log('Auth (Google) provider URL:', data?.url);
       const result = await WebBrowser.openAuthSessionAsync(data.url, redirectUrl);
 
       if (result.type !== 'success' || !result.url) {
@@ -377,6 +379,9 @@ class AuthService {
       }
 
       const { data: sessionData, error: sessionError } = await supabase.auth.exchangeCodeForSession({ authCode });
+      if (sessionError) {
+        console.error('Auth (Google) code exchange failed:', sessionError);
+      }
 
       if (sessionError) {
         throw sessionError;
@@ -415,6 +420,7 @@ class AuthService {
             : '/auth/callback')
         : AuthSession.makeRedirectUri({ scheme: 'onlyyou', useProxy });
 
+      console.log('Auth (Apple) redirectUrl:', redirectUrl);
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'apple',
         options: {
@@ -437,6 +443,7 @@ class AuthService {
         throw new Error('Khong nhan duoc URL xac thuc Apple.');
       }
 
+      console.log('Auth (Apple) provider URL:', data?.url);
       const result = await WebBrowser.openAuthSessionAsync(data.url, redirectUrl);
 
       if (result.type !== 'success' || !result.url) {
@@ -464,6 +471,9 @@ class AuthService {
       }
 
       const { data: sessionData, error: sessionError } = await supabase.auth.exchangeCodeForSession({ authCode });
+      if (sessionError) {
+        console.error('Auth (Apple) code exchange failed:', sessionError);
+      }
 
       if (sessionError) {
         throw sessionError;
