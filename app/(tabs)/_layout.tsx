@@ -19,40 +19,11 @@ const tabs = [
 
 export default function TabLayout() {
   const [activeTab, setActiveTab] = useState('profile');
-  const [isCheckingAuth, setIsCheckingAuth] = useState(true);
+  const [isCheckingAuth, setIsCheckingAuth] = useState(false);
 
   useEffect(() => {
-    const authState = AuthService.getAuthState();
-
-    if (!authState.isLoading) {
-      if (!authState.isAuthenticated) {
-        router.replace('/auth/login');
-      } else {
-        setIsCheckingAuth(false);
-        // Initialize WebRTC after confirming authentication
-        WebRTCService.init().catch(() => {});
-      }
-    } else {
-      const handleAuthChange = (state: typeof authState) => {
-        if (!state.isLoading) {
-          if (!state.isAuthenticated) {
-            router.replace('/auth/login');
-            // Clear any persisted WebRTC state on sign out
-            WebRTCService.clearSavedConnection().catch(() => {});
-          } else {
-            setIsCheckingAuth(false);
-            WebRTCService.init().catch(() => {});
-          }
-          AuthService.onAuthStateChange = null;
-        }
-      };
-
-      AuthService.onAuthStateChange = handleAuthChange;
-
-      return () => {
-        AuthService.onAuthStateChange = null;
-      };
-    }
+    // Bypass auth: initialize services without gating
+    WebRTCService.init().catch(() => {});
   }, []);
 
   if (isCheckingAuth) {

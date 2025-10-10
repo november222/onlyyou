@@ -8,50 +8,8 @@ export default function IndexScreen() {
   const [isChecking, setIsChecking] = useState(true);
 
   useEffect(() => {
-    let isMounted = true;
-
-    const checkAuthAndNavigate = async () => {
-      try {
-        const hasSeenOnboarding = await AsyncStorage.getItem('hasSeenOnboarding');
-
-        if (!hasSeenOnboarding) {
-          if (isMounted) router.replace('/onboarding');
-          return;
-        }
-
-        const handleAuthStateChange = (authState: AuthState) => {
-          if (!isMounted) return;
-
-          if (!authState.isLoading) {
-            AuthService.onAuthStateChange = null;
-
-            if (authState.isAuthenticated) {
-              router.replace('/(tabs)/profile');
-            } else {
-              router.replace('/auth/login');
-            }
-          }
-        };
-
-        const authState = AuthService.getAuthState();
-
-        if (authState.isLoading) {
-          AuthService.onAuthStateChange = handleAuthStateChange;
-        } else {
-          handleAuthStateChange(authState);
-        }
-      } catch (error) {
-        console.error('Error checking auth:', error);
-        if (isMounted) router.replace('/auth/login');
-      }
-    };
-
-    checkAuthAndNavigate();
-
-    return () => {
-      isMounted = false;
-      AuthService.onAuthStateChange = null;
-    };
+    // Bypass auth: always go to tabs for UI/UX work
+    router.replace('/(tabs)/profile');
   }, []);
 
   return (

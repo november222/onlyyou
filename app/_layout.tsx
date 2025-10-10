@@ -86,7 +86,7 @@ export default function RootLayout() {
             // Try to join the room
             try {
               // Require authentication before joining via deep link
-              if (!AuthService.isAuthenticated()) {
+              if (false && !AuthService.isAuthenticated()) {
                 Alert.alert(
                   'Yêu cầu đăng nhập',
                   'Vui lòng đăng nhập trước khi kết nối phòng.',
