@@ -314,46 +314,7 @@ export default function SettingsScreen() {
           </View>
         </View>
 
-        {/* Data Section */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>{t('settings:dataStorage')}</Text>
-          <View style={styles.sectionContent}>
-            <SettingItem
-              icon={<Upload size={20} color="#ff6b9d" strokeWidth={2} />}
-              title={t('settings:autoBackup')}
-              subtitle={t('settings:autoBackupDesc')}
-              rightElement={
-                <Switch
-                  value={autoBackup}
-                  onValueChange={setAutoBackup}
-                  trackColor={{ false: '#333', true: '#ff6b9d' }}
-                  thumbColor="#fff"
-                />
-              }
-            />
-            <SettingItem
-              icon={<Download size={20} color="#4ade80" strokeWidth={2} />}
-              title={t('settings:exportMessages')}
-              subtitle={t('settings:exportMessagesDesc')}
-              onPress={handleExportMessages}
-              showChevron
-            />
-            <SettingItem
-              icon={<Upload size={20} color="#3b82f6" strokeWidth={2} />}
-              title={t('settings:createBackup')}
-              subtitle={t('settings:createBackupDesc')}
-              onPress={handleBackupMessages}
-              showChevron
-            />
-            <SettingItem
-              icon={<Trash2 size={20} color="#ef4444" strokeWidth={2} />}
-              title={t('settings:clearAllMessages')}
-              subtitle={t('settings:clearAllMessagesDesc')}
-              onPress={handleClearMessages}
-              showChevron
-            />
-          </View>
-        </View>
+        {/* Data & Storage section removed per request */}
 
         {/* Account Management Section */}
         <View style={styles.section}>
