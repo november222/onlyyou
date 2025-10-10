@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { PurchaseService } from '@/services/PurchaseService';
+import features from '@/config/features';
 
 interface PremiumContextType {
   isPremium: boolean;
@@ -22,6 +23,11 @@ export function PremiumProvider({ children }: PremiumProviderProps) {
 
     const initializePremium = async () => {
       try {
+        if (features.premiumMock) {
+          setIsPremium(true);
+          setIsLoading(false);
+          return;
+        }
         // Initialize purchase service
         await PurchaseService.init();
         

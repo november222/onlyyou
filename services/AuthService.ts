@@ -1,5 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { supabase } from '@/lib/supabase';
+import features from '@/config/features';
 import type { Session } from '@supabase/supabase-js';
 import * as WebBrowser from 'expo-web-browser';
 import * as AuthSession from 'expo-auth-session';
@@ -36,6 +37,23 @@ class AuthService {
   public async init(): Promise<void> {
     if (this.initialized) return;
     this.initialized = true;
+
+    if (features && (features as any).mockAuth) {
+      // Mock authenticated user for UI work
+      this.updateAuthState({
+        isAuthenticated: true,
+        user: {
+          id: 'mock-user-1',
+          email: 'mock@onlyyou.app',
+          name: 'OnlyYou',
+          avatar: undefined,
+          premiumTier: 'yearly',
+          premiumExpiresAt: null,
+        },
+        isLoading: false,
+      });
+      return;
+    }
 
     supabase.auth.onAuthStateChange((event, session) => {
       console.log('Auth event:', event);
