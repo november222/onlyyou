@@ -8,11 +8,22 @@ export default function IndexScreen() {
   const [isChecking, setIsChecking] = useState(true);
 
   useEffect(() => {
-    // Bypass auth: always go to tabs for UI/UX work
-    const task = InteractionManager.runAfterInteractions(() => {
-      router.replace('/(tabs)/profile');
-    });
-    return () => task.cancel?.();
+    const go = async () => {
+      try {
+        const seen = await AsyncStorage.getItem('hasSeenIntroVideo');
+        const task = InteractionManager.runAfterInteractions(() => {
+          if (seen === 'true') {
+            router.replace('/(tabs)/profile');
+          } else {
+            router.replace('/intro');
+          }
+        });
+        return () => task.cancel?.();
+      } catch {
+        router.replace('/(tabs)/profile');
+      }
+    };
+    go();
   }, []);
 
   return (
