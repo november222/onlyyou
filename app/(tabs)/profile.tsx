@@ -38,6 +38,7 @@ import { usePremium } from '@/providers/PremiumProvider';
 import PingService, { PingQuestion } from '@/services/PingService';
 import { isFeatureEnabled } from '../../config/features';
 import PhotoService from '@/services/PhotoService';
+import { getRelationshipStart, setRelationshipStart, daysBetween } from '@/lib/loveDay';
 
 interface ConnectionSession {
   id: string;
@@ -76,6 +77,8 @@ export default function ProfileScreen() {
   const [pingAnswer, setPingAnswer] = useState('');
   const [isSubmittingPing, setIsSubmittingPing] = useState(false);
   const [photosCount, setPhotosCount] = useState(0);
+  const [relationshipStartAt, setRelationshipStartAt] = useState<Date | null>(null);
+  const [loveDays, setLoveDays] = useState(0);
   const { isPremium } = usePremium();
 
   // Mock Premier status - in real app this would come from user data/API
@@ -255,7 +258,29 @@ export default function ProfileScreen() {
         setCurrentConnectionStart(new Date(savedConnection.currentSessionStart));
       }
     }
-    
+
+    // Load or initialize relationship start date for L-day
+    (async () => {
+      try {
+        const stored = await getRelationshipStart();
+        if (stored) {
+          const d = new Date(stored);
+          if (!isNaN(d.getTime())) {
+            setRelationshipStartAt(d);
+            setLoveDays(daysBetween(stored));
+          }
+        } else {
+          const saved = WebRTCService.getSavedConnection();
+          if (saved?.connectionDate) {
+            await setRelationshipStart(saved.connectionDate);
+            const d = new Date(saved.connectionDate);
+            setRelationshipStartAt(d);
+            setLoveDays(daysBetween(saved.connectionDate));
+          }
+        }
+      } catch {}
+    })();
+
     // Listen for auth state changes
     AuthService.onAuthStateChange = (state) => {
       setAuthState(state);
@@ -270,6 +295,14 @@ export default function ProfileScreen() {
         const savedConnection = WebRTCService.getSavedConnection();
         if (savedConnection?.currentSessionStart) {
           setCurrentConnectionStart(new Date(savedConnection.currentSessionStart));
+        }
+        // Initialize L-day start if missing
+        if (!relationshipStartAt && savedConnection?.connectionDate) {
+          const d = new Date(savedConnection.connectionDate);
+          if (!isNaN(d.getTime())) {
+            setRelationshipStartAt(d);
+            setLoveDays(daysBetween(savedConnection.connectionDate));
+          }
         }
       } else {
         // Disconnected - clear session start time
@@ -531,21 +564,21 @@ export default function ProfileScreen() {
             <Text style={styles.subtitle}>{t('profile:subtitle')}</Text>
           </View>
 
-          {/* Love Counter */}
+          {/* Love Counter (L-day) */}
           <View style={styles.loveCounterCard}>
             <View style={styles.loveCounterHeader}>
               <Sparkles size={24} color="#ff6b9d" strokeWidth={2} />
               <Text style={styles.loveCounterTitle}>L-day</Text>
             </View>
             
-            {currentConnectionStart && (
+            {relationshipStartAt && (
               <View style={styles.loveCounterContent}>
                 <Text style={styles.loveCounterNumber}>
-                  {Math.floor((Date.now() - currentConnectionStart.getTime()) / (1000 * 60 * 60 * 24))}
+                  {loveDays}
                 </Text>
                 <Text style={styles.loveCounterLabel}>{t('profile:daysConnected')}</Text>
                 <Text style={styles.loveCounterSubtext}>
-                  {t('profile:since')} {formatDate(currentConnectionStart)}
+                  {t('profile:since')} {formatDate(relationshipStartAt)}
                 </Text>
               </View>
             )}
