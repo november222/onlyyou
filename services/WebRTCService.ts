@@ -433,6 +433,8 @@ class WebRTCService {
 
   // Mock: Start audio/video call
   public async startCall(video: boolean = false): Promise<void> {
+    // Call feature removed
+    return;
     if (!this.connectionState.isConnected) {
       throw new Error('Không thể gọi: chưa kết nối');
     }
@@ -452,7 +454,7 @@ class WebRTCService {
 
   // Mock: End call
   public endCall(): void {
-    console.log('Mock: Call ended');
+    // Call feature removed
   }
 
   // Get connection state

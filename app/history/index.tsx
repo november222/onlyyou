@@ -42,6 +42,7 @@ import { useTranslation } from 'react-i18next';
 import TimelineService, { Event, EventType } from '@/services/TimelineService';
 import { isFeatureEnabled } from '../../config/features';
 import PremiumGate from '../../components/PremiumGate';
+import { useTheme, useThemeColors } from '@/providers/ThemeProvider';
 
 interface ConnectionSession {
   id: string;
@@ -59,8 +60,11 @@ type DragContext = {
 
 // Timeline Event Card Component
 const TimelineEventCard = ({ event }: { event: Event }) => {
+  const { i18n } = useTranslation();
   const formatTime = (timestamp: number) => {
-    return new Date(timestamp).toLocaleString('vi-VN', {
+    const lng = i18n.language;
+    const locale = lng === 'vi' ? 'vi-VN' : lng === 'en' ? 'en-US' : lng === 'ko' ? 'ko-KR' : lng === 'es' ? 'es-ES' : undefined;
+    return new Date(timestamp).toLocaleString(locale, {
       day: '2-digit',
       month: '2-digit',
       hour: '2-digit',
@@ -272,6 +276,8 @@ const SwipeableSessionCard = ({
 };
 
 export default function HistoryScreen() {
+  const { theme } = useTheme();
+  const colors = useThemeColors();
   const [connectionSessions, setConnectionSessions] = useState<ConnectionSession[]>([]);
   const [timelineEvents, setTimelineEvents] = useState<Event[]>([]);
   const [isPremium, setIsPremium] = useState(false);
@@ -398,7 +404,9 @@ export default function HistoryScreen() {
   };
 
   const formatDateTime = (date: Date): string => {
-    return date.toLocaleString('vi-VN', {
+    const lng = i18n.language;
+    const locale = lng === 'vi' ? 'vi-VN' : lng === 'en' ? 'en-US' : lng === 'ko' ? 'ko-KR' : lng === 'es' ? 'es-ES' : undefined;
+    return date.toLocaleString(locale, {
       day: '2-digit',
       month: '2-digit',
       year: 'numeric',
@@ -429,13 +437,13 @@ export default function HistoryScreen() {
 
   return (
     <>
-      <SafeAreaView style={styles.container}>
+      <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]}>
         {/* Header */}
         <View style={styles.header}>
           <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
-            <ArrowLeft size={24} color="#fff" strokeWidth={2} />
+            <ArrowLeft size={24} color={colors.text} strokeWidth={2} />
           </TouchableOpacity>
-          <Text style={styles.title}>{t('history:title')}</Text>
+          <Text style={[styles.title, { color: colors.text }]}>{t('history:title')}</Text>
           <View style={styles.headerRight} />
         </View>
 
@@ -443,19 +451,19 @@ export default function HistoryScreen() {
         {isFeatureEnabled('timeline') && (
           <View style={styles.tabNavigation}>
             <TouchableOpacity
-              style={[styles.tabButton, activeTab === 'sessions' && styles.activeTabButton]}
+              style={[styles.tabButton, { borderColor: colors.border, backgroundColor: colors.card }, activeTab === 'sessions' && styles.activeTabButton]}
               onPress={() => setActiveTab('sessions')}
             >
-              <Text style={[styles.tabButtonText, activeTab === 'sessions' && styles.activeTabButtonText]}>
-                Sessions
+              <Text style={[styles.tabButtonText, { color: colors.text }, activeTab === 'sessions' && styles.activeTabButtonText]}>
+                {t('history:sessions')}
               </Text>
             </TouchableOpacity>
             <TouchableOpacity
-              style={[styles.tabButton, activeTab === 'timeline' && styles.activeTabButton]}
+              style={[styles.tabButton, { borderColor: colors.border, backgroundColor: colors.card }, activeTab === 'timeline' && styles.activeTabButton]}
               onPress={() => setActiveTab('timeline')}
             >
-              <Text style={[styles.tabButtonText, activeTab === 'timeline' && styles.activeTabButtonText]}>
-                Timeline
+              <Text style={[styles.tabButtonText, { color: colors.text }, activeTab === 'timeline' && styles.activeTabButtonText]}>
+                {t('history:timeline')}
               </Text>
             </TouchableOpacity>
           </View>
@@ -463,26 +471,26 @@ export default function HistoryScreen() {
 
         {/* Summary Stats */}
         {activeTab === 'sessions' && (
-          <View style={styles.summaryCard}>
+          <View style={[styles.summaryCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
             <View style={styles.summaryRow}>
               <View style={styles.summaryItem}>
                 <Text style={styles.summaryValue}>{connectionSessions.length}</Text>
-                <Text style={styles.summaryLabel}>{t('history:totalSessions')}</Text>
+                <Text style={[styles.summaryLabel, { color: '#888' }]}>{t('history:totalSessions')}</Text>
               </View>
               <View style={styles.summaryItem}>
                 <Text style={styles.summaryValue}>{formatDuration(totalDuration)}</Text>
-                <Text style={styles.summaryLabel}>{t('history:totalTime')}</Text>
+                <Text style={[styles.summaryLabel, { color: '#888' }]}>{t('history:totalTime')}</Text>
               </View>
               <View style={styles.summaryItem}>
                 <Text style={styles.summaryValue}>{totalBuzzCalls}</Text>
-                <Text style={styles.summaryLabel}>{t('history:buzzCalls')}</Text>
+                <Text style={[styles.summaryLabel, { color: '#888' }]}>{t('history:buzzCalls')}</Text>
               </View>
             </View>
           </View>
         )}
 
         {activeTab === 'timeline' && (
-          <View style={styles.summaryCard}>
+          <View style={[styles.summaryCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
             <View style={styles.summaryRow}>
               <View style={styles.summaryItem}>
                 <Text style={styles.summaryValue}>{timelineEvents.length}</Text>
@@ -533,8 +541,8 @@ export default function HistoryScreen() {
         presentationStyle="fullScreen"
         onRequestClose={() => setShowPremiumModal(false)}
       >
-        <SafeAreaView style={styles.premiumModal} edges={['top', 'bottom']}>
-          <View style={styles.premiumHeader}>
+        <SafeAreaView style={[styles.premiumModal, { backgroundColor: theme.background }]} edges={['top', 'bottom']}>
+          <View style={[styles.premiumHeader, { borderBottomColor: colors.border }]}>
             <Text style={styles.premiumTitle}>Nâng Cấp Premier</Text>
             <TouchableOpacity
               style={styles.closeButton}
@@ -848,7 +856,6 @@ const styles = StyleSheet.create({
   premiumTitle: {
     fontSize: 20,
     fontWeight: '700',
-    color: '#fff',
   },
   closeButton: {
     padding: 8,
@@ -869,7 +876,6 @@ const styles = StyleSheet.create({
   premiumMainTitle: {
     fontSize: 28,
     fontWeight: '700',
-    color: '#fff',
     marginBottom: 8,
     textAlign: 'center',
   },
@@ -896,7 +902,6 @@ const styles = StyleSheet.create({
   },
   premiumFeatureText: {
     fontSize: 16,
-    color: '#fff',
     marginLeft: 12,
     flex: 1,
   },

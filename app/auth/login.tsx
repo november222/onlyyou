@@ -11,12 +11,16 @@ import { router, Stack } from 'expo-router';
 import { Heart } from 'lucide-react-native';
 import AuthService from '@/services/AuthService';
 import { useTranslation } from 'react-i18next';
+import { useThemeMode, useThemeColors } from '@/providers/ThemeProvider';
 
 export default function LoginScreen() {
   const [isLoadingGoogle, setIsLoadingGoogle] = useState(false);
+  const { theme } = useTheme();
   const [isLoadingApple, setIsLoadingApple] = useState(false);
   const [error, setError] = useState('');
   const { t } = useTranslation();
+  const { isDark } = useThemeMode();
+  const colors = useThemeColors();
 
   const handleGoogleSignIn = async () => {
     setError('');
@@ -27,7 +31,7 @@ export default function LoginScreen() {
         router.replace('/(tabs)/profile');
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Dang nhap that bai');
+      setError(err instanceof Error ? err.message : t('auth:signInFailed'));
     } finally {
       setIsLoadingGoogle(false);
     }
@@ -42,7 +46,7 @@ export default function LoginScreen() {
         router.replace('/(tabs)/profile');
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Dang nhap that bai');
+      setError(err instanceof Error ? err.message : t('auth:signInFailed'));
     } finally {
       setIsLoadingApple(false);
     }
@@ -51,12 +55,12 @@ export default function LoginScreen() {
   return (
     <>
       <Stack.Screen options={{ headerShown: false, title: '' }} />
-      <SafeAreaView style={styles.container}>
+      <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
         <View style={styles.content}>
           <View style={styles.header}>
-            <Heart size={64} color="#ff6b9d" strokeWidth={2} fill="#ff6b9d" />
-            <Text style={styles.title}>{t('auth:title')}</Text>
-            <Text style={styles.subtitle}>{t('auth:subtitle')}</Text>
+            <Heart size={64} color={theme.primary} strokeWidth={2} fill={theme.primary} />
+            <Text style={[styles.title, { color: colors.text }]}>{t('auth:title')}</Text>
+            <Text style={[styles.subtitle, { color: (colors.mutedText || colors.text) }]}>{t('auth:subtitle')}</Text>
           </View>
 
           <View style={styles.buttonSection}>
@@ -66,13 +70,13 @@ export default function LoginScreen() {
               disabled={isLoadingGoogle}
             >
               {isLoadingGoogle ? (
-                <ActivityIndicator size="small" color="#fff" />
+                <ActivityIndicator size="small" color={theme.primary} />
               ) : (
                 <>
-                  <View style={styles.googleIcon}>
-                    <Text style={styles.googleIconText}>G</Text>
+                  <View style={[styles.googleIcon, { backgroundColor: theme.primary }]}>
+                    <Text style={[styles.googleIconText, { color: (theme.onPrimary || colors.text) }]}>G</Text>
                   </View>
-                  <Text style={styles.buttonText}>Tiếp tục với Google</Text>
+                  <Text style={[styles.buttonText, { color: colors.text }]}>{t('auth:signInWithGoogle')}</Text>
                 </>
               )}
             </TouchableOpacity>
@@ -81,7 +85,7 @@ export default function LoginScreen() {
           </View>
 
           <View style={styles.footer}>
-            <Text style={styles.footerText}>{t('auth:termsText')}</Text>
+            <Text style={[styles.footerText, { color: (colors.mutedText || colors.text) }]}>{t('auth:termsText')}</Text>
           </View>
         </View>
       </SafeAreaView>
@@ -92,7 +96,7 @@ export default function LoginScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#000',
+    
   },
   content: {
     flex: 1,
@@ -107,13 +111,13 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 36,
     fontWeight: '700',
-    color: '#fff',
+    
     marginTop: 24,
     marginBottom: 12,
   },
   subtitle: {
     fontSize: 16,
-    color: '#888',
+    
     textAlign: 'center',
     lineHeight: 24,
     paddingHorizontal: 20,
@@ -125,12 +129,12 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#fff',
+    
     paddingVertical: 16,
     paddingHorizontal: 24,
     borderRadius: 16,
     gap: 12,
-    shadowColor: '#000',
+    
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 8,
@@ -147,16 +151,16 @@ const styles = StyleSheet.create({
   googleIconText: {
     fontSize: 16,
     fontWeight: '700',
-    color: '#fff',
+    
   },
   buttonText: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#000',
+    
   },
   errorText: {
     fontSize: 14,
-    color: '#ff4444',
+    // color applied inline via theme in JSX
     textAlign: 'center',
     marginTop: 8,
   },
@@ -168,8 +172,8 @@ const styles = StyleSheet.create({
   },
   footerText: {
     fontSize: 12,
-    color: '#666',
-    textAlign: 'center',
+    
+    // color applied inline via theme in JSX
     lineHeight: 18,
   },
 });

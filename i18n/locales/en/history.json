@@ -1,5 +1,7 @@
 {
   "title": "Connection History",
+  "sessions": "Sessions",
+  "timeline": "Timeline",
   "totalSessions": "Total sessions",
   "totalTime": "Total time",
   "buzzCalls": "Buzz calls",
@@ -19,5 +21,24 @@
   "calls": "Calls",
   "videoCalls": "Video calls",
   "reactions": "Reactions",
-  "inDevelopment": "In development"
+  "inDevelopment": "In development",
+  "listTitle": "Connection History",
+  "detailTitle": "Session Details",
+  "premiumFeatureTitle": "Premier Feature",
+  "premiumFeatureDesc": "You need to upgrade to Premier to delete connection history.",
+  "upgrade": "Upgrade",
+  "deleteConfirmTitle": "Delete Session?",
+  "deleteConfirmDesc": "Are you sure you want to remove this session from history?",
+  "delete": "Delete",
+  "notFound": "Session information not found",
+  "statusConnected": "Connected",
+  "statusDisconnected": "Disconnected",
+  "timestampsTitle": "Connection Times",
+  "startLabel": "Start",
+  "endLabel": "End",
+  "durationLabel": "Exact duration",
+  "buzzCallsTitle": "Buzz Calls",
+  "buzzCallsDesc": "Quick messages sent during this session",
+  "youSent": "You sent",
+  "partnerSent": "Partner sent"
 }

@@ -1,11 +1,13 @@
 import { useEffect, useState } from 'react';
 import { router } from 'expo-router';
 import { View, ActivityIndicator, StyleSheet, InteractionManager } from 'react-native';
+import { useThemeColors } from '@/providers/ThemeProvider';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import AuthService, { AuthState } from '@/services/AuthService';
 
 export default function IndexScreen() {
   const [isChecking, setIsChecking] = useState(true);
+  const colors = useThemeColors();
 
   useEffect(() => {
     // Bypass auth: always go to tabs for UI/UX work
@@ -16,7 +18,7 @@ export default function IndexScreen() {
   }, []);
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
       <ActivityIndicator size="large" color="#ff6b9d" />
     </View>
   );

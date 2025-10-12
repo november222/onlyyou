@@ -11,23 +11,45 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useEffect } from 'react';
-import { Bell, Moon, Shield, Trash2, Download, Upload, Info, Heart, ChevronRight, User, LogOut, UserX, TriangleAlert as AlertTriangle, Globe, X, Check } from 'lucide-react-native';
+import {
+  Bell,
+  Moon,
+  Shield,
+  Trash2,
+  Download,
+  Upload,
+  Info,
+  Heart,
+  ChevronRight,
+  User,
+  LogOut,
+  UserX,
+  TriangleAlert as AlertTriangle,
+  Globe,
+  X,
+  Check,
+} from 'lucide-react-native';
 import AuthService, { AuthState } from '@/services/AuthService';
 import { router } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import i18n, { supportedLanguages } from '@/i18n';
+import { notificationService } from '@/services/NotificationService';
+import { useTheme, useThemeColors } from '@/providers/ThemeProvider';
 import { isFeatureEnabled } from '../../config/features';
 import { usePrivacy } from '@/providers/PrivacyProvider';
 
 export default function SettingsScreen() {
   const [notifications, setNotifications] = useState(true);
-  const [darkMode, setDarkMode] = useState(true);
+  const { theme, mode, setMode, isDark } = useTheme();
+  const colors = useThemeColors();
   const [readReceipts, setReadReceipts] = useState(true);
   const [autoBackup, setAutoBackup] = useState(true);
   const [selectedLanguage, setSelectedLanguage] = useState('vi');
   const [showLanguageModal, setShowLanguageModal] = useState(false);
-  const [authState, setAuthState] = useState<AuthState>(AuthService.getAuthState());
+  const [authState, setAuthState] = useState<AuthState>(
+    AuthService.getAuthState()
+  );
   const { t, i18n: i18nInstance } = useTranslation();
   const { isLockEnabled, setLockEnabled } = usePrivacy();
 
@@ -45,14 +67,14 @@ export default function SettingsScreen() {
   useEffect(() => {
     // Sync selected language with i18n current language
     setSelectedLanguage(i18nInstance.language);
-    
+
     // Listen for language changes
     const handleLanguageChange = (lng: string) => {
       setSelectedLanguage(lng);
     };
-    
+
     i18nInstance.on('languageChanged', handleLanguageChange);
-    
+
     return () => {
       i18nInstance.off('languageChanged', handleLanguageChange);
     };
@@ -64,93 +86,125 @@ export default function SettingsScreen() {
       await AsyncStorage.setItem('lang', languageCode);
       setSelectedLanguage(languageCode);
       setShowLanguageModal(false);
-      
-      const selectedLang = supportedLanguages.find(lang => lang.code === languageCode);
+
+      const selectedLang = supportedLanguages.find(
+        (lang) => lang.code === languageCode
+      );
       Alert.alert(
         t('settings:languageChanged'),
-        t('settings:languageChangedDesc').replace('{language}', selectedLang?.name || ''),
+        t('settings:languageChangedDesc').replace(
+          '{language}',
+          selectedLang?.name || ''
+        ),
         [{ text: t('common:ok') }]
       );
     } catch (error) {
-      Alert.alert(t('common:error'), 'Failed to change language');
+      Alert.alert(t('common:error'), t('settings:languageChangeFailed'));
     }
   };
 
   const handleClearMessages = () => {
     Alert.alert(
-      'Clear All Messages?',
-      'This will permanently delete all your messages. This action cannot be undone.',
+      t('settings:clearAllConfirmTitle'),
+      t('settings:clearAllConfirmDesc'),
       [
-        { text: 'Cancel', style: 'cancel' },
+        { text: t('common:cancel'), style: 'cancel' },
         {
-          text: 'Clear All',
+          text: t('settings:clearAllConfirmCTA'),
           style: 'destructive',
-          onPress: () => Alert.alert('Messages Cleared', 'All messages have been deleted.'),
+          onPress: () =>
+            Alert.alert(
+              t('settings:messagesClearedTitle'),
+              t('settings:messagesClearedDesc')
+            ),
         },
       ]
     );
   };
 
   const handleExportMessages = () => {
-    Alert.alert('Export Messages', 'Your messages have been exported to your device.');
+    Alert.alert(t('settings:exportedTitle'), t('settings:exportedDesc'));
   };
 
   const handleBackupMessages = () => {
-    Alert.alert('Backup Created', 'Your messages have been backed up securely.');
+    Alert.alert(
+      t('settings:backupCreatedTitle'),
+      t('settings:backupCreatedDesc')
+    );
+  };
+
+  const handleToggleNotifications = async (value: boolean) => {
+    try {
+      setNotifications(value);
+      if (value) {
+        const token = await notificationService.registerForPushNotifications();
+        if (!token) {
+          Alert.alert(
+            t('settings:pushNotifications'),
+            t('settings:notificationsPermissionDenied')
+          );
+        } else {
+          Alert.alert(
+            t('settings:pushNotifications'),
+            t('settings:notificationsEnabled')
+          );
+          // TODO: Optionally send token to backend (Supabase) for server-side pushes
+        }
+      } else {
+        // Turning off: cancel scheduled local notifications (server preference optional)
+        await notificationService.cancelAllNotifications();
+      }
+    } catch (err) {
+      console.error('Failed to toggle notifications:', err);
+      Alert.alert(t('common:error'), t('settings:notificationUpdateFailed'));
+    }
   };
 
   const handleSignOut = () => {
-    Alert.alert(
-      t('auth:signOut'),
-      t('auth:signOutConfirm'),
-      [
-        { text: t('common:cancel'), style: 'cancel' },
-        {
-          text: t('auth:signOut'),
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              await AuthService.signOut();
-              router.replace('/auth/login');
-            } catch (error) {
-              Alert.alert(t('common:error'), t('auth:signOutFailed'));
-            }
-          },
+    Alert.alert(t('auth:signOut'), t('auth:signOutConfirm'), [
+      { text: t('common:cancel'), style: 'cancel' },
+      {
+        text: t('auth:signOut'),
+        style: 'destructive',
+        onPress: async () => {
+          try {
+            await AuthService.signOut();
+            router.replace('/auth/login');
+          } catch (error) {
+            Alert.alert(t('common:error'), t('auth:signOutFailed'));
+          }
         },
-      ]
-    );
+      },
+    ]);
   };
 
   const handleDeleteAccount = () => {
     Alert.alert(
-      'Xóa Tài Khoản Vĩnh Viễn?',
-      'Hành động này sẽ xóa hoàn toàn tài khoản của bạn và tất cả dữ liệu liên quan. Bạn sẽ không thể khôi phục lại.',
+      t('settings:deleteConfirmTitle'),
+      t('settings:deleteConfirmDesc'),
       [
-        { text: 'Hủy', style: 'cancel' },
+        { text: t('common:cancel'), style: 'cancel' },
         {
-          text: 'Tiếp Tục',
+          text: t('common:continue'),
           style: 'destructive',
           onPress: () => {
-            // Second confirmation
             Alert.alert(
-              'Xác Nhận Cuối Cùng',
-              'Bạn có THỰC SỰ muốn xóa tài khoản vĩnh viễn? Hành động này KHÔNG THỂ hoàn tác.',
+              t('settings:deleteConfirmFinalTitle'),
+              t('settings:deleteConfirmFinalDesc'),
               [
-                { text: 'Hủy', style: 'cancel' },
+                { text: t('common:cancel'), style: 'cancel' },
                 {
-                  text: 'Xóa Vĩnh Viễn',
+                  text: t('settings:deletePermanentlyCTA'),
                   style: 'destructive',
                   onPress: async () => {
                     try {
-                      // Mock account deletion
-                      await new Promise(resolve => setTimeout(resolve, 2000));
-                      
+                      await new Promise((resolve) => setTimeout(resolve, 2000));
                       Alert.alert(
-                        'Tài Khoản Đã Được Xóa',
-                        'Tài khoản của bạn đã được xóa vĩnh viễn. Cảm ơn bạn đã sử dụng Only You.',
+                        t('settings:accountDeletedTitle'),
+                        t('settings:accountDeletedDesc'),
                         [
                           {
-                            text: 'OK',
+                            text: t('common:ok'),
                             onPress: () => {
                               AuthService.signOut();
                               router.replace('/auth/login');
@@ -159,7 +213,10 @@ export default function SettingsScreen() {
                         ]
                       );
                     } catch (error) {
-                      Alert.alert('Lỗi', 'Không thể xóa tài khoản. Vui lòng thử lại.');
+                      Alert.alert(
+                        t('common:error'),
+                        t('settings:deleteAccountFailed')
+                      );
                     }
                   },
                 },
@@ -170,13 +227,13 @@ export default function SettingsScreen() {
       ]
     );
   };
-  const SettingItem = ({ 
-    icon, 
-    title, 
-    subtitle, 
-    onPress, 
-    rightElement, 
-    showChevron = false 
+  const SettingItem = ({
+    icon,
+    title,
+    subtitle,
+    onPress,
+    rightElement,
+    showChevron = false,
   }: {
     icon: React.ReactNode;
     title: string;
@@ -185,44 +242,81 @@ export default function SettingsScreen() {
     rightElement?: React.ReactNode;
     showChevron?: boolean;
   }) => (
-    <TouchableOpacity style={styles.settingItem} onPress={onPress}>
+    <TouchableOpacity
+      style={[styles.settingItem, { borderBottomColor: colors.border }]}
+      onPress={onPress}
+    >
       <View style={styles.settingLeft}>
-        <View style={styles.settingIcon}>
-          {icon}
-        </View>
+        <View style={styles.settingIcon}>{icon}</View>
         <View style={styles.settingText}>
-          <Text style={styles.settingTitle}>{title}</Text>
-          {subtitle && <Text style={styles.settingSubtitle}>{subtitle}</Text>}
+          <Text style={[styles.settingTitle, { color: colors.text }]}>
+            {title}
+          </Text>
+          {subtitle && (
+            <Text
+              style={[
+                styles.settingSubtitle,
+                { color: colors.mutedText || colors.text },
+              ]}
+            >
+              {' '}
+              {subtitle}
+            </Text>
+          )}
         </View>
       </View>
       <View style={styles.settingRight}>
         {rightElement}
-        {showChevron && <ChevronRight size={20} color="#666" strokeWidth={2} />}
+        {showChevron && (
+          <ChevronRight
+            size={20}
+            color={colors.mutedText || colors.text}
+            strokeWidth={2}
+          />
+        )}
       </View>
     </TouchableOpacity>
   );
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         {/* Header */}
         <View style={styles.header}>
-          <Heart size={24} color="#ff6b9d" strokeWidth={2} fill="#ff6b9d" />
-          <Text style={styles.title}>{t('settings:title')}</Text>
+          <Heart
+            size={24}
+            color={theme.primary}
+            strokeWidth={2}
+            fill={theme.primary}
+          />
+          <Text style={[styles.title, { color: colors.text }]}>
+            {t('settings:title')}
+          </Text>
         </View>
 
         {/* Account Section */}
         {authState.user && (
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>{t('settings:account')}</Text>
+            <Text
+              style={[
+                styles.sectionTitle,
+                { color: colors.mutedText || colors.text },
+              ]}
+            >
+              {t('settings:account')}
+            </Text>
             <View style={styles.sectionContent}>
               <SettingItem
-                icon={<User size={20} color="#ff6b9d" strokeWidth={2} />}
+                icon={<User size={20} color={theme.primary} strokeWidth={2} />}
                 title={authState.user.name}
-                subtitle={`${authState.user.email} • Đăng nhập qua ${authState.user.provider === 'google' ? 'Google' : 'Apple'}`}
+                subtitle={t('settings:signedInAsVia', {
+                  email: authState.user.email,
+                  provider:
+                    authState.user.provider === 'google' ? 'Google' : 'Google',
+                })}
               />
               <SettingItem
-                icon={<LogOut size={20} color="#ef4444" strokeWidth={2} />}
+                icon={<LogOut size={20} color={theme.danger} strokeWidth={2} />}
                 title={t('auth:signOut')}
                 subtitle={t('auth:signOutDescription')}
                 onPress={handleSignOut}
@@ -234,18 +328,30 @@ export default function SettingsScreen() {
 
         {/* Notifications Section */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>{t('settings:notifications')}</Text>
-          <View style={styles.sectionContent}>
+          <Text
+            style={[
+              styles.sectionTitle,
+              { color: colors.mutedText || colors.text },
+            ]}
+          >
+            {t('settings:notifications')}
+          </Text>
+          <View
+            style={[
+              styles.sectionContent,
+              { backgroundColor: colors.card, borderColor: colors.border },
+            ]}
+          >
             <SettingItem
-              icon={<Bell size={20} color="#ff6b9d" strokeWidth={2} />}
+              icon={<Bell size={20} color={theme.primary} strokeWidth={2} />}
               title={t('settings:pushNotifications')}
               subtitle={t('settings:pushNotificationsDesc')}
               rightElement={
                 <Switch
                   value={notifications}
-                  onValueChange={setNotifications}
-                  trackColor={{ false: '#333', true: '#ff6b9d' }}
-                  thumbColor="#fff"
+                  onValueChange={handleToggleNotifications}
+                  trackColor={{ false: colors.border, true: theme.primary }}
+                  thumbColor={theme.onPrimary || colors.text}
                 />
               }
             />
@@ -254,26 +360,81 @@ export default function SettingsScreen() {
 
         {/* Appearance Section */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>{t('settings:appearance')}</Text>
-          <View style={styles.sectionContent}>
+          <Text
+            style={[
+              styles.sectionTitle,
+              { color: colors.mutedText || colors.text },
+            ]}
+          >
+            {t('settings:appearance')}
+          </Text>
+          <View
+            style={[
+              styles.sectionContent,
+              { backgroundColor: colors.card, borderColor: colors.border },
+            ]}
+          >
             <SettingItem
-              icon={<Globe size={20} color="#ff6b9d" strokeWidth={2} />}
+              icon={<Globe size={20} color={theme.primary} strokeWidth={2} />}
               title={t('settings:language')}
-              subtitle={supportedLanguages.find(lang => lang.code === selectedLanguage)?.name || 'Tiếng Việt'}
+              subtitle={
+                supportedLanguages.find(
+                  (lang) => lang.code === selectedLanguage
+                )?.name || t('settings:viName')
+              }
               onPress={() => setShowLanguageModal(true)}
               showChevron
             />
             <SettingItem
-              icon={<Moon size={20} color="#ff6b9d" strokeWidth={2} />}
+              icon={<Moon size={20} color={theme.primary} strokeWidth={2} />}
               title={t('settings:darkMode')}
               subtitle={t('settings:darkModeDesc')}
               rightElement={
-                <Switch
-                  value={darkMode}
-                  onValueChange={setDarkMode}
-                  trackColor={{ false: '#333', true: '#ff6b9d' }}
-                  thumbColor="#fff"
-                />
+                <View
+                  style={{
+                    flexDirection: 'row',
+                    backgroundColor: colors.card,
+                    borderRadius: 8,
+                    overflow: 'hidden',
+                    borderWidth: 1,
+                    borderColor: colors.border,
+                  }}
+                >
+                  {[
+                    { key: 'system', label: t('settings:themeSystem') },
+                    { key: 'light', label: t('settings:themeLight') },
+                    { key: 'dark', label: t('settings:themeDark') },
+                  ].map((opt) => {
+                    const selected = mode === (opt.key as any);
+                    return (
+                      <TouchableOpacity
+                        key={opt.key}
+                        onPress={() => {
+                          if (mode !== (opt.key as any)) {
+                            setMode(opt.key as any);
+                          }
+                        }}
+                        style={{
+                          paddingVertical: 8,
+                          paddingHorizontal: 10,
+                          backgroundColor: selected
+                            ? theme.primary
+                            : 'transparent',
+                        }}
+                      >
+                        <Text
+                          style={{
+                            color: selected ? '#fff' : colors.text,
+                            fontSize: 12,
+                            fontWeight: '600',
+                          }}
+                        >
+                          {opt.label}
+                        </Text>
+                      </TouchableOpacity>
+                    );
+                  })}
+                </View>
               }
             />
           </View>
@@ -281,36 +442,32 @@ export default function SettingsScreen() {
 
         {/* Privacy Section */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>{t('settings:privacy')}</Text>
+          <Text
+            style={[
+              styles.sectionTitle,
+              { color: colors.mutedText || colors.text },
+            ]}
+          >
+            {t('settings:privacy')}
+          </Text>
           <View style={styles.sectionContent}>
             {isFeatureEnabled('privacyLock') && (
               <SettingItem
-                icon={<Shield size={20} color="#ff6b9d" strokeWidth={2} />}
-                title="Khóa Ứng Dụng"
-                subtitle="Sử dụng sinh trắc học để bảo vệ ứng dụng"
+                icon={
+                  <Shield size={20} color={theme.primary} strokeWidth={2} />
+                }
+                title={t('settings:appLock')}
+                subtitle={t('settings:appLockDesc')}
                 rightElement={
                   <Switch
                     value={isLockEnabled}
                     onValueChange={setLockEnabled}
-                    trackColor={{ false: '#333', true: '#ff6b9d' }}
-                    thumbColor="#fff"
+                    trackColor={{ false: colors.border, true: theme.primary }}
+                    thumbColor={theme.onPrimary || colors.text}
                   />
                 }
               />
             )}
-            <SettingItem
-              icon={<Shield size={20} color="#ff6b9d" strokeWidth={2} />}
-              title={t('settings:readReceipts')}
-              subtitle={t('settings:readReceiptsDesc')}
-              rightElement={
-                <Switch
-                  value={readReceipts}
-                  onValueChange={setReadReceipts}
-                  trackColor={{ false: '#333', true: '#ff6b9d' }}
-                  thumbColor="#fff"
-                />
-              }
-            />
           </View>
         </View>
 
@@ -318,10 +475,22 @@ export default function SettingsScreen() {
 
         {/* Account Management Section */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>{t('settings:accountManagement')}</Text>
-          <View style={styles.sectionContent}>
+          <Text
+            style={[
+              styles.sectionTitle,
+              { color: colors.mutedText || colors.text },
+            ]}
+          >
+            {t('settings:accountManagement')}
+          </Text>
+          <View
+            style={[
+              styles.sectionContent,
+              { backgroundColor: colors.card, borderColor: colors.border },
+            ]}
+          >
             <SettingItem
-              icon={<UserX size={20} color="#ef4444" strokeWidth={2} />}
+              icon={<UserX size={20} color={theme.danger} strokeWidth={2} />}
               title={t('settings:deleteAccount')}
               subtitle={t('settings:deleteAccountDesc')}
               onPress={handleDeleteAccount}
@@ -332,10 +501,22 @@ export default function SettingsScreen() {
 
         {/* About Section */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>{t('settings:about')}</Text>
-          <View style={styles.sectionContent}>
+          <Text
+            style={[
+              styles.sectionTitle,
+              { color: colors.mutedText || colors.text },
+            ]}
+          >
+            {t('settings:about')}
+          </Text>
+          <View
+            style={[
+              styles.sectionContent,
+              { backgroundColor: colors.card, borderColor: colors.border },
+            ]}
+          >
             <SettingItem
-              icon={<Info size={20} color="#ff6b9d" strokeWidth={2} />}
+              icon={<Info size={20} color={theme.primary} strokeWidth={2} />}
               title={t('settings:aboutApp')}
               subtitle={t('settings:aboutAppDesc')}
               showChevron
@@ -345,7 +526,12 @@ export default function SettingsScreen() {
 
         {/* Footer */}
         <View style={styles.footer}>
-          <Text style={styles.footerText}>
+          <Text
+            style={[
+              styles.footerText,
+              { color: colors.mutedText || colors.text },
+            ]}
+          >
             {t('settings:footerText')}
           </Text>
         </View>
@@ -358,30 +544,48 @@ export default function SettingsScreen() {
         presentationStyle="pageSheet"
         onRequestClose={() => setShowLanguageModal(false)}
       >
-        <View style={styles.languageModal}>
-          <View style={styles.languageHeader}>
-           <Text style={styles.languageTitle}>{t('settings:selectLanguage')}</Text>
+        <View
+          style={[styles.languageModal, { backgroundColor: colors.background }]}
+        >
+          <View
+            style={[
+              styles.languageHeader,
+              { borderBottomColor: colors.border },
+            ]}
+          >
+            <Text style={[styles.languageTitle, { color: colors.text }]}>
+              {t('settings:selectLanguage')}
+            </Text>
             <TouchableOpacity
               style={styles.closeButton}
               onPress={() => setShowLanguageModal(false)}
             >
-              <X size={24} color="#888" strokeWidth={2} />
+              <X
+                size={24}
+                color={colors.mutedText || colors.text}
+                strokeWidth={2}
+              />
             </TouchableOpacity>
           </View>
-          
+
           <ScrollView style={styles.languageList}>
             {supportedLanguages.map((language) => (
               <TouchableOpacity
                 key={language.code}
-                style={styles.languageItem}
+                style={[
+                  styles.languageItem,
+                  { backgroundColor: colors.card, borderColor: colors.border },
+                ]}
                 onPress={() => handleLanguageChange(language.code)}
               >
                 <View style={styles.languageLeft}>
                   <Text style={styles.languageFlag}>{language.flag}</Text>
-                  <Text style={styles.languageName}>{language.name}</Text>
+                  <Text style={[styles.languageName, { color: colors.text }]}>
+                    {language.name}
+                  </Text>
                 </View>
                 {selectedLanguage === language.code && (
-                  <Check size={20} color="#ff6b9d" strokeWidth={2} />
+                  <Check size={20} color={theme.primary} strokeWidth={2} />
                 )}
               </TouchableOpacity>
             ))}
@@ -395,7 +599,6 @@ export default function SettingsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#000',
   },
   content: {
     flex: 1,
@@ -418,14 +621,13 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#888',
+
     marginBottom: 8,
     marginHorizontal: 20,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
   },
   sectionContent: {
-    backgroundColor: '#111',
     marginHorizontal: 20,
     borderRadius: 12,
     overflow: 'hidden',
@@ -461,7 +663,7 @@ const styles = StyleSheet.create({
   },
   settingSubtitle: {
     fontSize: 14,
-    color: '#888',
+
     lineHeight: 18,
   },
   settingRight: {
@@ -476,13 +678,12 @@ const styles = StyleSheet.create({
   },
   footerText: {
     fontSize: 14,
-    color: '#666',
+
     textAlign: 'center',
     lineHeight: 20,
   },
   languageModal: {
     flex: 1,
-    backgroundColor: '#000',
   },
   languageHeader: {
     flexDirection: 'row',
@@ -490,7 +691,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 20,
     borderBottomWidth: 1,
-    borderBottomColor: '#333',
   },
   languageTitle: {
     fontSize: 20,
@@ -508,12 +708,11 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    backgroundColor: '#111',
+
     borderRadius: 12,
     padding: 16,
     marginBottom: 12,
     borderWidth: 1,
-    borderColor: '#333',
   },
   languageLeft: {
     flexDirection: 'row',

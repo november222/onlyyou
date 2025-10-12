@@ -8,8 +8,26 @@ import {
   Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useTheme, useThemeColors } from '@/providers/ThemeProvider';
 import { router, useLocalSearchParams } from 'expo-router';
-import { ArrowLeft, Calendar, Timer, Wifi, WifiOff, Zap, Clock, CirclePlay as PlayCircle, CircleStop as StopCircle, Heart, Sparkles, Phone, Video, Trash2, Crown } from 'lucide-react-native';
+import { useTranslation } from 'react-i18next';
+import {
+  ArrowLeft,
+  Calendar,
+  Timer,
+  Wifi,
+  WifiOff,
+  Zap,
+  Clock,
+  CirclePlay as PlayCircle,
+  CircleStop as StopCircle,
+  Heart,
+  Sparkles,
+  Phone,
+  Video,
+  Trash2,
+  Crown,
+} from 'lucide-react-native';
 
 interface ConnectionSession {
   id: string;
@@ -29,6 +47,9 @@ interface BuzzCall {
 }
 
 export default function SessionDetailScreen() {
+  const { theme } = useTheme();
+  const colors = useThemeColors();
+  const { t } = useTranslation();
   const { id, sessionData } = useLocalSearchParams();
   const [session, setSession] = useState<ConnectionSession | null>(null);
   const [buzzCalls, setBuzzCalls] = useState<BuzzCall[]>([]);
@@ -57,7 +78,7 @@ export default function SessionDetailScreen() {
     const mockBuzzCalls: BuzzCall[] = [
       {
         id: '1',
-        message: 'I\'m hungry :(',
+        message: "I'm hungry :(",
         timestamp: new Date('2024-01-15T15:20:15'),
         sentByUser: true,
       },
@@ -75,7 +96,7 @@ export default function SessionDetailScreen() {
       },
       {
         id: '4',
-        message: 'I\'m hungry :(',
+        message: "I'm hungry :(",
         timestamp: new Date('2024-01-15T17:15:45'),
         sentByUser: false,
       },
@@ -93,23 +114,26 @@ export default function SessionDetailScreen() {
   const handleDeleteSession = () => {
     if (!isPremium) {
       Alert.alert(
-        'Tính Năng Premier',
-        'Bạn cần nâng cấp Premier để xóa lịch sử kết nối.',
+        t('history:premiumFeatureTitle'),
+        t('history:premiumFeatureDesc'),
         [
-          { text: 'Để Sau', style: 'cancel' },
-          { text: 'Nâng Cấp', onPress: () => router.push('/premium') },
+          { text: t('common:cancel'), style: 'cancel' },
+          {
+            text: t('history:upgrade'),
+            onPress: () => router.push('/premium'),
+          },
         ]
       );
       return;
     }
 
     Alert.alert(
-      'Xóa Phiên Kết Nối?',
-      'Bạn có chắc muốn xóa phiên kết nối này khỏi lịch sử?',
+      t('history:deleteConfirmTitle'),
+      t('history:deleteConfirmDesc'),
       [
-        { text: 'Hủy', style: 'cancel' },
+        { text: t('common:cancel'), style: 'cancel' },
         {
-          text: 'Xóa',
+          text: t('history:delete'),
           style: 'destructive',
           onPress: () => {
             router.back();
@@ -149,164 +173,258 @@ export default function SessionDetailScreen() {
 
   if (!session) {
     return (
-      <SafeAreaView style={styles.container}>
-        <Text style={styles.errorText}>Không tìm thấy thông tin phiên kết nối</Text>
+      <SafeAreaView
+        style={[styles.container, { backgroundColor: theme.background }]}
+      >
+        <Text style={[styles.errorText, { color: colors.error || '#ef4444' }]}>
+          {t('history:notFound')}
+        </Text>
       </SafeAreaView>
     );
   }
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView
+      style={[styles.container, { backgroundColor: theme.background }]}
+    >
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         {/* Header */}
         <View style={styles.header}>
-          <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
-            <ArrowLeft size={24} color="#fff" strokeWidth={2} />
+          <TouchableOpacity
+            style={styles.backButton}
+            onPress={() => router.back()}
+          >
+            <ArrowLeft size={24} color={colors.text} strokeWidth={2} />
           </TouchableOpacity>
-          <Text style={styles.title}>Chi Tiết Phiên</Text>
-          <TouchableOpacity style={styles.deleteButton} onPress={handleDeleteSession}>
+
+          <Text style={[styles.title, { color: colors.text }]}>
+            {t('history:detailTitle')}
+          </Text>
+
+          <TouchableOpacity
+            style={styles.deleteButton}
+            onPress={handleDeleteSession}
+          >
             <View style={styles.deleteButtonContent}>
-              <Trash2 size={20} color="#ef4444" strokeWidth={2} />
-              {!isPremium && <Crown size={12} color="#f59e0b" strokeWidth={2} />}
+              <Trash2
+                size={20}
+                color={colors.error || '#ef4444'}
+                strokeWidth={2}
+              />
+              {!isPremium && (
+                <Crown
+                  size={12}
+                  color={colors.accent || '#f59e0b'}
+                  strokeWidth={2}
+                />
+              )}
             </View>
           </TouchableOpacity>
         </View>
 
         {/* Session Overview */}
-        <View style={styles.overviewCard}>
+        <View
+          style={[
+            styles.overviewCard,
+            { backgroundColor: colors.card, borderColor: colors.border },
+          ]}
+        >
           <View style={styles.overviewHeader}>
             <View style={styles.roomCodeContainer}>
-              <Text style={styles.roomCode}>{session.roomCode}</Text>
-              <View style={[
-                styles.sessionStatus,
-                { backgroundColor: session.isActive ? '#4ade80' : '#666' }
-              ]}>
-                <Text style={styles.sessionStatusText}>
-                  {session.isActive ? 'Đang kết nối' : 'Đã ngắt'}
+              <Text style={[styles.roomCode, { color: colors.text }]}>
+                {session.roomCode}
+              </Text>
+              <View
+                style={[
+                  styles.sessionStatus,
+                  {
+                    backgroundColor: session.isActive
+                      ? colors.success || '#4ade80'
+                      : colors.border,
+                  },
+                ]}
+              >
+                <Text
+                  style={[styles.sessionStatusText, { color: colors.text }]}
+                >
+                  {session.isActive
+                    ? t('history:statusConnected')
+                    : t('history:statusDisconnected')}
                 </Text>
               </View>
             </View>
           </View>
 
           <View style={styles.durationDisplay}>
-            <Timer size={32} color="#ff6b9d" strokeWidth={2} />
-            <Text style={styles.durationText}>{formatDuration(session.duration)}</Text>
+            <Timer
+              size={32}
+              color={colors.primary || '#ff6b9d'}
+              strokeWidth={2}
+            />
+            <Text
+              style={[
+                styles.durationText,
+                { color: colors.primary || '#ff6b9d' },
+              ]}
+            >
+              {formatDuration(session.duration)}
+            </Text>
           </View>
         </View>
 
         {/* Timestamps */}
-        <View style={styles.timestampsCard}>
-          <Text style={styles.cardTitle}>Thời Gian Kết Nối</Text>
-          
+        <View
+          style={[
+            styles.timestampsCard,
+            { backgroundColor: colors.card, borderColor: colors.border },
+          ]}
+        >
+          <Text style={[styles.cardTitle, { color: colors.text }]}>
+            {t('history:timestampsTitle')}
+          </Text>
+
           <View style={styles.timestampRow}>
-            <View style={styles.timestampIcon}>
-              <PlayCircle size={20} color="#4ade80" strokeWidth={2} />
+            <View
+              style={[
+                styles.timestampIcon,
+                { backgroundColor: colors.accent || 'rgba(255,107,157,0.1)' },
+              ]}
+            >
+              <PlayCircle
+                size={20}
+                color={colors.success || '#4ade80'}
+                strokeWidth={2}
+              />
             </View>
             <View style={styles.timestampContent}>
-              <Text style={styles.timestampLabel}>Bắt đầu</Text>
-              <Text style={styles.timestampValue}>{formatFullDateTime(session.startDate)}</Text>
+              <Text style={[styles.timestampLabel, { color: colors.muted }]}>
+                {t('history:startLabel')}
+              </Text>
+              <Text style={[styles.timestampValue, { color: colors.text }]}>
+                {formatFullDateTime(session.startDate)}
+              </Text>
             </View>
           </View>
 
           {session.endDate && (
             <View style={styles.timestampRow}>
-              <View style={styles.timestampIcon}>
-                <StopCircle size={20} color="#ef4444" strokeWidth={2} />
+              <View
+                style={[
+                  styles.timestampIcon,
+                  { backgroundColor: colors.error || 'rgba(239,68,68,0.05)' },
+                ]}
+              >
+                <StopCircle
+                  size={20}
+                  color={colors.error || '#ef4444'}
+                  strokeWidth={2}
+                />
               </View>
               <View style={styles.timestampContent}>
-                <Text style={styles.timestampLabel}>Kết thúc</Text>
-                <Text style={styles.timestampValue}>{formatFullDateTime(session.endDate)}</Text>
+                <Text style={[styles.timestampLabel, { color: colors.muted }]}>
+                  {t('history:endLabel')}
+                </Text>
+                <Text style={[styles.timestampValue, { color: colors.text }]}>
+                  {formatFullDateTime(session.endDate)}
+                </Text>
               </View>
             </View>
           )}
 
           <View style={styles.timestampRow}>
-            <View style={styles.timestampIcon}>
-              <Clock size={20} color="#f59e0b" strokeWidth={2} />
+            <View
+              style={[
+                styles.timestampIcon,
+                { backgroundColor: colors.warning || 'rgba(245,158,11,0.05)' },
+              ]}
+            >
+              <Clock
+                size={20}
+                color={colors.warning || '#f59e0b'}
+                strokeWidth={2}
+              />
             </View>
             <View style={styles.timestampContent}>
-              <Text style={styles.timestampLabel}>Thời lượng chính xác</Text>
-              <Text style={styles.timestampValue}>{formatDuration(session.duration)}</Text>
+              <Text style={[styles.timestampLabel, { color: colors.muted }]}>
+                {t('history:durationLabel')}
+              </Text>
+              <Text style={[styles.timestampValue, { color: colors.text }]}>
+                {formatDuration(session.duration)}
+              </Text>
             </View>
           </View>
         </View>
 
         {/* Buzz Calls Section */}
-        <View style={styles.buzzCallsCard}>
+        <View
+          style={[
+            styles.buzzCallsCard,
+            { backgroundColor: colors.card, borderColor: colors.border },
+          ]}
+        >
           <View style={styles.buzzCallsHeader}>
             <View style={styles.buzzCallsTitle}>
-              <Zap size={20} color="#f59e0b" strokeWidth={2} />
-              <Text style={styles.cardTitle}>Buzz Calls</Text>
+              <Zap
+                size={20}
+                color={colors.warning || '#f59e0b'}
+                strokeWidth={2}
+              />
+              <Text style={[styles.cardTitle, { color: colors.text }]}>
+                {t('history:buzzCallsTitle')}
+              </Text>
             </View>
-            <View style={styles.buzzCallsCount}>
-              <Text style={styles.buzzCallsCountText}>{session.buzzCallsCount}</Text>
+
+            <View
+              style={[
+                styles.buzzCallsCount,
+                { backgroundColor: colors.accent || '#f59e0b' },
+              ]}
+            >
+              <Text style={styles.buzzCallsCountText}>
+                {session.buzzCallsCount}
+              </Text>
             </View>
           </View>
-          
-          <Text style={styles.buzzCallsDescription}>
-            Các tin nhắn nhanh đã gửi trong phiên kết nối này
+
+          <Text style={[styles.buzzCallsDescription, { color: colors.muted }]}>
+            {t('history:buzzCallsDesc')}
           </Text>
 
           {/* Buzz Calls List */}
           <View style={styles.buzzCallsList}>
             {buzzCalls.map((buzzCall) => (
-              <View key={buzzCall.id} style={styles.buzzCallItem}>
+              <View
+                key={buzzCall.id}
+                style={[
+                  styles.buzzCallItem,
+                  { backgroundColor: colors.surface || colors.card },
+                ]}
+              >
                 <View style={styles.buzzCallContent}>
-                  <Text style={styles.buzzCallMessage}>"{buzzCall.message}"</Text>
-                  <Text style={styles.buzzCallTime}>
-                    {formatTime(buzzCall.timestamp)} • {buzzCall.sentByUser ? 'Bạn gửi' : 'Đối tác gửi'}
+                  <Text
+                    style={[styles.buzzCallMessage, { color: colors.text }]}
+                  >
+                    "{buzzCall.message}"
+                  </Text>
+                  <Text style={[styles.buzzCallTime, { color: colors.muted }]}>
+                    {formatTime(buzzCall.timestamp)} •{' '}
+                    {buzzCall.sentByUser
+                      ? t('history:youSent')
+                      : t('history:partnerSent')}
                   </Text>
                 </View>
-                <View style={[
-                  styles.buzzCallIndicator,
-                  { backgroundColor: buzzCall.sentByUser ? '#ff6b9d' : '#4ade80' }
-                ]} />
+                <View
+                  style={[
+                    styles.buzzCallIndicator,
+                    {
+                      backgroundColor: buzzCall.sentByUser
+                        ? colors.primary || '#ff6b9d'
+                        : colors.success || '#4ade80',
+                    },
+                  ]}
+                />
               </View>
             ))}
-          </View>
-
-          {/* Future Buzz Calls Feature Placeholder */}
-          <View style={styles.futureBuzzCallsPlaceholder}>
-            <Text style={styles.placeholderTitle}>🚀 Tính Năng Sắp Ra Mắt</Text>
-            <Text style={styles.placeholderDescription}>
-              Buzz Calls - Gửi tin nhắn nhanh với một chạm:
-            </Text>
-            <View style={styles.placeholderMessages}>
-              <Text style={styles.placeholderMessage}>• "I'm hungry :("</Text>
-              <Text style={styles.placeholderMessage}>• "Miss you a lot :("</Text>
-              <Text style={styles.placeholderMessage}>• "Babe, are you awake?"</Text>
-            </View>
-          </View>
-        </View>
-
-        {/* Session Stats */}
-        <View style={styles.statsCard}>
-          <Text style={styles.cardTitle}>Thống Kê Phiên</Text>
-          
-          <View style={styles.statsGrid}>
-            <View style={styles.statItem}>
-              <Sparkles size={20} color="#f472b6" strokeWidth={2} />
-              <Text style={styles.statLabel}>Tin nhắn</Text>
-              <Text style={styles.statValue}>Đang phát triển</Text>
-            </View>
-            
-            <View style={styles.statItem}>
-              <Phone size={20} color="#10b981" strokeWidth={2} />
-              <Text style={styles.statLabel}>Cuộc gọi</Text>
-              <Text style={styles.statValue}>Đang phát triển</Text>
-            </View>
-            
-            <View style={styles.statItem}>
-              <Video size={20} color="#8b5cf6" strokeWidth={2} />
-              <Text style={styles.statLabel}>Video call</Text>
-              <Text style={styles.statValue}>Đang phát triển</Text>
-            </View>
-            
-            <View style={styles.statItem}>
-              <Heart size={20} color="#ff6b9d" strokeWidth={2} />
-              <Text style={styles.statLabel}>Reactions</Text>
-              <Text style={styles.statValue}>Đang phát triển</Text>
-            </View>
           </View>
         </View>
       </ScrollView>
@@ -506,66 +624,5 @@ const styles = StyleSheet.create({
     height: 8,
     borderRadius: 4,
     marginLeft: 12,
-  },
-  futureBuzzCallsPlaceholder: {
-    backgroundColor: '#222',
-    borderRadius: 12,
-    padding: 16,
-    borderWidth: 1,
-    borderColor: '#333',
-    borderStyle: 'dashed',
-  },
-  placeholderTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#f59e0b',
-    marginBottom: 8,
-  },
-  placeholderDescription: {
-    fontSize: 14,
-    color: '#888',
-    marginBottom: 12,
-  },
-  placeholderMessages: {
-    gap: 4,
-  },
-  placeholderMessage: {
-    fontSize: 13,
-    color: '#666',
-    fontStyle: 'italic',
-  },
-  statsCard: {
-    backgroundColor: '#111',
-    marginHorizontal: 20,
-    marginBottom: 40,
-    borderRadius: 16,
-    padding: 20,
-    borderWidth: 1,
-    borderColor: '#333',
-  },
-  statsGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 16,
-  },
-  statItem: {
-    flex: 1,
-    minWidth: '45%',
-    backgroundColor: '#222',
-    borderRadius: 12,
-    padding: 16,
-    alignItems: 'center',
-    gap: 8,
-  },
-  statLabel: {
-    fontSize: 12,
-    color: '#888',
-    textAlign: 'center',
-  },
-  statValue: {
-    fontSize: 14,
-    color: '#666',
-    fontWeight: '500',
-    textAlign: 'center',
   },
 });

@@ -11,14 +11,13 @@ import {
   Modal,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { 
-  Heart, 
-  Clock, 
-  Calendar, 
-  Wifi, 
-  WifiOff, 
+import {
+  Heart,
+  Clock,
+  Calendar,
+  Wifi,
+  WifiOff,
   Timer,
-  Users,
   Sparkles,
   TrendingUp,
   History,
@@ -27,18 +26,17 @@ import {
   Shield,
   ChevronRight,
   Zap,
-  Camera,
-  Plus
 } from 'lucide-react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import WebRTCService, { ConnectionState } from '@/services/WebRTCService';
 import { router } from 'expo-router';
 import AuthService, { AuthState } from '@/services/AuthService';
 import { usePremium } from '@/providers/PremiumProvider';
-import PingService, { PingQuestion } from '@/services/PingService';
-import { isFeatureEnabled } from '../../config/features';
-import PhotoService from '@/services/PhotoService';
-import { getRelationshipStart, setRelationshipStart, daysBetween } from '@/lib/loveDay';
+import {
+  getRelationshipStart,
+  setRelationshipStart,
+  daysBetween,
+} from '@/lib/loveDay';
+import { useTheme, useThemeColors } from '@/providers/ThemeProvider';
 
 interface ConnectionSession {
   id: string;
@@ -52,10 +50,15 @@ interface ConnectionSession {
 
 export default function ProfileScreen() {
   const { t } = useTranslation();
-  const [currentConnectionStart, setCurrentConnectionStart] = useState<Date | null>(null);
+  const { theme } = useTheme();
+  const colors = useThemeColors();
+  const [currentConnectionStart, setCurrentConnectionStart] =
+    useState<Date | null>(null);
   const [totalConnectedTime, setTotalConnectedTime] = useState(0);
   const [totalDisconnectedTime, setTotalDisconnectedTime] = useState(0);
-  const [connectionSessions, setConnectionSessions] = useState<ConnectionSession[]>([]);
+  const [connectionSessions, setConnectionSessions] = useState<
+    ConnectionSession[]
+  >([]);
   const [currentSessionDuration, setCurrentSessionDuration] = useState(0);
   const [connectionState, setConnectionState] = useState<ConnectionState>({
     isConnected: false,
@@ -68,16 +71,17 @@ export default function ProfileScreen() {
   const [showPremiumModal, setShowPremiumModal] = useState(false);
   const [showHistoryModal, setShowHistoryModal] = useState(false);
   const [showPremiumDetailsModal, setShowPremiumDetailsModal] = useState(false);
-  const [allConnectionSessions, setAllConnectionSessions] = useState<ConnectionSession[]>([]);
-  const [authState, setAuthState] = useState<AuthState>(AuthService.getAuthState());
-  const [todaysQuestion, setTodaysQuestion] = useState<PingQuestion | null>(null);
-  const [hasAnsweredToday, setHasAnsweredToday] = useState(false);
-  const [pingStreak, setPingStreak] = useState(0);
-  const [showDailyPingModal, setShowDailyPingModal] = useState(false);
-  const [pingAnswer, setPingAnswer] = useState('');
-  const [isSubmittingPing, setIsSubmittingPing] = useState(false);
-  const [photosCount, setPhotosCount] = useState(0);
-  const [relationshipStartAt, setRelationshipStartAt] = useState<Date | null>(null);
+  const [allConnectionSessions, setAllConnectionSessions] = useState<
+    ConnectionSession[]
+  >([]);
+  const [authState, setAuthState] = useState<AuthState>(
+    AuthService.getAuthState()
+  );
+  // Daily Ping removed
+
+  const [relationshipStartAt, setRelationshipStartAt] = useState<Date | null>(
+    null
+  );
   const [loveDays, setLoveDays] = useState(0);
   const { isPremium } = usePremium();
 
@@ -86,61 +90,6 @@ export default function ProfileScreen() {
 
   const showPremiumAlert = () => {
     setShowPremiumModal(true);
-  };
-
-  const handleAddPhoto = async () => {
-    if (!isFeatureEnabled('album')) return;
-    
-    Alert.alert(
-      'Thêm Ảnh',
-      'Chọn cách thêm ảnh vào album',
-      [
-        { text: 'Hủy', style: 'cancel' },
-        { text: 'Chụp Ảnh', onPress: () => takePhoto() },
-        { text: 'Chọn Từ Thư Viện', onPress: () => pickPhoto() },
-      ]
-    );
-  };
-
-  const takePhoto = async () => {
-    try {
-      const result = await PhotoService.takePhoto();
-      
-      if (result.success) {
-        Alert.alert('Thành công! 📸', 'Ảnh đã được thêm vào album và timeline');
-        loadPhotosCount(); // Refresh count
-      } else {
-        Alert.alert('Lỗi', result.error || 'Không thể chụp ảnh');
-      }
-    } catch (error) {
-      Alert.alert('Lỗi', 'Có lỗi xảy ra khi chụp ảnh');
-    }
-  };
-
-  const pickPhoto = async () => {
-    try {
-      const result = await PhotoService.pickAndSave();
-      
-      if (result.success) {
-        Alert.alert('Thành công! 📸', 'Ảnh đã được thêm vào album và timeline');
-        loadPhotosCount(); // Refresh count
-      } else {
-        Alert.alert('Lỗi', result.error || 'Không thể chọn ảnh');
-      }
-    } catch (error) {
-      Alert.alert('Lỗi', 'Có lỗi xảy ra khi chọn ảnh');
-    }
-  };
-
-  const loadPhotosCount = async () => {
-    if (isFeatureEnabled('album')) {
-      try {
-        const count = await PhotoService.getPhotosCount();
-        setPhotosCount(count);
-      } catch (error) {
-        console.error('Failed to load photos count:', error);
-      }
-    }
   };
 
   const loadSessionHistory = async () => {
@@ -162,12 +111,12 @@ export default function ProfileScreen() {
     }
   };
 
-  const HistorySessionCard = ({ 
-    item, 
+  const HistorySessionCard = ({
+    item,
     onPress,
-    isPremium, 
-    formatDuration, 
-    formatDateTime 
+    isPremium,
+    formatDuration,
+    formatDateTime,
   }: {
     item: ConnectionSession;
     onPress: () => void;
@@ -175,52 +124,62 @@ export default function ProfileScreen() {
     formatDuration: (seconds: number) => string;
     formatDateTime: (date: Date) => string;
   }) => (
-    <TouchableOpacity onPress={onPress} style={styles.historySessionCard}>
+    <TouchableOpacity
+      onPress={onPress}
+      style={[
+        styles.historySessionCard,
+        { backgroundColor: colors.card, borderColor: colors.border },
+      ]}
+    >
       <View style={styles.historySessionHeader}>
         <View style={styles.historySessionInfo}>
           <Text style={styles.historySessionRoomCode}>{item.roomCode}</Text>
-          <View style={[
-            styles.historySessionStatus,
-            { backgroundColor: item.isActive ? '#4ade80' : '#666' }
-          ]}>
+          <View
+            style={[
+              styles.historySessionStatus,
+              { backgroundColor: item.isActive ? theme.success : (colors.mutedText || colors.text) },
+            ]}
+          >
             <Text style={styles.historySessionStatusText}>
-              {item.isActive ? 'Đang kết nối' : 'Đã ngắt'}
+              {item.isActive
+                ? t('connection:connected')
+                : t('connection:disconnected')}
             </Text>
           </View>
         </View>
-        <ChevronRight size={16} color="#666" strokeWidth={2} />
+        <ChevronRight size={16} color={colors.mutedText || colors.text} strokeWidth={2} />
       </View>
-      
+
       <View style={styles.historySessionDetails}>
         <View style={styles.historySessionDetailRow}>
           <View style={styles.historySessionDate}>
-            <Calendar size={14} color="#888" strokeWidth={2} />
+            <Calendar size={14} color={colors.mutedText || colors.text} strokeWidth={2} />
             <Text style={styles.historySessionDateText}>
               {formatDateTime(item.startDate)}
             </Text>
           </View>
           <View style={styles.historySessionDuration}>
-            <Timer size={14} color="#ff6b9d" strokeWidth={2} />
+            <Timer size={14} color={theme.primary} strokeWidth={2} />
             <Text style={styles.historySessionDurationText}>
               {formatDuration(item.duration)}
             </Text>
           </View>
         </View>
-        
+
         {item.endDate && (
           <View style={styles.historySessionDate}>
-            <WifiOff size={14} color="#888" strokeWidth={2} />
+            <WifiOff size={14} color={colors.mutedText || colors.text} strokeWidth={2} />
             <Text style={styles.historySessionDateText}>
               {formatDateTime(item.endDate)}
             </Text>
           </View>
         )}
-        
-        {/* Buzz Calls Count */}
+
+        {/* {t('profile:historyTotalBuzzCalls')} Count */}
         <View style={styles.historyBuzzCallsRow}>
-          <Zap size={14} color="#f59e0b" strokeWidth={2} />
+          <Zap size={14} color={theme.secondary} strokeWidth={2} />
           <Text style={styles.historyBuzzCallsText}>
-            {item.buzzCallsCount} buzz calls
+            {item.buzzCallsCount} {t('profile:historyTotalBuzzCalls')}
           </Text>
         </View>
       </View>
@@ -238,24 +197,18 @@ export default function ProfileScreen() {
   );
 
   useEffect(() => {
-    // Get current connection state
     const currentState = WebRTCService.getConnectionState();
-    setConnectionState(currentState);
-
-    // Load initial data
-    loadConnectionData();
-    loadPhotosCount();
     loadSessionHistory();
-    
-    // Get total connected time from service
     const totalTime = WebRTCService.getTotalConnectedTime();
     setTotalConnectedTime(totalTime);
-    
+
     // Set connection start time if connected
     if (currentState.isConnected) {
       const savedConnection = WebRTCService.getSavedConnection();
       if (savedConnection?.currentSessionStart) {
-        setCurrentConnectionStart(new Date(savedConnection.currentSessionStart));
+        setCurrentConnectionStart(
+          new Date(savedConnection.currentSessionStart)
+        );
       }
     }
 
@@ -285,16 +238,18 @@ export default function ProfileScreen() {
     AuthService.onAuthStateChange = (state) => {
       setAuthState(state);
     };
-    
+
     // Listen for connection state changes
     WebRTCService.onConnectionStateChange = (state) => {
       setConnectionState(state);
-      
+
       if (state.isConnected) {
         // Connected - get session start time
         const savedConnection = WebRTCService.getSavedConnection();
         if (savedConnection?.currentSessionStart) {
-          setCurrentConnectionStart(new Date(savedConnection.currentSessionStart));
+          setCurrentConnectionStart(
+            new Date(savedConnection.currentSessionStart)
+          );
         }
         // Initialize L-day start if missing
         if (!relationshipStartAt && savedConnection?.connectionDate) {
@@ -319,68 +274,21 @@ export default function ProfileScreen() {
         // Update current session duration from WebRTC service
         const duration = WebRTCService.getCurrentSessionDuration();
         setCurrentSessionDuration(duration);
-        
+
         // Update total connected time (current total + current session)
         const totalTime = WebRTCService.getTotalConnectedTime();
         setTotalConnectedTime(totalTime + duration);
       }
     }, 1000);
-
-    // Load daily ping data
-    if (isFeatureEnabled('dailyPing')) {
-      loadDailyPingData();
-    }
     return () => clearInterval(timer);
   }, [connectionState.isConnected]);
 
-  const loadDailyPingData = async () => {
-    try {
-      const question = PingService.getTodaysQuestion();
-      const answered = await PingService.hasAnsweredToday();
-      const streak = await PingService.getPingStreak();
-      
-      setTodaysQuestion(question);
-      setHasAnsweredToday(answered);
-      setPingStreak(streak);
-    } catch (error) {
-      console.error('Failed to load daily ping data:', error);
-    }
-  };
-
-  const handleSubmitPing = async () => {
-    if (!pingAnswer.trim()) {
-      Alert.alert('Lỗi', 'Vui lòng nhập câu trả lời');
-      return;
-    }
-
-    setIsSubmittingPing(true);
-    
-    try {
-      const result = await PingService.answerTodaysPing(pingAnswer);
-      
-      if (result.success) {
-        Alert.alert('Thành công! 🎉', 'Cảm ơn bạn đã chia sẻ!', [
-          {
-            text: 'OK',
-            onPress: () => {
-              setShowDailyPingModal(false);
-              setPingAnswer('');
-              loadDailyPingData(); // Refresh data
-            },
-          },
-        ]);
-      } else {
-        Alert.alert('Lỗi', result.error || 'Không thể lưu câu trả lời');
-      }
-    } catch (error) {
-      Alert.alert('Lỗi', 'Có lỗi xảy ra. Vui lòng thử lại.');
-    } finally {
-      setIsSubmittingPing(false);
-    }
-  };
-
   const saveCurrentSession = async () => {
-    if (currentConnectionStart && connectionState.roomCode && currentSessionDuration > 0) {
+    if (
+      currentConnectionStart &&
+      connectionState.roomCode &&
+      currentSessionDuration > 0
+    ) {
       const newSession: ConnectionSession = {
         id: Date.now().toString(),
         startDate: currentConnectionStart,
@@ -390,8 +298,8 @@ export default function ProfileScreen() {
         isActive: false,
         buzzCallsCount: 0,
       };
-      
-      setConnectionSessions(prev => [newSession, ...prev]);
+
+      setConnectionSessions((prev) => [newSession, ...prev]);
     }
   };
 
@@ -456,11 +364,14 @@ export default function ProfileScreen() {
 
     setConnectionSessions(mockSessions);
     setAllConnectionSessions(mockSessions);
-    
+
     // Calculate total times
-    const totalConnected = mockSessions.reduce((sum, session) => sum + session.duration, 0);
+    const totalConnected = mockSessions.reduce(
+      (sum, session) => sum + session.duration,
+      0
+    );
     setTotalConnectedTime(totalConnected);
-    
+
     // Mock disconnected time (time between sessions)
     setTotalDisconnectedTime(172800); // 2 days total
   };
@@ -468,22 +379,20 @@ export default function ProfileScreen() {
   const handleHistorySessionPress = (session: ConnectionSession) => {
     if (!isPremium) {
       Alert.alert(
-        'Tính Năng Premier 👑',
-        'Xem chi tiết phiên kết nối là tính năng Premier.',
+        t('profile:premiumFeatureTitle'),
+        t('profile:historyPremiumMessage'),
         [
-          { text: 'Để Sau', style: 'cancel' },
-          { 
-            text: 'Nâng Cấp', 
+          { text: t('common:cancel'), style: 'cancel' },
+          {
+            text: t('profile:upgrade'),
             onPress: () => {
               setShowHistoryModal(false);
               router.push('/premium?openPayment=1');
-            }
+            },
           },
         ]
       );
-      return;
     }
-
     if (!isPremium) {
       setShowHistoryModal(false);
       setShowPremiumModal(true);
@@ -491,17 +400,20 @@ export default function ProfileScreen() {
     }
 
     if (session.isActive) {
-      Alert.alert('Phiên Đang Hoạt Động', 'Không thể xem chi tiết phiên đang kết nối.');
+      Alert.alert(
+        t('profile:activeSessionTitle'),
+        t('profile:activeSessionMessage')
+      );
       return;
     }
-    
+
     setShowHistoryModal(false);
     router.push({
       pathname: '/history/[id]',
-      params: { 
+      params: {
         id: session.id,
-        sessionData: JSON.stringify(session)
-      }
+        sessionData: JSON.stringify(session),
+      },
     });
   };
 
@@ -540,44 +452,68 @@ export default function ProfileScreen() {
     });
   };
 
-  const totalHistoryDuration = allConnectionSessions.reduce((sum, session) => sum + session.duration, 0);
-  const totalHistoryBuzzCalls = allConnectionSessions.reduce((sum, session) => sum + session.buzzCallsCount, 0);
+  const totalHistoryDuration = allConnectionSessions.reduce(
+    (sum, session) => sum + session.duration,
+    0
+  );
+  const totalHistoryBuzzCalls = allConnectionSessions.reduce(
+    (sum, session) => sum + session.buzzCallsCount,
+    0
+  );
 
   return (
     <>
-      <View style={styles.container}>
+      <View style={[styles.container, { backgroundColor: theme.background }]}>
         <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
           {/* Header */}
           <View style={styles.header}>
-            <Heart size={32} color="#ff6b9d" strokeWidth={2} fill="#ff6b9d" />
+            <Heart size={32} color={theme.primary} strokeWidth={2} fill={theme.primary} />
             <View style={styles.titleContainer}>
-              <Text style={styles.title}>
+              <Text style={[styles.title, { color: colors.text }]}>
                 {authState.user?.name || t('profile:title')}
               </Text>
               {isPremierUser && (
-                <View style={styles.premierBadge}>
-                  <Crown size={16} color="#fff" strokeWidth={2} fill="#f59e0b" />
-                  <Text style={styles.premierBadgeText}>Premier</Text>
+                <View style={[styles.premierBadge, { backgroundColor: theme.secondary }]}> 
+                  <Crown
+                    size={16}
+                    color={theme.onSecondary || colors.text}
+                    strokeWidth={2}
+                    fill={theme.secondary}
+                  />
+                  <Text style={[styles.premierBadgeText, { color: theme.onSecondary || colors.text }]}>Premier</Text>
                 </View>
               )}
             </View>
-            <Text style={styles.subtitle}>{t('profile:subtitle')}</Text>
+            <Text style={[styles.subtitle, { color: colors.mutedText || colors.text }]}>
+              {t('profile:subtitle')}
+            </Text>
           </View>
 
           {/* Love Counter (L-day) */}
-          <View style={styles.loveCounterCard}>
+          <View
+            style={[
+              styles.loveCounterCard,
+              { backgroundColor: colors.card, borderColor: colors.border },
+            ]}
+          >
             <View style={styles.loveCounterHeader}>
-              <Sparkles size={24} color="#ff6b9d" strokeWidth={2} />
-              <Text style={styles.loveCounterTitle}>L-day</Text>
+              <Sparkles size={24} color={theme.primary} strokeWidth={2} />
+              <Text style={[styles.loveCounterTitle, { color: colors.text }]}>
+                L-day
+              </Text>
             </View>
-            
+
             {relationshipStartAt && (
               <View style={styles.loveCounterContent}>
-                <Text style={styles.loveCounterNumber}>
+                <Text
+                  style={[styles.loveCounterNumber, { color: colors.text }]}
+                >
                   {loveDays}
                 </Text>
-                <Text style={styles.loveCounterLabel}>{t('profile:daysConnected')}</Text>
-                <Text style={styles.loveCounterSubtext}>
+                <Text style={[styles.loveCounterLabel, { color: colors.text }]}>
+                  {t('profile:daysConnected')}
+                </Text>
+                <Text style={[styles.loveCounterSubtext, { color: colors.mutedText || colors.text }]}>
                   {t('profile:since')} {formatDate(relationshipStartAt)}
                 </Text>
               </View>
@@ -585,92 +521,92 @@ export default function ProfileScreen() {
           </View>
 
           {/* Total Sessions Navigation */}
-          <TouchableOpacity 
-            style={styles.totalSessionsCard}
+          <TouchableOpacity
+            style={[
+              styles.totalSessionsCard,
+              { backgroundColor: colors.card, borderColor: colors.border },
+            ]}
             onPress={() => setShowHistoryModal(true)}
           >
             <View style={styles.totalSessionsHeader}>
               <View style={styles.totalSessionsLeft}>
-                <History size={24} color="#ff6b9d" strokeWidth={2} />
-                <Text style={styles.totalSessionsTitle}>{t('profile:viewAllSessions')}</Text>
+                <History size={24} color={theme.primary} strokeWidth={2} />
+                <Text style={styles.totalSessionsTitle}>
+                  {t('profile:viewAllSessions')}
+                </Text>
               </View>
-              <ChevronRight size={20} color="#666" strokeWidth={2} />
+              <ChevronRight size={20} color={colors.mutedText || colors.text} strokeWidth={2} />
             </View>
           </TouchableOpacity>
 
           {/* Album Card */}
-          {isFeatureEnabled('album') && (
-            <TouchableOpacity 
-              style={styles.albumCard}
-              onPress={handleAddPhoto}
-            >
-              <View style={styles.albumHeader}>
-                <View style={styles.albumLeft}>
-                  <Camera size={24} color="#10b981" strokeWidth={2} />
-                  <Text style={styles.albumTitle}>Album Ảnh</Text>
-                </View>
-                <View style={styles.albumRight}>
-                  <Text style={styles.albumCount}>{photosCount}</Text>
-                  <Text style={styles.albumDays}>
-                    {Math.floor((totalConnectedTime + currentSessionDuration) / (60 * 60 * 24))}
-                  </Text>
-                </View>
-              </View>
-              <Text style={styles.albumSubtitle}>
-                Tổng thời gian kết nối: {formatDuration(totalConnectedTime + currentSessionDuration)}
-              </Text>
-            </TouchableOpacity>
-          )}
+          {/* Album Card removed */}
 
           {/* Current Session Stats */}
           <View style={styles.statsGrid}>
-            <View style={styles.statCard}>
+            <View
+              style={[
+                styles.statCard,
+                { backgroundColor: colors.card, borderColor: colors.border },
+              ]}
+            >
               <View style={styles.statIcon}>
                 {connectionState.isConnected ? (
-                  <Wifi size={20} color="#4ade80" strokeWidth={2} />
+                  <Wifi size={20} color={theme.success} strokeWidth={2} />
                 ) : (
-                  <WifiOff size={20} color="#ef4444" strokeWidth={2} />
+                  <WifiOff size={20} color={theme.danger} strokeWidth={2} />
                 )}
               </View>
               <Text style={styles.statValue}>
-                {connectionState.isConnected 
-                  ? formatDuration(currentSessionDuration) 
-                  : formatDuration(currentSessionDuration)
-                }
+                {connectionState.isConnected
+                  ? formatDuration(currentSessionDuration)
+                  : formatDuration(currentSessionDuration)}
               </Text>
               <Text style={styles.statLabel}>
-                {connectionState.isConnected ? t('profile:currentlyConnected') : t('profile:lastSession')}
+                {connectionState.isConnected
+                  ? t('profile:currentlyConnected')
+                  : t('profile:lastSession')}
               </Text>
             </View>
 
             <View style={styles.statCard}>
               <View style={styles.statIcon}>
-                <Clock size={20} color="#3b82f6" strokeWidth={2} />
+                <Clock size={20} color={theme.primary} strokeWidth={2} />
               </View>
               <Text style={styles.statValue}>
                 {formatDuration(totalConnectedTime)}
               </Text>
-              <Text style={styles.statLabel}>{t('profile:totalConnectedTime')}</Text>
+              <Text style={styles.statLabel}>
+                {t('profile:totalConnectedTime')}
+              </Text>
             </View>
           </View>
 
           <View style={styles.statsGrid}>
-            <View style={styles.statCard}>
+            <View
+              style={[
+                styles.statCard,
+                { backgroundColor: colors.card, borderColor: colors.border },
+              ]}
+            >
               <View style={styles.statIcon}>
-                <WifiOff size={20} color="#ef4444" strokeWidth={2} />
+                <WifiOff size={20} color={theme.danger} strokeWidth={2} />
               </View>
               <Text style={styles.statValue}>
                 {formatDuration(totalDisconnectedTime)}
               </Text>
             </View>
 
-            <View style={styles.statCard}>
+            <View
+              style={[
+                styles.statCard,
+                { backgroundColor: colors.card, borderColor: colors.border },
+              ]}
+            >
               <View style={styles.statIcon}>
-                <TrendingUp size={20} color="#f59e0b" strokeWidth={2} />
+                <TrendingUp size={20} color={theme.secondary} strokeWidth={2} />
               </View>
-              <Text style={styles.statValue}>
-                {connectionSessions.length}
-              </Text>
+              <Text style={styles.statValue}>{connectionSessions.length}</Text>
               <Text style={styles.statLabel}>{t('profile:totalSessions')}</Text>
             </View>
           </View>
@@ -682,51 +618,80 @@ export default function ProfileScreen() {
             presentationStyle="fullScreen"
             onRequestClose={() => setShowPremiumModal(false)}
           >
-            <SafeAreaView style={styles.premiumModal} edges={['top', 'bottom']}>
+            <SafeAreaView
+              style={[
+                styles.premiumModal,
+                { backgroundColor: colors.background },
+              ]}
+              edges={['top', 'bottom']}
+            >
               <View style={styles.premiumHeader}>
-                <Text style={styles.premiumTitle}>Nâng Cấp Premier</Text>
+                <Text style={styles.premiumTitle}>
+                  {t('profile:premiumTitle')}
+                </Text>
                 <TouchableOpacity
                   style={styles.closeButton}
                   onPress={() => setShowPremiumModal(false)}
                 >
-                  <X size={24} color="#888" strokeWidth={2} />
+                  <X size={24} color={colors.mutedText || colors.text} strokeWidth={2} />
                 </TouchableOpacity>
               </View>
-              
-              <ScrollView style={styles.premiumScrollView} contentContainerStyle={styles.premiumContent}>
+
+              <ScrollView
+                style={styles.premiumScrollView}
+                contentContainerStyle={styles.premiumContent}
+              >
                 <View style={styles.premiumIcon}>
-                  <Crown size={48} color="#f59e0b" strokeWidth={2} fill="#f59e0b" />
+                  <Crown
+                    size={48}
+                    color={theme.secondary}
+                    strokeWidth={2}
+                    fill={theme.secondary}
+                  />
                 </View>
-                
-                <Text style={styles.premiumMainTitle}>Only You Premier</Text>
-                <Text style={styles.premiumSubtitle}>
-                  Mở khóa tất cả tính năng premium và trải nghiệm yêu xa hoàn hảo
+
+                <Text style={styles.premiumMainTitle}>
+                  {t('profile:premiumMainTitle')}
                 </Text>
-                
+                <Text style={styles.premiumSubtitle}>
+                  {t('profile:premiumSubtitle')}
+                </Text>
+
                 <View style={styles.premiumFeatures}>
                   <View style={styles.premiumFeature}>
-                    <History size={20} color="#4ade80" strokeWidth={2} />
-                    <Text style={styles.premiumFeatureText}>Xem chi tiết lịch sử kết nối</Text>
+                    <History size={20} color={theme.success} strokeWidth={2} />
+                    <Text style={styles.premiumFeatureText}>
+                      {t('profile:premiumFeature')}
+                    </Text>
                   </View>
                   <View style={styles.premiumFeature}>
-                    <Zap size={20} color="#4ade80" strokeWidth={2} />
-                    <Text style={styles.premiumFeatureText}>Buzz Calls nâng cao</Text>
+                    <Zap size={20} color={theme.success} strokeWidth={2} />
+                    <Text style={styles.premiumFeatureText}>
+                      {t('profile:premiumFeature')}
+                    </Text>
                   </View>
                   <View style={styles.premiumFeature}>
-                    <Shield size={20} color="#4ade80" strokeWidth={2} />
-                    <Text style={styles.premiumFeatureText}>Bảo mật nâng cao</Text>
+                    <Shield size={20} color={theme.success} strokeWidth={2} />
+                    <Text style={styles.premiumFeatureText}>
+                      {t('profile:premiumFeature')}
+                    </Text>
                   </View>
                   <View style={styles.premiumFeature}>
-                    <Sparkles size={20} color="#4ade80" strokeWidth={2} />
-                    <Text style={styles.premiumFeatureText}>Giao diện và theme độc quyền</Text>
+                    <Sparkles size={20} color={theme.success} strokeWidth={2} />
+                    <Text style={styles.premiumFeatureText}>
+                      {t('profile:premiumFeature')}
+                    </Text>
                   </View>
                 </View>
-                
+
                 <View style={styles.premiumPricing}>
-                  <Text style={styles.premiumPrice}>₫399,000/năm</Text>
-                  <Text style={styles.premiumPriceSubtext}>Hoặc ₫49,000/tháng • Tiết kiệm 32%</Text>
+                  <Text style={styles.premiumPrice}>
+                    {t('profile:premiumPriceYear')}
+                  </Text>
+                  <Text style={styles.premiumPriceSubtext}>
+                    {t('profile:premiumPriceMonthSave')}
+                  </Text>
                 </View>
-                
                 <View style={styles.premiumActions}>
                   <TouchableOpacity
                     style={styles.upgradeButton}
@@ -735,15 +700,19 @@ export default function ProfileScreen() {
                       router.push('/premium?openPayment=1');
                     }}
                   >
-                    <Crown size={20} color="#fff" strokeWidth={2} />
-                    <Text style={styles.upgradeButtonText}>Nâng Cấp Ngay</Text>
+                    <Crown size={20} color={theme.onSecondary || colors.text} strokeWidth={2} />
+                    <Text style={styles.upgradeButtonText}>
+                      {t('profile:upgradeNow')}
+                    </Text>
                   </TouchableOpacity>
-                  
+
                   <TouchableOpacity
                     style={styles.laterButton}
                     onPress={() => setShowPremiumModal(false)}
                   >
-                    <Text style={styles.laterButtonText}>Để Sau</Text>
+                    <Text style={styles.laterButtonText}>
+                      {t('profile:later')}
+                    </Text>
                   </TouchableOpacity>
                 </View>
               </ScrollView>
@@ -757,32 +726,57 @@ export default function ProfileScreen() {
             presentationStyle="fullScreen"
             onRequestClose={() => setShowHistoryModal(false)}
           >
-            <SafeAreaView style={styles.historyModal} edges={['top', 'bottom']}>
+            <SafeAreaView
+              style={[
+                styles.historyModal,
+                { backgroundColor: colors.background },
+              ]}
+              edges={['top', 'bottom']}
+            >
               {/* Header */}
               <View style={styles.historyHeader}>
-                <Text style={styles.historyTitle}>Lịch Sử Kết Nối</Text>
+                <Text style={styles.historyTitle}>
+                  {t('profile:historyTitle')}
+                </Text>
                 <TouchableOpacity
                   style={styles.closeButton}
                   onPress={() => setShowHistoryModal(false)}
                 >
-                  <X size={24} color="#888" strokeWidth={2} />
+                  <X size={24} color={colors.mutedText || colors.text} strokeWidth={2} />
                 </TouchableOpacity>
               </View>
 
               {/* Summary Stats */}
-              <View style={styles.historySummaryCard}>
+              <View
+                style={[
+                  styles.historySummaryCard,
+                  { backgroundColor: colors.card, borderColor: colors.border },
+                ]}
+              >
                 <View style={styles.historySummaryRow}>
                   <View style={styles.historySummaryItem}>
-                    <Text style={styles.historySummaryValue}>{allConnectionSessions.length}</Text>
-                    <Text style={styles.historySummaryLabel}>Tổng phiên</Text>
+                    <Text style={styles.historySummaryValue}>
+                      {allConnectionSessions.length}
+                    </Text>
+                    <Text style={styles.historySummaryLabel}>
+                      {t('profile:historyTotalSessions')}
+                    </Text>
                   </View>
                   <View style={styles.historySummaryItem}>
-                    <Text style={styles.historySummaryValue}>{formatDuration(totalHistoryDuration)}</Text>
-                    <Text style={styles.historySummaryLabel}>Tổng thời gian</Text>
+                    <Text style={styles.historySummaryValue}>
+                      {formatDuration(totalHistoryDuration)}
+                    </Text>
+                    <Text style={styles.historySummaryLabel}>
+                      {t('profile:historyTotalTime')}
+                    </Text>
                   </View>
                   <View style={styles.historySummaryItem}>
-                    <Text style={styles.historySummaryValue}>{totalHistoryBuzzCalls}</Text>
-                    <Text style={styles.historySummaryLabel}>Buzz calls</Text>
+                    <Text style={styles.historySummaryValue}>
+                      {totalHistoryBuzzCalls}
+                    </Text>
+                    <Text style={styles.historySummaryLabel}>
+                      {t('profile:historyTotalBuzzCalls')}
+                    </Text>
                   </View>
                 </View>
               </View>
@@ -791,7 +785,7 @@ export default function ProfileScreen() {
               <FlatList
                 data={allConnectionSessions}
                 renderItem={renderHistorySession}
-                keyExtractor={item => item.id}
+                keyExtractor={(item) => item.id}
                 style={styles.historySessionsList}
                 contentContainerStyle={styles.historySessionsContent}
                 showsVerticalScrollIndicator={false}
@@ -799,13 +793,11 @@ export default function ProfileScreen() {
             </SafeAreaView>
           </Modal>
 
-          <View style={styles.quoteCard}>
-            <Text style={styles.quoteText}>
-              "Yêu không phải là nhìn vào mắt nhau, mà là cùng nhau nhìn về một hướng."
-            </Text>
-            <Text style={styles.quoteAuthor}>- Antoine de Saint-Exupéry</Text>
-          </View>
+          <View style={[styles.quoteCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
+            <Text style={[styles.quoteText, { color: colors.text }]}>{t('profile:quoteText')}</Text>
 
+            <Text style={[styles.quoteAuthor, { color: theme.primary }]}>{t('profile:quoteAuthor')}</Text>
+          </View>
         </ScrollView>
       </View>
     </>
@@ -815,7 +807,7 @@ export default function ProfileScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#000',
+    
   },
   content: {
     flex: 1,
@@ -835,12 +827,11 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 24,
     fontWeight: '700',
-    color: '#fff',
+    
   },
   premierBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#f59e0b',
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 12,
@@ -849,20 +840,20 @@ const styles = StyleSheet.create({
   premierBadgeText: {
     fontSize: 12,
     fontWeight: '600',
-    color: '#fff',
+    
   },
   subtitle: {
     fontSize: 14,
-    color: '#888',
+    
   },
   loveCounterCard: {
-    backgroundColor: '#111',
+    
     marginHorizontal: 20,
     marginBottom: 20,
     borderRadius: 20,
     padding: 24,
     borderWidth: 1,
-    borderColor: '#333',
+    
     alignItems: 'center',
   },
   loveCounterHeader: {
@@ -873,7 +864,7 @@ const styles = StyleSheet.create({
   loveCounterTitle: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#fff',
+    
     marginLeft: 8,
   },
   loveCounterContent: {
@@ -882,60 +873,17 @@ const styles = StyleSheet.create({
   loveCounterNumber: {
     fontSize: 48,
     fontWeight: '700',
-    color: '#ff6b9d',
+    
     marginBottom: 8,
   },
   loveCounterLabel: {
     fontSize: 16,
-    color: '#fff',
+    
     marginBottom: 4,
   },
   loveCounterSubtext: {
     fontSize: 14,
-    color: '#888',
-  },
-  albumCard: {
-    backgroundColor: '#111',
-    marginHorizontal: 20,
-    marginBottom: 20,
-    borderRadius: 16,
-    padding: 20,
-    borderWidth: 1,
-    borderColor: '#333',
-  },
-  albumHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 8,
-  },
-  albumLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  albumTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#fff',
-    marginLeft: 12,
-  },
-  albumRight: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  albumCount: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#10b981',
-  },
-  albumDays: {
-    fontSize: 12,
-    color: '#888',
-  },
-  albumSubtitle: {
-    fontSize: 14,
-    color: '#888',
+    
   },
   statsGrid: {
     flexDirection: 'row',
@@ -945,12 +893,12 @@ const styles = StyleSheet.create({
   },
   statCard: {
     flex: 1,
-    backgroundColor: '#111',
+    
     borderRadius: 16,
     padding: 16,
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: '#333',
+    
   },
   statIcon: {
     width: 40,
@@ -964,13 +912,13 @@ const styles = StyleSheet.create({
   statValue: {
     fontSize: 16,
     fontWeight: '700',
-    color: '#fff',
+    
     marginBottom: 4,
     textAlign: 'center',
   },
   statLabel: {
     fontSize: 12,
-    color: '#888',
+    
     textAlign: 'center',
     lineHeight: 16,
   },
@@ -991,12 +939,12 @@ const styles = StyleSheet.create({
   historySectionTitle: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#fff',
+    
     marginLeft: 8,
   },
   premiumModal: {
     flex: 1,
-    backgroundColor: '#000',
+    
   },
   premiumHeader: {
     flexDirection: 'row',
@@ -1004,12 +952,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 20,
     borderBottomWidth: 1,
-    borderBottomColor: '#333',
+    
   },
   premiumTitle: {
     fontSize: 20,
     fontWeight: '700',
-    color: '#fff',
+    
   },
   closeButton: {
     padding: 8,
@@ -1030,13 +978,13 @@ const styles = StyleSheet.create({
   premiumMainTitle: {
     fontSize: 28,
     fontWeight: '700',
-    color: '#fff',
+    
     marginBottom: 8,
     textAlign: 'center',
   },
   premiumSubtitle: {
     fontSize: 16,
-    color: '#888',
+    
     textAlign: 'center',
     marginBottom: 32,
     lineHeight: 24,
@@ -1048,16 +996,16 @@ const styles = StyleSheet.create({
   premiumFeature: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#111',
+    
     borderRadius: 12,
     padding: 16,
     marginBottom: 16,
     borderWidth: 1,
-    borderColor: '#333',
+    
   },
   premiumFeatureText: {
     fontSize: 16,
-    color: '#fff',
+    
     marginLeft: 12,
     flex: 1,
   },
@@ -1069,12 +1017,12 @@ const styles = StyleSheet.create({
   premiumPrice: {
     fontSize: 32,
     fontWeight: '700',
-    color: '#f59e0b',
+    
     marginBottom: 4,
   },
   premiumPriceSubtext: {
     fontSize: 14,
-    color: '#888',
+    
     textAlign: 'center',
   },
   premiumActions: {
@@ -1082,7 +1030,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
   },
   upgradeButton: {
-    backgroundColor: '#f59e0b',
     borderRadius: 12,
     padding: 16,
     flexDirection: 'row',
@@ -1093,7 +1040,7 @@ const styles = StyleSheet.create({
   upgradeButtonText: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#fff',
+    
   },
   laterButton: {
     backgroundColor: 'transparent',
@@ -1101,16 +1048,16 @@ const styles = StyleSheet.create({
     padding: 16,
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: '#333',
+    
   },
   laterButtonText: {
     fontSize: 16,
     fontWeight: '500',
-    color: '#888',
+    
   },
   premiumDetailsModal: {
     flex: 1,
-    backgroundColor: '#000',
+    
   },
   premiumDetailsScrollView: {
     flex: 1,
@@ -1129,7 +1076,7 @@ const styles = StyleSheet.create({
   premiumDetailsTitle: {
     fontSize: 20,
     fontWeight: '700',
-    color: '#fff',
+    
   },
   headerRight: {
     width: 40,
@@ -1165,14 +1112,14 @@ const styles = StyleSheet.create({
   heroTitle: {
     fontSize: 32,
     fontWeight: '700',
-    color: '#fff',
+    
     marginBottom: 12,
     textAlign: 'center',
     paddingHorizontal: 20,
   },
   heroSubtitle: {
     fontSize: 16,
-    color: '#888',
+    
     textAlign: 'center',
     lineHeight: 24,
     paddingHorizontal: 20,
@@ -1185,7 +1132,7 @@ const styles = StyleSheet.create({
   pricingSectionTitle: {
     fontSize: 20,
     fontWeight: '600',
-    color: '#fff',
+    
     textAlign: 'center',
     marginBottom: 20,
   },
@@ -1196,23 +1143,21 @@ const styles = StyleSheet.create({
   },
   pricingCard: {
     flex: 1,
-    backgroundColor: '#111',
+    
     borderRadius: 16,
     padding: 20,
     borderWidth: 2,
-    borderColor: '#333',
+    
     position: 'relative',
     minHeight: 120,
     justifyContent: 'space-between',
   },
   recommendedCard: {
-    borderColor: '#f59e0b',
   },
   recommendedBadge: {
     position: 'absolute',
     top: -12,
     alignSelf: 'center',
-    backgroundColor: '#f59e0b',
     borderRadius: 12,
     paddingHorizontal: 12,
     paddingVertical: 4,
@@ -1224,7 +1169,7 @@ const styles = StyleSheet.create({
   recommendedText: {
     fontSize: 12,
     fontWeight: '600',
-    color: '#fff',
+    
   },
   pricingHeader: {
     flexDirection: 'row',
@@ -1236,13 +1181,13 @@ const styles = StyleSheet.create({
   pricingTitle: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#fff',
+    
     flex: 1,
   },
   pricingPrice: {
     fontSize: 24,
     fontWeight: '700',
-    color: '#f59e0b',
+    
     marginBottom: 4,
   },
   yearlyPricing: {
@@ -1254,17 +1199,17 @@ const styles = StyleSheet.create({
   },
   originalPrice: {
     fontSize: 16,
-    color: '#666',
+    
     textDecorationLine: 'line-through',
   },
   pricingPeriod: {
     fontSize: 14,
-    color: '#888',
+    
     marginBottom: 8,
   },
   savingsText: {
     fontSize: 12,
-    color: '#4ade80',
+    
     fontWeight: '600',
   },
   featuresSection: {
@@ -1274,18 +1219,18 @@ const styles = StyleSheet.create({
   featuresSectionTitle: {
     fontSize: 20,
     fontWeight: '600',
-    color: '#fff',
+    
     marginBottom: 20,
   },
   featureCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#111',
+    
     borderRadius: 12,
     padding: 16,
     marginBottom: 12,
     borderWidth: 1,
-    borderColor: '#333',
+    
     minHeight: 80,
   },
   featureIcon: {
@@ -1304,13 +1249,13 @@ const styles = StyleSheet.create({
   featureTitle: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#fff',
+    
     marginBottom: 4,
     lineHeight: 22,
   },
   featureDescription: {
     fontSize: 14,
-    color: '#888',
+    
     lineHeight: 20,
     flexWrap: 'wrap',
   },
@@ -1321,7 +1266,7 @@ const styles = StyleSheet.create({
   },
   loadingText: {
     fontSize: 16,
-    color: '#888',
+    
   },
   guaranteeSection: {
     alignItems: 'center',
@@ -1331,13 +1276,13 @@ const styles = StyleSheet.create({
   guaranteeTitle: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#4ade80',
+    
     marginTop: 12,
     marginBottom: 8,
   },
   guaranteeDescription: {
     fontSize: 14,
-    color: '#888',
+    
     textAlign: 'center',
     lineHeight: 20,
   },
@@ -1345,22 +1290,22 @@ const styles = StyleSheet.create({
     padding: 20,
     paddingTop: 16,
     borderTopWidth: 1,
-    borderTopColor: '#333',
-    backgroundColor: '#111',
+    
+    
     marginHorizontal: 20,
     borderRadius: 16,
     marginBottom: 40,
   },
   termsText: {
     fontSize: 12,
-    color: '#666',
+    
     textAlign: 'center',
     lineHeight: 16,
     marginTop: 12,
   },
   historyModal: {
     flex: 1,
-    backgroundColor: '#000',
+    
   },
   historyHeader: {
     flexDirection: 'row',
@@ -1368,21 +1313,21 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 20,
     borderBottomWidth: 1,
-    borderBottomColor: '#333',
+    
   },
   historyTitle: {
     fontSize: 20,
     fontWeight: '700',
-    color: '#fff',
+    
   },
   historySummaryCard: {
-    backgroundColor: '#111',
+    
     marginHorizontal: 20,
     marginVertical: 20,
     borderRadius: 16,
     padding: 20,
     borderWidth: 1,
-    borderColor: '#333',
+    
   },
   historySummaryRow: {
     flexDirection: 'row',
@@ -1394,12 +1339,12 @@ const styles = StyleSheet.create({
   historySummaryValue: {
     fontSize: 18,
     fontWeight: '700',
-    color: '#ff6b9d',
+    
     marginBottom: 4,
   },
   historySummaryLabel: {
     fontSize: 12,
-    color: '#888',
+    
   },
   historySessionsList: {
     flex: 1,
@@ -1409,10 +1354,10 @@ const styles = StyleSheet.create({
     paddingBottom: 20,
   },
   historySessionCard: {
-    backgroundColor: '#111',
+    
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: '#333',
+    
     marginBottom: 12,
     padding: 16,
   },
@@ -1430,7 +1375,7 @@ const styles = StyleSheet.create({
   historySessionRoomCode: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#fff',
+    
     fontFamily: 'monospace',
   },
   historySessionStatus: {
@@ -1440,7 +1385,7 @@ const styles = StyleSheet.create({
   },
   historySessionStatusText: {
     fontSize: 12,
-    color: '#fff',
+    
     fontWeight: '500',
   },
   historySessionDetails: {
@@ -1458,7 +1403,7 @@ const styles = StyleSheet.create({
   },
   historySessionDateText: {
     fontSize: 13,
-    color: '#888',
+    
   },
   historySessionDuration: {
     flexDirection: 'row',
@@ -1467,7 +1412,7 @@ const styles = StyleSheet.create({
   },
   historySessionDurationText: {
     fontSize: 13,
-    color: '#ff6b9d',
+    
     fontWeight: '500',
   },
   historyBuzzCallsRow: {
@@ -1477,22 +1422,22 @@ const styles = StyleSheet.create({
   },
   historyBuzzCallsText: {
     fontSize: 13,
-    color: '#f59e0b',
+    
     fontWeight: '500',
   },
   quoteCard: {
-    backgroundColor: '#111',
+    
     marginHorizontal: 20,
     marginBottom: 40,
     borderRadius: 16,
     padding: 20,
     borderWidth: 1,
-    borderColor: '#333',
+    
     alignItems: 'center',
   },
   quoteText: {
     fontSize: 16,
-    color: '#fff',
+    
     textAlign: 'center',
     lineHeight: 24,
     fontStyle: 'italic',
@@ -1500,156 +1445,17 @@ const styles = StyleSheet.create({
   },
   quoteAuthor: {
     fontSize: 14,
-    color: '#ff6b9d',
+    
     fontWeight: '500',
-  },
-  dailyPingCard: {
-    backgroundColor: '#111',
-    marginHorizontal: 20,
-    marginBottom: 20,
-    borderRadius: 16,
-    padding: 20,
-    borderWidth: 1,
-    borderColor: '#333',
-  },
-  dailyPingCardCompleted: {
-    borderColor: '#4ade80',
-    backgroundColor: 'rgba(74, 222, 128, 0.05)',
-  },
-  dailyPingHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  dailyPingLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flex: 1,
-  },
-  dailyPingEmoji: {
-    fontSize: 24,
-    marginRight: 12,
-  },
-  dailyPingInfo: {
-    flex: 1,
-  },
-  dailyPingTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#fff',
-    marginBottom: 2,
-  },
-  dailyPingStreak: {
-    fontSize: 12,
-    color: '#f59e0b',
-    fontWeight: '500',
-  },
-  dailyPingBadge: {
-    backgroundColor: '#ff6b9d',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 8,
-  },
-  dailyPingBadgeText: {
-    fontSize: 12,
-    color: '#fff',
-    fontWeight: '600',
-  },
-  dailyPingQuestion: {
-    fontSize: 15,
-    color: '#fff',
-    lineHeight: 22,
-    marginBottom: 12,
-    fontStyle: 'italic',
-  },
-  dailyPingStatus: {
-    fontSize: 13,
-    color: '#888',
-    fontWeight: '500',
-  },
-  dailyPingModal: {
-    flex: 1,
-    backgroundColor: '#000',
-  },
-  dailyPingModalHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: 20,
-    borderBottomWidth: 1,
-    borderBottomColor: '#333',
-  },
-  dailyPingModalTitle: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: '#fff',
-  },
-  dailyPingModalContent: {
-    flex: 1,
-    padding: 20,
-  },
-  dailyPingQuestionContainer: {
-    marginBottom: 32,
-    alignItems: 'center',
-  },
-  dailyPingModalQuestion: {
-    fontSize: 20,
-    fontWeight: '600',
-    color: '#fff',
-    textAlign: 'center',
-    lineHeight: 28,
-    marginBottom: 12,
-  },
-  dailyPingModalSubtext: {
-    fontSize: 14,
-    color: '#888',
-    textAlign: 'center',
-  },
-  dailyPingAnswerContainer: {
-    marginBottom: 32,
-  },
-  dailyPingAnswerInput: {
-    backgroundColor: '#111',
-    borderRadius: 12,
-    padding: 16,
-    color: '#fff',
-    fontSize: 16,
-    minHeight: 120,
-    borderWidth: 1,
-    borderColor: '#333',
-    marginBottom: 8,
-  },
-  dailyPingCharCount: {
-    fontSize: 12,
-    color: '#666',
-    textAlign: 'right',
-  },
-  dailyPingSubmitButton: {
-    backgroundColor: '#ff6b9d',
-    borderRadius: 12,
-    padding: 16,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-  },
-  dailyPingSubmitButtonDisabled: {
-    opacity: 0.5,
-  },
-  dailyPingSubmitButtonText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#fff',
   },
   totalSessionsCard: {
-    backgroundColor: '#111',
+    
     marginHorizontal: 20,
     marginBottom: 20,
     borderRadius: 16,
     padding: 20,
     borderWidth: 1,
-    borderColor: '#333',
+    
   },
   totalSessionsHeader: {
     flexDirection: 'row',
@@ -1664,14 +1470,18 @@ const styles = StyleSheet.create({
   totalSessionsTitle: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#fff',
+    
     marginLeft: 12,
   },
   totalSessionsSubtitle: {
     fontSize: 14,
-    color: '#888',
+    
   },
   chevronIcon: {
     marginLeft: 4,
   },
 });
+
+
+
+

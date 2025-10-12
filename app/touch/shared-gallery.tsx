@@ -11,6 +11,7 @@ import {
   Dimensions,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useTheme } from '@/providers/ThemeProvider';
 import { router } from 'expo-router';
 import { ArrowLeft, Plus, Camera, ImageIcon, Trash2, X } from 'lucide-react-native';
 import PhotoService, { Photo } from '@/services/PhotoService';
@@ -21,6 +22,7 @@ const { width: screenWidth } = Dimensions.get('window');
 const itemSize = (screenWidth - 60) / 3; // 3 columns with padding
 
 export default function SharedGalleryScreen() {
+  const { theme } = useTheme();
   const [photos, setPhotos] = useState<Photo[]>([]);
   const [selectedPhoto, setSelectedPhoto] = useState<Photo | null>(null);
   const [showFullScreen, setShowFullScreen] = useState(false);
@@ -141,11 +143,11 @@ export default function SharedGalleryScreen() {
   );
 
   return (
-    <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
+    <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]} edges={['top', 'bottom']}>
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
-          <ArrowLeft size={24} color="#fff" strokeWidth={2} />
+          <ArrowLeft size={24} color={theme.onBackground || '#111'} strokeWidth={2} />
         </TouchableOpacity>
         <View style={styles.titleContainer}>
           <Text style={styles.title}>Shared Gallery</Text>
@@ -187,7 +189,7 @@ export default function SharedGalleryScreen() {
               style={styles.fullScreenCloseButton}
               onPress={() => setShowFullScreen(false)}
             >
-              <X size={24} color="#fff" strokeWidth={2} />
+              <X size={24} color={theme.onBackground || '#111'} strokeWidth={2} />
             </TouchableOpacity>
             
             {selectedPhoto && (
@@ -235,7 +237,6 @@ export default function SharedGalleryScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#000',
   },
   header: {
     flexDirection: 'row',
@@ -280,7 +281,6 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     borderRadius: 8,
     overflow: 'hidden',
-    backgroundColor: '#111',
     position: 'relative',
   },
   photoImage: {
@@ -319,7 +319,6 @@ const styles = StyleSheet.create({
   },
   fullScreenModal: {
     flex: 1,
-    backgroundColor: '#000',
   },
   fullScreenHeader: {
     flexDirection: 'row',
@@ -364,3 +363,4 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
 });
+

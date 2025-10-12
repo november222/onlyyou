@@ -17,10 +17,12 @@ import { PremiumProvider } from '@/providers/PremiumProvider';
 import { PrivacyProvider, usePrivacy } from '@/providers/PrivacyProvider';
 import LockScreen from '@/components/LockScreen';
 import { isFeatureEnabled } from '@/config/features';
+import { ThemeProvider, useTheme } from '@/providers/ThemeProvider';
 
 
 function AppContent() {
   const { isLocked, isLoading } = usePrivacy();
+  const { theme, isDark } = useTheme();
 
   if (isLoading) {
     return null; // Or loading screen
@@ -32,7 +34,7 @@ function AppContent() {
 
   return (
     <>
-      <Stack screenOptions={{ headerShown: false, header: () => null }}>
+      <Stack screenOptions={{ headerShown: false, header: () => null, contentStyle: { backgroundColor: theme.background } }}>
         <Stack.Screen name="index" options={{ headerShown: false }} />
         <Stack.Screen name="auth" options={{ headerShown: false }} />
         <Stack.Screen name="onboarding" options={{ headerShown: false }} />
@@ -40,7 +42,13 @@ function AppContent() {
         <Stack.Screen name="+not-found" />
       </Stack>
       {/* Edge-to-edge: avoid backgroundColor/translucent warnings */}
-      <StatusBar style="light" />
+      <StatusBar
+        style={isDark ? 'light' : 'dark'}
+        backgroundColor={theme.background}
+        animated
+        hidden={false}
+        translucent={false}
+      />
     </>
   );
 }
@@ -139,7 +147,9 @@ export default function RootLayout() {
       <I18nextProvider i18n={i18n}>
         <PremiumProvider>
           <PrivacyProvider>
-            <AppContent />
+            <ThemeProvider>
+              <AppContent />
+            </ThemeProvider>
           </PrivacyProvider>
         </PremiumProvider>
       </I18nextProvider>

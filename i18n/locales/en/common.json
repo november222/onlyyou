@@ -30,6 +30,7 @@
   "call": "Call",
   "systemCall": "System Call",
   "sendBuzz": "Send Buzz",
+  "premium": "Premium",
   "success": "Success",
   "failed": "Failed"
 }

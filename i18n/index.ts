@@ -12,6 +12,7 @@ import enOnboarding from './locales/en/onboarding.json';
 import enProfile from './locales/en/profile.json';
 import enConnection from './locales/en/connection.json';
 import enMessages from './locales/en/messages.json';
+import enTouch from './locales/en/touch.json';
 
 import viCommon from './locales/vi/common.json';
 import viAuth from './locales/vi/auth.json';
@@ -21,6 +22,7 @@ import viOnboarding from './locales/vi/onboarding.json';
 import viProfile from './locales/vi/profile.json';
 import viConnection from './locales/vi/connection.json';
 import viMessages from './locales/vi/messages.json';
+import viTouch from './locales/vi/touch.json';
 
 import koCommon from './locales/ko/common.json';
 import koAuth from './locales/ko/auth.json';
@@ -30,6 +32,7 @@ import koOnboarding from './locales/ko/onboarding.json';
 import koProfile from './locales/ko/profile.json';
 import koConnection from './locales/ko/connection.json';
 import koMessages from './locales/ko/messages.json';
+import koTouch from './locales/ko/touch.json';
 
 import esCommon from './locales/es/common.json';
 import esAuth from './locales/es/auth.json';
@@ -39,6 +42,7 @@ import esOnboarding from './locales/es/onboarding.json';
 import esProfile from './locales/es/profile.json';
 import esConnection from './locales/es/connection.json';
 import esMessages from './locales/es/messages.json';
+import esTouch from './locales/es/touch.json';
 
 // Supported languages configuration
 export const supportedLanguages = [
@@ -62,6 +66,7 @@ const resources = {
     profile: enProfile,
     connection: enConnection,
     messages: enMessages,
+    touch: enTouch,
   },
   vi: {
     common: viCommon,
@@ -72,6 +77,7 @@ const resources = {
     profile: viProfile,
     connection: viConnection,
     messages: viMessages,
+    touch: viTouch,
   },
   ko: {
     common: koCommon,
@@ -82,6 +88,7 @@ const resources = {
     profile: koProfile,
     connection: koConnection,
     messages: koMessages,
+    touch: koTouch,
   },
   es: {
     common: esCommon,
@@ -92,6 +99,7 @@ const resources = {
     profile: esProfile,
     connection: esConnection,
     messages: esMessages,
+    touch: esTouch,
   },
 };
 
@@ -103,7 +111,7 @@ i18n
     fallbackLng: 'en',
     supportedLngs,
     lng: 'en',
-    ns: ['common', 'auth', 'settings', 'history', 'onboarding', 'profile', 'connection', 'messages'],
+    ns: ['common', 'auth', 'settings', 'history', 'onboarding', 'profile', 'connection', 'messages', 'touch'],
     defaultNS: 'common',
     interpolation: {
       escapeValue: false,

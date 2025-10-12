@@ -16,6 +16,7 @@ import {
   NativeModules,
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useTheme, useThemeColors } from '@/providers/ThemeProvider';
 import { Heart, Shield, Wifi, WifiOff, Copy, Key, Plus, RefreshCw, Trash2, QrCode, X, Scan } from 'lucide-react-native';
 import WebRTCService, { ConnectionState } from '@/services/WebRTCService';
 import AuthService from '@/services/AuthService';
@@ -25,6 +26,8 @@ import * as Linking from 'expo-linking';
 
 export default function ConnectionScreen() {
   const { t } = useTranslation();
+  const { theme } = useTheme();
+  const colors = useThemeColors();
   const insets = useSafeAreaInsets();
   const [connectionState, setConnectionState] = useState<ConnectionState>({
     isConnected: false,
@@ -148,7 +151,7 @@ export default function ConnectionScreen() {
 
       code = (code || '').trim();
       if (!code) {
-        throw new Error('QR không chứa mã phòng.');
+        throw new Error('QR does not contain a room code.');
       }
 
       // Reflect code in input UI
@@ -157,10 +160,10 @@ export default function ConnectionScreen() {
       // Attempt to join room
       await WebRTCService.joinRoom(code);
       setShowQRScanner(false);
-      Alert.alert('Thành công', 'Đã đọc mã QR và kết nối phòng.');
+      Alert.alert(t('common:success'), t('connection:qrScanSuccess'));
     } catch (err) {
       console.error('QR scan failed:', err);
-      Alert.alert('Quét thất bại', err instanceof Error ? err.message : 'Không thể đọc mã QR');
+      Alert.alert(t('connection:qrScanFailedTitle'), t('connection:qrScanFailed'));
       // allow re-scan
       setQrScanned(false);
     }
@@ -176,11 +179,11 @@ export default function ConnectionScreen() {
     } catch (error) {
       console.error('Failed to connect to signaling server:', error);
       Alert.alert(
-        'Kết nối thất bại', 
-        'Không thể kết nối đến server. Vui lòng kiểm tra mạng và thử lại.',
+        t('connection:serverConnectFailedTitle'), 
+        t('connection:serverConnectFailed'),
         [
-          { text: 'Thử lại', onPress: () => setTimeout(connectToServer, 1000) },
-          { text: 'Hủy', style: 'cancel' }
+          { text: t('connection:retry'), onPress: () => setTimeout(connectToServer, 1000) },
+          { text: t('common:cancel'), style: 'cancel' }
         ]
       );
     } finally {
@@ -202,21 +205,21 @@ export default function ConnectionScreen() {
       await WebRTCService.joinRoom(roomCode);
       
       Alert.alert(
-        'Phòng đã tạo! 💕', 
-        `Chia sẻ mã này với người yêu của bạn:\n\n${roomCode}`,
+        t('connection:roomCreatedTitle'), 
+        t('connection:roomCreatedMessage', { code: roomCode }),
         [
-          { text: 'Sao chép mã', onPress: () => copyRoomCode(roomCode) },
-          { text: 'OK' }
+          { text: t('connection:copyCode'), onPress: () => copyRoomCode(roomCode) },
+          { text: t('common:ok') }
         ]
       );
     } catch (error) {
       console.error('Failed to generate room code:', error);
       Alert.alert(
-        'Tạo phòng thất bại', 
-        'Không thể tạo phòng. Vui lòng kiểm tra kết nối và thử lại.',
+        t('connection:createRoomFailedTitle'), 
+        t('connection:createRoomFailed'),
         [
-          { text: 'Thử lại', onPress: generateRoomCode },
-          { text: 'Hủy', style: 'cancel' }
+          { text: t('connection:retry'), onPress: generateRoomCode },
+          { text: t('common:cancel'), style: 'cancel' }
         ]
       );
     } finally {
@@ -226,7 +229,7 @@ export default function ConnectionScreen() {
 
   const joinRoom = async () => {
     if (!inputRoomCode.trim()) {
-      Alert.alert('Mã không hợp lệ', 'Vui lòng nhập mã phòng.');
+      Alert.alert(t('connection:invalidCodeTitle'), t('connection:enterRoomCode'));
       return;
     }
 
@@ -243,27 +246,27 @@ export default function ConnectionScreen() {
       setInputRoomCode(''); // Clear input on success
       
       Alert.alert(
-        'Kết nối thành công! 💕',
-        'Bạn đã kết nối với người yêu của mình.',
-        [{ text: 'Tuyệt vời!' }]
+        t('connection:joinSuccessTitle'),
+        t('connection:joinSuccessMessage'),
+        [{ text: t('connection:awesome') }]
       );
     } catch (error) {
       console.error('Failed to join room:', error);
-      const errorMessage = (error as Error)?.message || 'Không thể tham gia phòng';
+      const errorMessage = (error as Error)?.message || 'Unable to join room';
 
-      if (errorMessage.includes('không hợp lệ') || errorMessage.includes('invalid')) {
+      if (errorMessage.toLowerCase().includes('invalid')) {
         Alert.alert(
-          'Mã phòng không hợp lệ',
-          'Mã phòng bạn nhập không đúng định dạng hoặc không tồn tại. Vui lòng kiểm tra lại.',
-          [{ text: 'OK' }]
+          t('connection:roomInvalidTitle'),
+          t('connection:roomInvalidMessage'),
+          [{ text: t('common:ok') }]
         );
       } else {
         Alert.alert(
-          'Tham gia thất bại',
+          t('connection:joinFailedTitle'),
           errorMessage,
           [
-            { text: 'Thử lại', onPress: joinRoom },
-            { text: 'Hủy', style: 'cancel' }
+            { text: t('connection:retry'), onPress: joinRoom },
+            { text: t('common:cancel'), style: 'cancel' }
           ]
         );
       }
@@ -274,27 +277,27 @@ export default function ConnectionScreen() {
 
   const handleDisconnect = () => {
     if (!savedConnection) {
-      // Nếu chưa có saved connection, không cho disconnect
+      // If not saved, prevent disconnect
       Alert.alert(
-        'Không thể ngắt kết nối',
-        'Vui lòng đặt tên cho kết nối này trước khi ngắt kết nối.'
+        t('connection:cantDisconnectTitle'),
+        t('connection:cantDisconnectMessage')
       );
       return;
     }
 
     Alert.alert(
-      'Ngắt kết nối tạm thời?',
-      `Bạn sẽ tạm thời ngắt kết nối với "${savedConnection.partnerName}". Đối tác của bạn sẽ ở trạng thái chờ cho đến khi bạn kết nối lại.`,
+      t('connection:disconnectConfirmTitle'),
+      t('connection:disconnectConfirmMessage', { name: savedConnection.partnerName }),
       [
-        { text: 'Hủy', style: 'cancel' },
+        { text: t('common:cancel'), style: 'cancel' },
         {
-          text: 'Ngắt kết nối',
+          text: t('connection:disconnect'),
           style: 'destructive',
           onPress: async () => {
             await WebRTCService.disconnect();
             Alert.alert(
-              'Đã ngắt kết nối',
-              `Đối tác đang chờ bạn kết nối lại. Sử dụng nút "Kết nối lại" để tiếp tục.`
+              t('connection:disconnectedTitle'),
+              t('connection:disconnectedMessage')
             );
           },
         },
@@ -306,13 +309,13 @@ export default function ConnectionScreen() {
     const roomCode = code || connectionState.roomCode;
     if (roomCode) {
       // In a real app, this would copy to clipboard using @react-native-clipboard/clipboard
-      Alert.alert('Đã sao chép! 📋', `Mã phòng "${roomCode}" đã được sao chép.`);
+      Alert.alert(t('connection:copiedTitle'), t('connection:copiedRoomCode', { code: roomCode }));
     }
   };
 
   const savePartnerName = async () => {
     if (!partnerName.trim()) {
-      Alert.alert('Lỗi', 'Vui lòng nhập tên cho kết nối này');
+      Alert.alert(t('common:error'), t('connection:enterPartnerName'));
       return;
     }
 
@@ -322,27 +325,27 @@ export default function ConnectionScreen() {
       setShowNamePrompt(false);
       setPartnerName('');
       Alert.alert(
-        'Đã kết nối! 💕',
-        `Bạn đã kết nối với "${partnerName.trim()}". Kết nối này sẽ được lưu lại.`
+        t('connection:connectedTitle'),
+        t('connection:connectedWithMessage', { name: partnerName.trim() })
       );
     } catch (error) {
-      Alert.alert('Lỗi', 'Không thể lưu tên kết nối');
+      Alert.alert(t('common:error'), t('connection:saveNameFailed'));
     }
   };
 
   const handleForgetConnection = () => {
     Alert.alert(
-      'Xóa Kết Nối Đã Lưu?',
-      'Bạn sẽ cần tạo kết nối mới với người yêu. Điều này sẽ xóa vĩnh viễn thông tin kết nối đã lưu.',
+      t('connection:forgetConfirmTitle'),
+      t('connection:forgetConfirmMessage'),
       [
-        { text: 'Hủy', style: 'cancel' },
+        { text: t('common:cancel'), style: 'cancel' },
         {
-          text: 'Xóa',
+          text: t('common:delete'),
           style: 'destructive',
           onPress: () => {
             WebRTCService.clearSavedConnection();
             setSavedConnection(null);
-            Alert.alert('Đã xóa', 'Thông tin kết nối đã lưu đã được xóa.');
+            Alert.alert(t('connection:deletedTitle'), t('connection:deletedMessage'));
           },
         },
       ]
@@ -353,23 +356,23 @@ export default function ConnectionScreen() {
     if (!savedConnection) return;
 
     Alert.alert(
-      'Cắt đứt phiên kết nối này?',
-      `Điều này sẽ kết thúc vĩnh viễn phiên kết nối với "${savedConnection.partnerName}". Lịch sử phiên này sẽ được lưu vào trang Profile.`,
+      t('connection:endSessionConfirmTitle'),
+      t('connection:endSessionConfirmMessage', { name: savedConnection.partnerName }),
       [
-        { text: 'Hủy', style: 'cancel' },
+        { text: t('common:cancel'), style: 'cancel' },
         {
-          text: 'Cắt đứt',
+          text: t('connection:endSessionButton'),
           style: 'destructive',
           onPress: async () => {
             try {
               await WebRTCService.endSessionAndSaveHistory();
               setSavedConnection(null);
               Alert.alert(
-                'Đã kết thúc phiên 💔',
-                'Phiên kết nối đã được lưu vào lịch sử. Bạn có thể xem lại trong trang Profile.'
+                t('connection:endSessionSuccessTitle'),
+                t('connection:endSessionSuccessMessage')
               );
             } catch (error) {
-              Alert.alert('Lỗi', 'Không thể kết thúc phiên kết nối');
+              Alert.alert(t('common:error'), t('connection:endSessionFailedMessage'));
             }
           },
         },
@@ -382,12 +385,12 @@ export default function ConnectionScreen() {
 
     try {
       await WebRTCService.joinRoom(savedConnection.roomCode, true); // isReconnecting = true
-      Alert.alert('Kết nối lại thành công! 💕', 'Đã kết nối lại với người yêu của bạn.');
+      Alert.alert(t('connection:reconnectSuccessTitle'), t('connection:reconnectSuccessMessage'));
     } catch (error) {
       Alert.alert(
-        'Kết nối lại thất bại',
-        'Không thể kết nối lại. Vui lòng thử lại sau.',
-        [{ text: 'OK' }]
+        t('connection:reconnectFailedTitle'),
+        t('connection:reconnectFailedMessage'),
+        [{ text: t('common:ok') }]
       );
     }
   };
@@ -397,12 +400,12 @@ export default function ConnectionScreen() {
       // Switch to messages tab (index 1 in tab layout)
       router.push('/(tabs)/');
     } else {
-      Alert.alert('Chưa kết nối', 'Vui lòng kết nối với người yêu trước khi nhắn tin.');
+      Alert.alert(t('messages:notConnected'), t('messages:pleaseConnect'));
     }
   };
 
   return (
-    <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top', 'bottom']}>
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         keyboardVerticalOffset={insets.bottom}
@@ -415,35 +418,35 @@ export default function ConnectionScreen() {
         >
           {/* Header */}
           <View style={styles.header}>
-            <Heart size={32} color="#ff6b9d" strokeWidth={2} fill="#ff6b9d" />
-            <Text style={styles.title}>{t('connection:title')}</Text>
-            <Text style={styles.subtitle}>{t('connection:subtitle')}</Text>
+            <Heart size={32} color={theme.primary} strokeWidth={2} fill={theme.primary} />
+            <Text style={[styles.title, { color: colors.text }]}>{t('connection:title')}</Text>
+            <Text style={[styles.subtitle, { color: (colors.mutedText || colors.text) }]}>{t('connection:subtitle')}</Text>
           </View>
 
         {/* Connection Status */}
-        <View style={styles.statusCard}>
+        <View style={[styles.statusCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
           <View style={styles.statusHeader}>
             {connectionState.isWaitingForPartner ? (
-              <RefreshCw size={24} color="#f59e0b" strokeWidth={2} />
+              <RefreshCw size={24} color={theme.secondary} strokeWidth={2} />
             ) : connectionState.isConnected ? (
-              <Wifi size={24} color="#4ade80" strokeWidth={2} />
+              <Wifi size={24} color={theme.success} strokeWidth={2} />
             ) : (
-              <WifiOff size={24} color="#ef4444" strokeWidth={2} />
+              <WifiOff size={24} color={theme.danger} strokeWidth={2} />
             )}
             <Text style={[
               styles.statusText,
               {
                 color: connectionState.isWaitingForPartner
-                  ? '#f59e0b'
+                  ? (theme.secondary)
                   : connectionState.isConnected
-                    ? '#4ade80'
+                    ? theme.success
                     : connectionState.isConnecting
-                      ? '#f59e0b'
-                      : '#ef4444'
+                      ? (theme.secondary)
+                      : theme.danger
               }
             ]}>
               {connectionState.isWaitingForPartner
-                ? 'Đang chờ đối tác...'
+                ? t('connection:waitingForPartnerStatus')
                 : connectionState.isConnected
                   ? t('connection:connected')
                   : connectionState.isConnecting
@@ -453,11 +456,11 @@ export default function ConnectionScreen() {
             </Text>
           </View>
 
-          <Text style={styles.statusDescription}>
+          <Text style={[styles.statusDescription, { color: colors.text }]}>
             {connectionState.isWaitingForPartner && savedConnection
-              ? `Đối tác "${savedConnection.partnerName}" đang chờ bạn kết nối lại...`
+              ? t('connection:waitingDescWithName', { name: savedConnection.partnerName })
               : connectionState.isWaitingForPartner
-                ? 'Phòng đã được tạo. Đang chờ đối tác kết nối...'
+                ? t('connection:roomCreatedWaiting')
                 : connectionState.isConnected
                   ? t('connection:connectedDesc')
                   : connectionState.isConnecting
@@ -468,7 +471,7 @@ export default function ConnectionScreen() {
 
           {connectionState.roomCode && (
             <View style={styles.roomCodeDisplay}>
-              <Text style={styles.roomCodeLabel}>Room Code:</Text>
+              <Text style={styles.roomCodeLabel}>{t('connection:roomCode')}:</Text>
               <TouchableOpacity onPress={() => copyRoomCode()}>
                 <Text style={styles.roomCodeValue}>{connectionState.roomCode}</Text>
               </TouchableOpacity>
@@ -478,30 +481,30 @@ export default function ConnectionScreen() {
           {/* Saved Connection Info */}
           {savedConnection && !connectionState.isConnected && (
             <View style={styles.savedConnectionInfo}>
-              <Text style={styles.savedConnectionLabel}>Kết nối đã lưu với:</Text>
+              <Text style={styles.savedConnectionLabel}>{t('connection:savedConnectionWith')}:</Text>
               <Text style={styles.savedPartnerName}>{savedConnection.partnerName} 💕</Text>
               <TouchableOpacity onPress={() => copyRoomCode(savedConnection.roomCode)}>
                 <Text style={styles.savedConnectionValue}>{savedConnection.roomCode}</Text>
               </TouchableOpacity>
               <Text style={styles.savedConnectionDate}>
-                Từ {new Date(savedConnection.connectionDate).toLocaleDateString('vi-VN')}
+                {t('connection:sinceDate', { date: new Date(savedConnection.connectionDate).toLocaleDateString('vi-VN') })}
               </Text>
 
               {connectionState.isWaitingForPartner && (
                 <View style={styles.waitingNotice}>
-                  <RefreshCw size={16} color="#f59e0b" strokeWidth={2} />
+                  <RefreshCw size={16} color={theme.secondary} strokeWidth={2} />
                   <Text style={styles.waitingNoticeText}>
-                    {savedConnection.partnerName} đang chờ bạn...
+                    {t('connection:partnerWaiting', { name: savedConnection.partnerName })}
                   </Text>
                 </View>
               )}
 
-              <TouchableOpacity style={styles.reconnectButton} onPress={handleReconnect}>
-                <RefreshCw size={16} color="#4ade80" strokeWidth={2} />
-                <Text style={styles.reconnectButtonText}>Kết nối lại</Text>
+              <TouchableOpacity style={[styles.reconnectButton, { }]} onPress={handleReconnect}>
+                <RefreshCw size={16} color={theme.success} strokeWidth={2} />
+                <Text style={styles.reconnectButtonText}>{t('connection:reconnect')}</Text>
               </TouchableOpacity>
-              <TouchableOpacity style={styles.endSessionButton} onPress={handleEndSession}>
-                <Text style={styles.endSessionButtonText}>Cắt đứt phiên kết nối này</Text>
+              <TouchableOpacity style={[styles.endSessionButton, { borderColor: theme.danger }]} onPress={handleEndSession}>
+                <Text style={[styles.endSessionButtonText, { color: theme.danger }]}>{t('connection:endSessionButton')}</Text>
               </TouchableOpacity>
             </View>
           )}
@@ -509,8 +512,8 @@ export default function ConnectionScreen() {
           {/* Server Connection Status */}
           {isConnectingToServer && (
             <View style={styles.serverStatus}>
-              <ActivityIndicator size="small" color="#f59e0b" />
-              <Text style={styles.serverStatusText}>Đang kết nối đến server...</Text>
+              <ActivityIndicator size="small" color={theme.secondary} />
+              <Text style={styles.serverStatusText}>{t('connection:connectingServer')}</Text>
             </View>
           )}
         </View>
@@ -518,69 +521,68 @@ export default function ConnectionScreen() {
         {/* Security Info */}
         <View style={styles.securityCard}>
           <View style={styles.securityHeader}>
-            <Shield size={20} color="#ff6b9d" strokeWidth={2} />
-            <Text style={styles.securityTitle}>Mã hóa đầu cuối</Text>
+            <Shield size={20} color={theme.primary} strokeWidth={2} />
+            <Text style={styles.securityTitle}>{t('connection:endToEndTitle')}</Text>
           </View>
           <Text style={styles.securityDescription}>
-            Tin nhắn của bạn được mã hóa và chỉ bạn và người yêu mới có thể đọc được. 
-            Không ai khác có thể truy cập cuộc trò chuyện của bạn.
+            {t('connection:endToEndDesc')}
           </Text>
         </View>
 
         {/* Connection Setup */}
         {!connectionState.isConnected && !connectionState.isConnecting && !savedConnection && (
           <View style={styles.setupCard}>
-            <Text style={styles.setupTitle}>Kết nối với người yêu</Text>
+            <Text style={styles.setupTitle}>{t('connection:setupTitle')}</Text>
 
             {/* Generate Room Code */}
             <TouchableOpacity
-              style={styles.generateButton}
+              style={[styles.generateButton, { backgroundColor: theme.primary }]}
               onPress={generateRoomCode}
               disabled={isGeneratingCode || isConnectingToServer}
             >
               {isGeneratingCode ? (
-                <ActivityIndicator size="small" color="#fff" />
+                <ActivityIndicator size="small" color={theme.onPrimary || colors.text} />
               ) : (
-                <Plus size={20} color="#fff" strokeWidth={2} />
+                <Plus size={20} color={theme.onPrimary || colors.text} strokeWidth={2} />
               )}
-              <Text style={styles.generateButtonText}>
-                {isGeneratingCode ? 'Đang tạo...' : 'Tạo phòng mới'}
+              <Text style={[styles.generateButtonText, { color: (theme.onPrimary || colors.text) }]}>
+                {isGeneratingCode ? t('connection:creating') : t('connection:createNewRoom')}
               </Text>
             </TouchableOpacity>
             
-            <Text style={styles.orText}>hoặc</Text>
+            <Text style={styles.orText}>{t('connection:or')}</Text>
             
             {/* Join Room */}
             <View style={styles.joinContainer}>
               <TextInput
-                style={styles.roomCodeInput}
+                style={[styles.roomCodeInput, { backgroundColor: colors.card, borderColor: colors.border, color: colors.text }]}
                 value={inputRoomCode}
                 onChangeText={setInputRoomCode}
-                placeholder="Nhập mã phòng"
-                placeholderTextColor="#666"
+                placeholder={t('connection:enterRoomCode')}
+                placeholderTextColor={colors.mutedText || colors.text}
                 autoCapitalize="characters"
               />
               <TouchableOpacity
-                style={styles.joinButton}
+                style={[styles.joinButton, { backgroundColor: theme.primary }]}
                 onPress={joinRoom}
                 disabled={!inputRoomCode.trim() || isConnectingToServer || isJoining}
               >
                 {isJoining ? (
-                  <ActivityIndicator size="small" color="#fff" />
+                  <ActivityIndicator size="small" color={theme.onPrimary || colors.text} />
                 ) : (
-                  <Text style={styles.joinButtonText}>Tham gia</Text>
+                  <Text style={[styles.joinButtonText, { color: (theme.onPrimary || colors.text) }]}>{t('connection:join')}</Text>
                 )}
               </TouchableOpacity>
             </View>
 
             {/* Scan QR Code Button */}
             <TouchableOpacity
-              style={styles.scanQRButton}
+              style={[styles.scanQRButton, { borderColor: colors.border }]}
               onPress={() => setShowQRScanner(true)}
               disabled={isConnectingToServer}
             >
-              <Scan size={20} color="#4ade80" strokeWidth={2} />
-              <Text style={styles.scanQRButtonText}>Quét mã QR</Text>
+              <Scan size={20} color={theme.success} strokeWidth={2} />
+              <Text style={[styles.scanQRButtonText, { color: colors.text }]}>{t('connection:scanQRCode')}</Text>
             </TouchableOpacity>
           </View>
         )}
@@ -591,20 +593,20 @@ export default function ConnectionScreen() {
             <View style={styles.actions}>
               {connectionState.roomCode && (
                 <>
-                  <TouchableOpacity style={styles.copyCodeButton} onPress={() => copyRoomCode()}>
-                    <Copy size={16} color="#ff6b9d" strokeWidth={2} />
-                    <Text style={styles.copyCodeButtonText}>Sao chép mã phòng</Text>
+                  <TouchableOpacity style={[styles.copyCodeButton, { borderColor: colors.border }]} onPress={() => copyRoomCode()}>
+                    <Copy size={16} color={theme.primary} strokeWidth={2} />
+                    <Text style={[styles.copyCodeButtonText, { color: colors.text }]}>{t('connection:copyRoomCode')}</Text>
                   </TouchableOpacity>
 
-                  <TouchableOpacity style={styles.qrCodeButton} onPress={() => setShowQRCode(true)}>
-                    <QrCode size={16} color="#4ade80" strokeWidth={2} />
-                    <Text style={styles.qrCodeButtonText}>Hiển thị mã QR</Text>
+                  <TouchableOpacity style={[styles.qrCodeButton, { borderColor: theme.success }]} onPress={() => setShowQRCode(true)}>
+                    <QrCode size={16} color={theme.success} strokeWidth={2} />
+                    <Text style={[styles.qrCodeButtonText, { color: theme.success }]}>{t('connection:showQRCode')}</Text>
                   </TouchableOpacity>
                 </>
               )}
               
-              <TouchableOpacity style={styles.disconnectButton} onPress={handleDisconnect}>
-                <Text style={styles.disconnectButtonText}>Ngắt kết nối</Text>
+              <TouchableOpacity style={[styles.disconnectButton, { borderColor: theme.danger }]} onPress={handleDisconnect}>
+                <Text style={[styles.disconnectButtonText, { color: theme.danger }]}>{t('connection:disconnect')}</Text>
               </TouchableOpacity>
             </View>
           </>
@@ -613,15 +615,14 @@ export default function ConnectionScreen() {
         {/* Privacy Notice */}
         <View style={styles.privacyNotice}>
           <Text style={styles.privacyText}>
-            Only You được thiết kế chỉ dành cho hai người. Không có nhóm, không có người lạ, 
-            chỉ có bạn và người đặc biệt của bạn. 💕
+            {t('connection:privacyBlurb')}
           </Text>
         </View>
 
         {/* Onboarding shortcut */}
         <View style={{ alignItems: 'center', marginTop: 8, marginBottom: 12 }}>
           <TouchableOpacity style={styles.onboardingButton} onPress={() => router.push('/onboarding')}>
-            <Text style={styles.onboardingButtonText}>Xem giới thiệu</Text>
+            <Text style={styles.onboardingButtonText}>{t('connection:viewOnboarding')}</Text>
           </TouchableOpacity>
         </View>
         </ScrollView>
@@ -634,12 +635,12 @@ export default function ConnectionScreen() {
         animationType="fade"
         onRequestClose={() => setShowQRCode(false)}
       >
-        <View style={styles.qrModalOverlay}>
-          <View style={styles.qrModalContent}>
+        <View style={[styles.qrModalOverlay, { backgroundColor: 'rgba(0,0,0,0.5)' }]}>
+          <View style={[styles.qrModalContent, { backgroundColor: colors.card, borderColor: colors.border }]}>
             <View style={styles.qrModalHeader}>
-              <Text style={styles.qrModalTitle}>Mã QR Kết Nối</Text>
+              <Text style={styles.qrModalTitle}>{t('connection:qrModalTitle')}</Text>
               <TouchableOpacity onPress={() => setShowQRCode(false)}>
-                <X size={24} color="#fff" strokeWidth={2} />
+                <X size={24} color={colors.text} strokeWidth={2} />
               </TouchableOpacity>
             </View>
 
@@ -656,17 +657,17 @@ export default function ConnectionScreen() {
                     />
                   </View>
                   <Text style={styles.qrCodeText}>{connectionState.roomCode}</Text>
-                  <Text style={styles.qrCodeHint}>Quét mã này bằng máy ảnh điện thoại</Text>
-                  <Text style={styles.qrCodeSubHint}>Sẽ tự động mở app và kết nối! ✨</Text>
+                  <Text style={styles.qrCodeHint}>{t('connection:qrCodeHint')}</Text>
+                  <Text style={styles.qrCodeSubHint}>{t('connection:qrCodeSubHint')}</Text>
                 </View>
               )}
             </View>
 
             <TouchableOpacity
-              style={styles.closeQrButton}
+              style={[styles.closeQrButton, { backgroundColor: theme.primary }]}
               onPress={() => setShowQRCode(false)}
             >
-              <Text style={styles.closeQrButtonText}>Đóng</Text>
+              <Text style={[styles.closeQrButtonText, { color: (theme.onPrimary || colors.text) }]}>{t('common:close')}</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -679,28 +680,28 @@ export default function ConnectionScreen() {
         animationType="slide"
         onRequestClose={() => setShowQRScanner(false)}
       >
-        <View style={styles.scannerModalOverlay}>
-          <View style={styles.scannerModalContent}>
+        <View style={[styles.scannerModalOverlay, { backgroundColor: 'rgba(0,0,0,0.5)' }]}>
+          <View style={[styles.scannerModalContent, { backgroundColor: colors.card, borderColor: colors.border }]}>
             <View style={styles.scannerModalHeader}>
-              <Text style={styles.scannerModalTitle}>Quét Mã QR</Text>
+              <Text style={styles.scannerModalTitle}>{t('connection:scanQrTitle')}</Text>
               <TouchableOpacity onPress={() => setShowQRScanner(false)}>
-                <X size={24} color="#fff" strokeWidth={2} />
+                <X size={24} color={colors.text} strokeWidth={2} />
               </TouchableOpacity>
             </View>
 
             <View style={styles.scannerContainer}>
               <View style={styles.scannerPlaceholder}>
-                <Scan size={80} color="#4ade80" strokeWidth={1.5} />
-                <Text style={styles.scannerHint}>Hướng máy ảnh vào mã QR</Text>
-                <Text style={styles.scannerSubHint}>Chức năng quét QR sẽ được kích hoạt khi bạn cho phép truy cập camera</Text>
+                <Scan size={80} color={theme.success} strokeWidth={1.5} />
+                <Text style={styles.scannerHint}>{t('connection:scannerPointHint')}</Text>
+                <Text style={styles.scannerSubHint}>{t('connection:scannerNeedCamera')}</Text>
               </View>
             </View>
 
             <TouchableOpacity
-              style={styles.cancelScanButton}
+              style={[styles.cancelScanButton, { borderColor: colors.border }]}
               onPress={() => setShowQRScanner(false)}
             >
-              <Text style={styles.cancelScanButtonText}>Hủy</Text>
+              <Text style={[styles.cancelScanButtonText, { color: colors.text }]}>{t('common:cancel')}</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -711,9 +712,9 @@ export default function ConnectionScreen() {
         hasQRPermission === true ? (
           <View style={styles.fullscreenScannerOverlay}>
             <View style={styles.scannerModalHeader}>
-              <Text style={styles.scannerModalTitle}>Quét Mã QR</Text>
+              <Text style={styles.scannerModalTitle}>{t('connection:scanQrTitle')}</Text>
               <TouchableOpacity onPress={() => setShowQRScanner(false)}>
-                <X size={24} color="#fff" strokeWidth={2} />
+                <X size={24} color={colors.text} strokeWidth={2} />
               </TouchableOpacity>
             </View>
             {ScannerComp ? (
@@ -723,21 +724,21 @@ export default function ConnectionScreen() {
               />
             ) : (
               <View style={styles.scannerPlaceholder}>
-                <ActivityIndicator size="large" color="#fff" />
-                <Text style={styles.scannerHint}>Đang tải module camera...</Text>
+                <ActivityIndicator size="large" color={theme.onPrimary || colors.text} />
+                <Text style={styles.scannerHint}>{t('connection:loadingCameraModule')}</Text>
               </View>
             )}
           </View>
         ) : hasQRPermission === false ? (
           <View style={styles.fullscreenScannerOverlay}>
             <View style={styles.scannerPlaceholder}>
-              <Scan size={80} color="#f59e0b" strokeWidth={1.5} />
-              <Text style={styles.scannerHint}>Cần quyền truy cập camera để quét QR</Text>
-              <TouchableOpacity style={styles.openSettingsButton} onPress={() => Linking.openSettings()}>
-                <Text style={styles.openSettingsText}>Mở cài đặt</Text>
+              <Scan size={80} color={theme.secondary} strokeWidth={1.5} />
+              <Text style={styles.scannerHint}>{t('connection:scannerNeedCamera')}</Text>
+              <TouchableOpacity style={[styles.openSettingsButton, { backgroundColor: theme.primary }]} onPress={() => Linking.openSettings()}>
+                <Text style={[styles.openSettingsText, { color: (theme.onPrimary || colors.text) }]}>{t('connection:openSettings')}</Text>
               </TouchableOpacity>
-              <TouchableOpacity style={styles.cancelScanButton} onPress={() => setShowQRScanner(false)}>
-                <Text style={styles.cancelScanButtonText}>Đóng</Text>
+              <TouchableOpacity style={[styles.cancelScanButton, { borderColor: colors.border }]} onPress={() => setShowQRScanner(false)}>
+                <Text style={[styles.cancelScanButtonText, { color: colors.text }]}>{t('common:close')}</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -751,21 +752,21 @@ export default function ConnectionScreen() {
         animationType="fade"
         onRequestClose={() => {}}
       >
-        <View style={styles.namePromptOverlay}>
-          <View style={styles.namePromptContent}>
-            <Heart size={48} color="#ff6b9d" strokeWidth={2} fill="#ff6b9d" />
+        <View style={[styles.namePromptOverlay, { backgroundColor: 'rgba(0,0,0,0.5)' }]}>
+          <View style={[styles.namePromptContent, { backgroundColor: colors.card, borderColor: colors.border }]}>
+            <Heart size={48} color={theme.primary} strokeWidth={2} fill={theme.primary} />
 
-            <Text style={styles.namePromptTitle}>Đối tác đã kết nối! 💕</Text>
+            <Text style={styles.namePromptTitle}>{t('connection:namePromptTitle')}</Text>
             <Text style={styles.namePromptSubtitle}>
-              Đặt tên cho kết nối này để dễ nhớ hơn
+              {t('connection:namePromptSubtitle')}
             </Text>
 
             <TextInput
               style={styles.nameInput}
               value={partnerName}
               onChangeText={setPartnerName}
-              placeholder="Ví dụ: Em yêu, Anh ơi, Baby..."
-              placeholderTextColor="#666"
+              placeholder={t('connection:namePromptPlaceholder')}
+              placeholderTextColor={colors.mutedText || colors.text}
               autoFocus
               maxLength={30}
             />
@@ -775,7 +776,7 @@ export default function ConnectionScreen() {
               onPress={savePartnerName}
               disabled={!partnerName.trim()}
             >
-              <Text style={styles.saveNameButtonText}>Lưu & Tiếp tục</Text>
+              <Text style={styles.saveNameButtonText}>{t('connection:saveAndContinue')}</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -787,7 +788,7 @@ export default function ConnectionScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#000',
+    
   },
   content: {
     flex: 1,
@@ -804,21 +805,21 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 28,
     fontWeight: '700',
-    color: '#fff',
+    
     marginTop: 12,
   },
   subtitle: {
     fontSize: 16,
-    color: '#888',
+    
     marginTop: 4,
   },
   statusCard: {
-    backgroundColor: '#111',
+    
     borderRadius: 16,
     padding: 20,
     marginBottom: 20,
     borderWidth: 1,
-    borderColor: '#333',
+    
   },
   statusHeader: {
     flexDirection: 'row',
@@ -832,7 +833,7 @@ const styles = StyleSheet.create({
   },
   statusDescription: {
     fontSize: 14,
-    color: '#888',
+    
     marginBottom: 16,
   },
   connectionDetails: {
@@ -845,40 +846,40 @@ const styles = StyleSheet.create({
   },
   ipLabel: {
     fontSize: 14,
-    color: '#888',
+    
   },
   ipValue: {
     fontSize: 14,
-    color: '#fff',
+    
     fontFamily: 'monospace',
   },
   roomCodeDisplay: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    backgroundColor: '#222',
+    
     borderRadius: 8,
     padding: 12,
     marginTop: 12,
   },
   roomCodeLabel: {
     fontSize: 14,
-    color: '#888',
+    
   },
   roomCodeValue: {
     fontSize: 16,
-    color: '#fff',
+    
     fontFamily: 'monospace',
     fontWeight: '600',
     textDecorationLine: 'underline',
   },
   securityCard: {
-    backgroundColor: '#111',
+    
     borderRadius: 16,
     padding: 20,
     marginBottom: 20,
     borderWidth: 1,
-    borderColor: '#333',
+    
   },
   securityHeader: {
     flexDirection: 'row',
@@ -888,26 +889,26 @@ const styles = StyleSheet.create({
   securityTitle: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#fff',
+    
     marginLeft: 8,
   },
   securityDescription: {
     fontSize: 14,
-    color: '#888',
+    
     lineHeight: 20,
   },
   setupCard: {
-    backgroundColor: '#111',
+    
     borderRadius: 16,
     padding: 20,
     marginBottom: 20,
     borderWidth: 1,
-    borderColor: '#333',
+    
   },
   setupTitle: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#fff',
+    
     marginBottom: 12,
     textAlign: 'center',
   },
@@ -915,7 +916,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#ff6b9d',
+
     borderRadius: 12,
     padding: 16,
     marginBottom: 16,
@@ -924,11 +925,11 @@ const styles = StyleSheet.create({
   generateButtonText: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#fff',
+    
   },
   orText: {
     fontSize: 14,
-    color: '#888',
+    
     textAlign: 'center',
     marginBottom: 16,
   },
@@ -939,16 +940,14 @@ const styles = StyleSheet.create({
   },
   roomCodeInput: {
     flex: 1,
-    backgroundColor: '#222',
+    // background color via theme
     borderRadius: 8,
     padding: 12,
     fontSize: 16,
-    color: '#fff',
-    borderWidth: 1,
-    borderColor: '#333',
-  },
+    // text/border colors via theme
+    },
   joinButton: {
-    backgroundColor: '#ff6b9d',
+
     borderRadius: 8,
     paddingHorizontal: 20,
     paddingVertical: 12,
@@ -959,10 +958,10 @@ const styles = StyleSheet.create({
   joinButtonText: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#fff',
+    
   },
   messagesButton: {
-    backgroundColor: '#ff6b9d',
+
     borderRadius: 12,
     padding: 16,
     flexDirection: 'row',
@@ -974,7 +973,7 @@ const styles = StyleSheet.create({
   messagesButtonText: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#fff',
+    
   },
   actions: {
     marginBottom: 20,
@@ -989,12 +988,12 @@ const styles = StyleSheet.create({
     padding: 16,
     gap: 8,
     borderWidth: 1,
-    borderColor: '#ff6b9d',
+
   },
   copyCodeButtonText: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#ff6b9d',
+    
   },
   disconnectButton: {
     backgroundColor: 'transparent',
@@ -1002,46 +1001,46 @@ const styles = StyleSheet.create({
     padding: 16,
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: '#ef4444',
+
   },
   disconnectButtonText: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#ef4444',
+
   },
   privacyNotice: {
-    backgroundColor: '#111',
+    
     borderRadius: 12,
     padding: 16,
     borderWidth: 1,
-    borderColor: '#333',
+    
   },
   privacyText: {
     fontSize: 14,
-    color: '#888',
+    
     textAlign: 'center',
     lineHeight: 20,
   },
   savedConnectionInfo: {
-    backgroundColor: '#222',
+    
     borderRadius: 8,
     padding: 12,
     marginTop: 12,
   },
   savedConnectionLabel: {
     fontSize: 12,
-    color: '#888',
+    
     marginBottom: 4,
   },
   savedPartnerName: {
     fontSize: 18,
-    color: '#ff6b9d',
+    
     fontWeight: '700',
     marginBottom: 8,
   },
   savedConnectionValue: {
     fontSize: 16,
-    color: '#4ade80',
+    
     fontFamily: 'monospace',
     fontWeight: '600',
     marginBottom: 2,
@@ -1049,7 +1048,7 @@ const styles = StyleSheet.create({
   },
   savedConnectionDate: {
     fontSize: 12,
-    color: '#888',
+    
     marginBottom: 8,
   },
   waitingNotice: {
@@ -1058,16 +1057,16 @@ const styles = StyleSheet.create({
     gap: 8,
     paddingVertical: 10,
     paddingHorizontal: 12,
-    backgroundColor: '#332200',
+    
     borderRadius: 8,
     marginTop: 8,
     marginBottom: 8,
     borderWidth: 1,
-    borderColor: '#f59e0b',
+
   },
   waitingNoticeText: {
     fontSize: 13,
-    color: '#f59e0b',
+    
     fontWeight: '600',
     flex: 1,
   },
@@ -1080,7 +1079,7 @@ const styles = StyleSheet.create({
   },
   reconnectButtonText: {
     fontSize: 14,
-    color: '#4ade80',
+    
     fontWeight: '500',
   },
   endSessionButton: {
@@ -1088,13 +1087,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: '#666',
+
     alignItems: 'center',
     marginTop: 4,
   },
   endSessionButtonText: {
     fontSize: 13,
-    color: '#888',
+    
     fontWeight: '500',
   },
   serverStatus: {
@@ -1104,11 +1103,11 @@ const styles = StyleSheet.create({
     marginTop: 8,
     paddingTop: 8,
     borderTopWidth: 1,
-    borderTopColor: '#333',
+    
   },
   serverStatusText: {
     fontSize: 12,
-    color: '#f59e0b',
+    
   },
   forgetActions: {
     marginBottom: 12,
@@ -1122,10 +1121,10 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: 8,
     borderWidth: 1,
-    borderColor: '#666',
+
   },
   forgetButtonText: {
-    color: '#666',
+    
     fontSize: 14,
     fontWeight: '500',
   },
@@ -1138,24 +1137,24 @@ const styles = StyleSheet.create({
     padding: 16,
     gap: 8,
     borderWidth: 1,
-    borderColor: '#4ade80',
+
   },
   qrCodeButtonText: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#4ade80',
+    
   },
   onboardingButton: {
     paddingHorizontal: 16,
     paddingVertical: 10,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: '#444',
+    
     backgroundColor: 'transparent',
   },
   onboardingButtonText: {
     fontSize: 14,
-    color: '#888',
+    
     fontWeight: '600',
   },
   qrModalOverlay: {
@@ -1166,13 +1165,13 @@ const styles = StyleSheet.create({
     padding: 20,
   },
   qrModalContent: {
-    backgroundColor: '#111',
+    
     borderRadius: 24,
     padding: 24,
     width: '100%',
     maxWidth: 400,
     borderWidth: 1,
-    borderColor: '#333',
+    
   },
   qrModalHeader: {
     flexDirection: 'row',
@@ -1183,7 +1182,6 @@ const styles = StyleSheet.create({
   qrModalTitle: {
     fontSize: 20,
     fontWeight: '700',
-    color: '#fff',
   },
   qrCodeContainer: {
     alignItems: 'center',
@@ -1194,7 +1192,7 @@ const styles = StyleSheet.create({
     gap: 16,
   },
   qrCodeDisplay: {
-    backgroundColor: '#fff',
+
     padding: 20,
     borderRadius: 16,
     alignItems: 'center',
@@ -1209,23 +1207,23 @@ const styles = StyleSheet.create({
   qrCodeText: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#fff',
+    
     fontFamily: 'monospace',
     textAlign: 'center',
   },
   qrCodeHint: {
     fontSize: 14,
-    color: '#888',
+    
     textAlign: 'center',
   },
   qrCodeSubHint: {
     fontSize: 12,
-    color: '#4ade80',
+    
     textAlign: 'center',
     fontWeight: '500',
   },
   closeQrButton: {
-    backgroundColor: '#ff6b9d',
+
     borderRadius: 12,
     padding: 16,
     alignItems: 'center',
@@ -1233,7 +1231,7 @@ const styles = StyleSheet.create({
   closeQrButtonText: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#fff',
+    
   },
   scanQRButton: {
     flexDirection: 'row',
@@ -1244,13 +1242,13 @@ const styles = StyleSheet.create({
     padding: 16,
     gap: 8,
     borderWidth: 1,
-    borderColor: '#4ade80',
+
     marginTop: 12,
   },
   scanQRButtonText: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#4ade80',
+    
   },
   scannerModalOverlay: {
     flex: 1,
@@ -1260,13 +1258,13 @@ const styles = StyleSheet.create({
     padding: 20,
   },
   scannerModalContent: {
-    backgroundColor: '#111',
+    
     borderRadius: 24,
     padding: 24,
     width: '100%',
     maxWidth: 400,
     borderWidth: 1,
-    borderColor: '#333',
+    
   },
   scannerModalHeader: {
     flexDirection: 'row',
@@ -1277,7 +1275,6 @@ const styles = StyleSheet.create({
   scannerModalTitle: {
     fontSize: 20,
     fontWeight: '700',
-    color: '#fff',
   },
   scannerContainer: {
     alignItems: 'center',
@@ -1292,18 +1289,18 @@ const styles = StyleSheet.create({
   },
   scannerHint: {
     fontSize: 16,
-    color: '#fff',
+    
     textAlign: 'center',
     fontWeight: '500',
   },
   scannerSubHint: {
     fontSize: 14,
-    color: '#888',
+    
     textAlign: 'center',
     lineHeight: 20,
   },
   openSettingsButton: {
-    backgroundColor: '#4ade80',
+
     borderRadius: 12,
     paddingVertical: 10,
     paddingHorizontal: 16,
@@ -1311,10 +1308,10 @@ const styles = StyleSheet.create({
   openSettingsText: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#000',
+    
   },
   cancelScanButton: {
-    backgroundColor: '#333',
+    
     borderRadius: 12,
     padding: 16,
     alignItems: 'center',
@@ -1322,7 +1319,7 @@ const styles = StyleSheet.create({
   cancelScanButtonText: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#fff',
+    
   },
   namePromptOverlay: {
     flex: 1,
@@ -1332,7 +1329,7 @@ const styles = StyleSheet.create({
     padding: 20,
   },
   namePromptContent: {
-    backgroundColor: '#111',
+    
     borderRadius: 24,
     padding: 32,
     width: '100%',
@@ -1340,48 +1337,44 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 16,
     borderWidth: 1,
-    borderColor: '#333',
+    
   },
   namePromptTitle: {
     fontSize: 24,
     fontWeight: '700',
-    color: '#fff',
     textAlign: 'center',
     marginTop: 8,
   },
   namePromptSubtitle: {
     fontSize: 16,
-    color: '#888',
     textAlign: 'center',
     lineHeight: 22,
   },
   nameInput: {
     width: '100%',
-    backgroundColor: '#222',
+    // background color via theme
     borderRadius: 12,
     padding: 16,
     fontSize: 16,
-    color: '#fff',
-    borderWidth: 1,
-    borderColor: '#333',
+    // text/border via theme
     marginTop: 8,
   },
   saveNameButton: {
     width: '100%',
-    backgroundColor: '#ff6b9d',
+
     borderRadius: 12,
     padding: 16,
     alignItems: 'center',
     marginTop: 8,
   },
   saveNameButtonDisabled: {
-    backgroundColor: '#444',
+    
     opacity: 0.5,
   },
   saveNameButtonText: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#fff',
+    
   },
   fullscreenScannerOverlay: {
     position: 'absolute',
@@ -1399,6 +1392,10 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     overflow: 'hidden',
     borderWidth: 1,
-    borderColor: '#333',
+    
   },
 });
+
+
+
+

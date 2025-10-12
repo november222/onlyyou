@@ -1,9 +1,13 @@
 import React, { useEffect } from 'react';
 import { View, Text, StyleSheet, ActivityIndicator } from 'react-native';
+import { useThemeColors } from '@/providers/ThemeProvider';
 import { router } from 'expo-router';
 import AuthService from '@/services/AuthService';
 
 export default function AuthCallbackScreen() {
+  const colors = useThemeColors();
+  const { theme } = useTheme();
+  const { t } = require("react-i18next").useTranslation();
   useEffect(() => {
     handleCallback();
   }, []);
@@ -53,9 +57,9 @@ export default function AuthCallbackScreen() {
   };
 
   return (
-    <View style={styles.container}>
-      <ActivityIndicator size="large" color="#ff6b9d" />
-      <Text style={styles.text}>Đang xử lý đăng nhập...</Text>
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
+      <ActivityIndicator size="large" color={theme.primary} />
+      <Text style={[styles.text, { color: colors.text }]}>{t('auth:processing')}</Text>
     </View>
   );
 }
@@ -65,11 +69,10 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#000',
+    
     gap: 16,
   },
   text: {
     fontSize: 16,
-    color: '#fff',
   },
 });

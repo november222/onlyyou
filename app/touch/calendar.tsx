@@ -13,6 +13,7 @@ import {
   ScrollView,
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useTheme } from '@/providers/ThemeProvider';
 import { router } from 'expo-router';
 import { ArrowLeft, Plus, Calendar as CalendarIcon, Clock, Edit, Trash2, X } from 'lucide-react-native';
 import CalendarService, { CalItem } from '@/services/CalendarService';
@@ -21,6 +22,7 @@ import WebRTCService from '@/services/WebRTCService';
 
 export default function CalendarScreen() {
   const insets = useSafeAreaInsets();
+  const { theme } = useTheme();
   const [items, setItems] = useState<CalItem[]>([]);
   const [groupedItems, setGroupedItems] = useState<Record<string, CalItem[]>>({});
   const [showAddModal, setShowAddModal] = useState(false);
@@ -365,11 +367,11 @@ export default function CalendarScreen() {
   });
 
   return (
-    <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
+    <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]} edges={['top', 'bottom']}>
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
-          <ArrowLeft size={24} color="#fff" strokeWidth={2} />
+          <ArrowLeft size={24} color={theme.onBackground || '#111'} strokeWidth={2} />
         </TouchableOpacity>
         <View style={styles.titleContainer}>
           <Text style={styles.title}>Calendar</Text>
@@ -499,7 +501,7 @@ export default function CalendarScreen() {
                 style={styles.saveButton}
                 onPress={editingItem ? handleEditItem : handleAddItem}
               >
-                <CalendarIcon size={20} color="#fff" strokeWidth={2} />
+                <CalendarIcon size={20} color={theme.onBackground || '#111'} strokeWidth={2} />
                 <Text style={styles.saveButtonText}>
                   {editingItem ? 'Update Event' : 'Add Event'}
                 </Text>

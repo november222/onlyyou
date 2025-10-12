@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, ActivityIndicator } from 'react-native';
+import { useTheme } from '@/providers/ThemeProvider';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Sparkles, Settings, Heart, User } from 'lucide-react-native';
 import { router } from 'expo-router';
@@ -18,6 +19,7 @@ const tabs = [
 ];
 
 export default function TabLayout() {
+  const { theme, isDark } = useTheme();
   const [activeTab, setActiveTab] = useState('profile');
   const [isCheckingAuth, setIsCheckingAuth] = useState(false);
 
@@ -37,7 +39,7 @@ export default function TabLayout() {
   const ActiveComponent = tabs.find(tab => tab.key === activeTab)?.component || ProfileScreen;
 
   return (
-    <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
+    <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]} edges={['top', 'bottom']}>
 
       {/* Content */}
       <View style={styles.content}>
@@ -45,7 +47,7 @@ export default function TabLayout() {
       </View>
 
       {/* Bottom Navigation Bar */}
-      <View style={styles.bottomNavBar}>
+      <View style={[styles.bottomNavBar, { backgroundColor: theme.card, borderTopColor: theme.border }]}>
         <View style={styles.navContainer}>
           {tabs.map((tab) => {
             const Icon = tab.icon;
@@ -54,17 +56,20 @@ export default function TabLayout() {
             return (
               <TouchableOpacity
                 key={tab.key}
-                style={[styles.navItem, isActive && styles.activeNavItem]}
+                style={[
+                  styles.navItem,
+                  isActive && { backgroundColor: isDark ? 'rgba(255, 107, 157, 0.12)' : 'rgba(255, 107, 157, 0.08)' }
+                ]}
                 onPress={() => setActiveTab(tab.key)}
               >
                 <Icon 
                   size={20} 
-                  color={isActive ? '#ff6b9d' : '#666'} 
+                  color={isActive ? theme.primary : (isDark ? '#888' : '#666')} 
                   strokeWidth={2} 
                 />
                 <Text style={[
                   styles.navText,
-                  { color: isActive ? '#ff6b9d' : '#666' }
+                  { color: isActive ? theme.primary : (isDark ? '#888' : '#666') }
                 ]}>
                   {tab.title}
                 </Text>

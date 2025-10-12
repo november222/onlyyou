@@ -13,19 +13,40 @@ import {
   Switch,
   ScrollView,
 } from 'react-native';
-import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import {
+  SafeAreaView,
+  useSafeAreaInsets,
+} from 'react-native-safe-area-context';
 import { router } from 'expo-router';
-import { ArrowLeft, Zap, X, Edit, Trash2, Plus, Eye, EyeOff } from 'lucide-react-native';
+import {
+  ArrowLeft,
+  Zap,
+  X,
+  Edit,
+  Trash2,
+  Plus,
+  Eye,
+  EyeOff,
+} from 'lucide-react-native';
 import BuzzService, { BuzzTemplate } from '@/services/BuzzService';
 import { isFeatureEnabled } from '@/config/features';
 import { usePremium } from '@/providers/PremiumProvider';
 import WebRTCService from '@/services/WebRTCService';
+import { useTheme, useThemeColors } from '@/providers/ThemeProvider';
+import { useTranslation } from 'react-i18next';
 
 export default function BuzzCallScreen() {
   const insets = useSafeAreaInsets();
-  const [customBuzzTemplates, setCustomBuzzTemplates] = useState<BuzzTemplate[]>([]);
+  const { theme } = useTheme();
+  const colors = useThemeColors();
+  const { t, i18n } = useTranslation('touch');
+  const [customBuzzTemplates, setCustomBuzzTemplates] = useState<
+    BuzzTemplate[]
+  >([]);
   const [showCreateModal, setShowCreateModal] = useState(false);
-  const [editingTemplate, setEditingTemplate] = useState<BuzzTemplate | null>(null);
+  const [editingTemplate, setEditingTemplate] = useState<BuzzTemplate | null>(
+    null
+  );
   const [customBuzzText, setCustomBuzzText] = useState('');
   const [customBuzzEmoji, setCustomBuzzEmoji] = useState('💫');
   const [showAllEmojis, setShowAllEmojis] = useState(false);
@@ -57,16 +78,19 @@ export default function BuzzCallScreen() {
   const openCreateModal = () => {
     if (!isPremium) {
       Alert.alert(
-        'Tính Năng Premium 👑',
-        'Tạo buzz tùy chỉnh là tính năng dành cho người dùng Premium.',
+        t('createBuzz.premiumTitle'),
+        t('createBuzz.premiumMessage'),
         [
-          { text: 'Để Sau', style: 'cancel' },
-          { text: 'Nâng Cấp', onPress: () => router.push('/premium') },
+          { text: t('common:cancel'), style: 'cancel' },
+          {
+            text: t('createBuzz.upgrade'),
+            onPress: () => router.push('/premium'),
+          },
         ]
       );
       return;
     }
-    
+
     resetForm();
     setShowCreateModal(true);
   };
@@ -86,62 +110,75 @@ export default function BuzzCallScreen() {
 
   const handleSaveCustomBuzz = async () => {
     if (!customBuzzText.trim()) {
-      Alert.alert('Lỗi', 'Vui lòng nhập nội dung buzz');
+      Alert.alert(t('common:error'), t('createBuzz.errorEmpty'));
       return;
     }
 
     if (customBuzzText.length > 20) {
-      Alert.alert('Lỗi', 'Buzz tùy chỉnh không được quá 20 ký tự');
+      Alert.alert(t('common:error'), t('createBuzz.errorTooLong'));
       return;
     }
 
     try {
       let result;
-      
+
       if (editingTemplate) {
         // Update existing template
-        result = await BuzzService.updateCustomBuzz(editingTemplate.id, customBuzzText, customBuzzEmoji);
+        result = await BuzzService.updateCustomBuzz(
+          editingTemplate.id,
+          customBuzzText,
+          customBuzzEmoji
+        );
       } else {
         // Create new template
-        result = await BuzzService.createCustomBuzz(customBuzzText, customBuzzEmoji, isPremium);
+        result = await BuzzService.createCustomBuzz(
+          customBuzzText,
+          customBuzzEmoji,
+          isPremium
+        );
       }
-      
+
       if (result.success) {
         Alert.alert(
-          'Thành công! ✨',
-          editingTemplate ? 'Buzz đã được cập nhật' : 'Buzz tùy chỉnh đã được tạo'
+          t('common:success'),
+          editingTemplate ? t('createBuzz.updated') : t('createBuzz.saved')
         );
         setShowCreateModal(false);
         await loadCustomBuzzTemplates();
-        // Notify other screens to reload
         BuzzService.notifyBuzzTemplatesChanged();
       } else {
-        Alert.alert('Lỗi', result.error || 'Không thể lưu buzz tùy chỉnh');
+        Alert.alert(
+          t('common:error'),
+          result.error || t('createBuzz.saveFailed')
+        );
       }
     } catch (error) {
-      Alert.alert('Lỗi', 'Có lỗi xảy ra. Vui lòng thử lại.');
+      Alert.alert(t('common:error'), t('createBuzz.genericError'));
     }
   };
 
   const handleDeleteTemplate = (template: BuzzTemplate) => {
     Alert.alert(
-      'Xóa Buzz?',
-      `Bạn có chắc muốn xóa buzz "${template.text}"?`,
+      t('createBuzz.deleteTitle'),
+      t('createBuzz.deleteMessage', { text: template.text }),
       [
-        { text: 'Hủy', style: 'cancel' },
+        { text: t('common:cancel'), style: 'cancel' as const },
         {
-          text: 'Xóa',
-          style: 'destructive',
+          text: t('common:delete'),
+          style: 'destructive' as const,
           onPress: async () => {
             try {
               const result = await BuzzService.deleteCustomBuzz(template.id);
               if (result.success) {
                 loadCustomBuzzTemplates();
               } else {
-                Alert.alert('Lỗi', result.error || 'Không thể xóa buzz');
+                Alert.alert(
+                  t('common:error'),
+                  result.error || t('createBuzz.deleteFailed')
+                );
               }
-            } catch (error) {
-              Alert.alert('Lỗi', 'Có lỗi xảy ra. Vui lòng thử lại.');
+            } catch (e) {
+              Alert.alert(t('common:error'), t('createBuzz.genericError'));
             }
           },
         },
@@ -157,27 +194,72 @@ export default function BuzzCallScreen() {
         // Notify other screens to reload
         BuzzService.notifyBuzzTemplatesChanged();
       } else {
-        Alert.alert('Lỗi', result.error || 'Không thể cập nhật hiển thị');
+        Alert.alert(
+          t('common:error'),
+          result.error || t('createBuzz.toggleFailed')
+        );
       }
     } catch (error) {
-      Alert.alert('Lỗi', 'Có lỗi xảy ra. Vui lòng thử lại.');
+      Alert.alert(t('common:error'), t('createBuzz.genericError'));
     }
   };
 
   // Emoji Selector Component
   const EmojiSelector = () => {
     const allEmojis = [
-      '💫', '✨', '⚡', '🔥', '💖', '🌟', '💝', '🎉',
-      '💕', '💗', '💓', '💘', '💞', '💌', '💋', '😘',
-      '🥰', '😍', '🤗', '😊', '😚', '🥺', '🤭', '😇',
-      '🌸', '🌺', '🌻', '🌷', '🌹', '🦋', '🐰', '🐱',
-      '🍓', '🍑', '🍯', '🧁', '🍰', '🎂', '🍭', '🍬',
-      '🌙', '⭐', '☀️', '🌈', '☁️', '❄️', '🎀', '👑'
+      '💫',
+      '✨',
+      '⚡',
+      '🔥',
+      '💖',
+      '🌟',
+      '💝',
+      '🎉',
+      '💕',
+      '💗',
+      '💓',
+      '💘',
+      '💞',
+      '💌',
+      '💋',
+      '😘',
+      '🥰',
+      '😍',
+      '🤗',
+      '😊',
+      '😚',
+      '🥺',
+      '🤭',
+      '😇',
+      '🌸',
+      '🌺',
+      '🌻',
+      '🌷',
+      '🌹',
+      '🦋',
+      '🐰',
+      '🐱',
+      '🍓',
+      '🍑',
+      '🍯',
+      '🧁',
+      '🍰',
+      '🎂',
+      '🍭',
+      '🍬',
+      '🌙',
+      '⭐',
+      '☀️',
+      '🌈',
+      '☁️',
+      '❄️',
+      '🎀',
+      '👑',
     ];
-    
+
     const basicEmojis = allEmojis.slice(0, 16); // First 2 rows (8 per row)
     const displayEmojis = showAllEmojis ? allEmojis : basicEmojis;
-    
+
     return (
       <View style={styles.emojiSelectorContainer}>
         <View style={styles.emojiOptions}>
@@ -186,14 +268,14 @@ export default function BuzzCallScreen() {
               key={emoji}
               style={[
                 styles.emojiOption,
-                customBuzzEmoji === emoji && styles.selectedEmojiOption
+                customBuzzEmoji === emoji && styles.selectedEmojiOption,
               ]}
               onPress={() => setCustomBuzzEmoji(emoji)}
             >
               <Text style={styles.emojiOptionText}>{emoji}</Text>
             </TouchableOpacity>
           ))}
-          
+
           {/* Expand/Collapse Button */}
           {!showAllEmojis && (
             <TouchableOpacity
@@ -204,13 +286,13 @@ export default function BuzzCallScreen() {
             </TouchableOpacity>
           )}
         </View>
-        
+
         {showAllEmojis && (
           <TouchableOpacity
             style={styles.collapseButton}
             onPress={() => setShowAllEmojis(false)}
           >
-            <Text style={styles.collapseButtonText}>Thu gọn</Text>
+            <Text style={styles.collapseButtonText}>{t('createBuzz.collapse')}</Text>
           </TouchableOpacity>
         )}
       </View>
@@ -218,7 +300,12 @@ export default function BuzzCallScreen() {
   };
 
   const renderCustomBuzzTemplate = ({ item }: { item: BuzzTemplate }) => (
-    <View style={styles.customBuzzCard}>
+    <View
+      style={[
+        styles.customBuzzCard,
+        { backgroundColor: colors.card, borderColor: colors.border },
+      ]}
+    >
       <View style={styles.customBuzzHeader}>
         <View style={styles.customBuzzLeft}>
           <Text style={styles.customBuzzEmoji}>{item.emoji || '💫'}</Text>
@@ -226,14 +313,18 @@ export default function BuzzCallScreen() {
             <View style={styles.customBuzzTextRow}>
               <Text style={styles.customBuzzText}>{item.text}</Text>
               {item.type === 'default' && (
-                <Text style={styles.defaultBadge}>Mặc định</Text>
+                <Text style={styles.defaultBadge}>{t('createBuzz.defaultBadge')}</Text>
               )}
             </View>
             <Text style={styles.customBuzzMeta}>
-              {item.type === 'custom'
-                ? `Tạo ${new Date(parseInt(item.id.split('_')[1]) || Date.now()).toLocaleDateString('vi-VN')}`
-                : 'Buzz mặc định từ hệ thống'
-              }
+              {(() => {
+                const ts = parseInt(item.id.split('_')[1]) || Date.now();
+                const locale = i18n.language === 'vi' ? 'vi-VN' : i18n.language === 'en' ? 'en-US' : i18n.language === 'ko' ? 'ko-KR' : i18n.language === 'es' ? 'es-ES' : undefined;
+                const date = new Date(ts).toLocaleDateString(locale);
+                return item.type === 'custom'
+                  ? (t('createBuzz.createdOn', { date }) as string)
+                  : (t('createBuzz.defaultSystem') as string);
+              })()}
             </Text>
           </View>
         </View>
@@ -269,10 +360,10 @@ export default function BuzzCallScreen() {
           )}
         </View>
       </View>
-      
-      <View style={styles.quickBuzzToggle}>
+
+      <View style={[styles.quickBuzzToggle, { borderTopColor: colors.border }]}>
         <Text style={styles.quickBuzzToggleLabel}>
-          Hiển thị trong Quick Buzz
+          {t('createBuzz.showInQuickBuzz')}
         </Text>
         <Switch
           value={item.showInQuickBuzz || false}
@@ -285,7 +376,10 @@ export default function BuzzCallScreen() {
   );
 
   return (
-    <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
+    <SafeAreaView
+      style={[styles.container, { backgroundColor: theme.background }]}
+      edges={['top', 'bottom']}
+    >
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         keyboardVerticalOffset={insets.bottom}
@@ -293,12 +387,21 @@ export default function BuzzCallScreen() {
       >
         {/* Header */}
         <View style={styles.header}>
-          <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
-            <ArrowLeft size={24} color="#fff" strokeWidth={2} />
+          <TouchableOpacity
+            style={styles.backButton}
+            onPress={() => router.back()}
+          >
+            <ArrowLeft
+              size={24}
+              color={theme.onBackground || colors.text}
+              strokeWidth={2}
+            />
           </TouchableOpacity>
           <View style={styles.titleContainer}>
-            <Text style={styles.title}>Quản Lý Buzz</Text>
-            <Text style={styles.partnerNameSubtitle}>Cho {partnerName} 💕</Text>
+            <Text style={styles.title}>{t('manageBuzz.title')}</Text>
+            <Text style={styles.partnerNameSubtitle}>
+              {t('manageBuzz.for', { name: partnerName })}
+            </Text>
           </View>
           <TouchableOpacity style={styles.addButton} onPress={openCreateModal}>
             <Plus size={24} color="#ff6b9d" strokeWidth={2} />
@@ -307,33 +410,35 @@ export default function BuzzCallScreen() {
 
         {/* Custom Buzz List */}
         <View style={styles.content}>
-          <Text style={styles.sectionTitle}>Quản Lý Buzz</Text>
-          <Text style={styles.sectionSubtitle}>
-            Tạo buzz tùy chỉnh và quản lý buzz mặc định. Chọn buzz nào hiển thị trong Quick Buzz.
-          </Text>
-          
+          <Text style={styles.sectionTitle}>{t('manageBuzz.title')}</Text>
+          <Text style={styles.sectionSubtitle}>{t('manageBuzz.desc')}</Text>
+
           <FlatList
             data={customBuzzTemplates}
             renderItem={renderCustomBuzzTemplate}
-            keyExtractor={item => item.id}
+            keyExtractor={(item) => item.id}
             style={styles.customBuzzList}
             showsVerticalScrollIndicator={false}
             ListEmptyComponent={
               <View style={styles.emptyContainer}>
                 <Zap size={64} color="#333" strokeWidth={1} />
-                <Text style={styles.emptyText}>Chưa có buzz tùy chỉnh</Text>
+                <Text style={styles.emptyText}>
+                  {t('createBuzz.emptyTitle')}
+                </Text>
+
                 <Text style={styles.emptySubtext}>
-                  {isPremium 
-                    ? 'Tap + để tạo buzz đầu tiên'
-                    : 'Nâng cấp Premium để tạo buzz tùy chỉnh'
-                  }
+                  {isPremium
+                    ? (t('createBuzz.emptyHintFirst') as string)
+                    : (t('createBuzz.emptyHintUpgrade') as string)}
                 </Text>
                 {!isPremium && (
                   <TouchableOpacity
                     style={styles.upgradeButton}
                     onPress={() => router.push('/premium')}
                   >
-                    <Text style={styles.upgradeButtonText}>Nâng Cấp Premium 👑</Text>
+                    <Text style={styles.upgradeButtonText}>
+                      {t('createBuzz.upgrade')}
+                    </Text>
                   </TouchableOpacity>
                 )}
               </View>
@@ -351,66 +456,110 @@ export default function BuzzCallScreen() {
           <KeyboardAvoidingView
             behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
             keyboardVerticalOffset={insets.bottom}
-            style={styles.customBuzzModal}
+            style={[
+              styles.customBuzzModal,
+              { backgroundColor: theme.background },
+            ]}
           >
-            <View style={styles.customBuzzModalHeader}>
-              <Text style={styles.customBuzzModalTitle}>
-                {editingTemplate ? 'Chỉnh Sửa Buzz' : 'Tạo Buzz Tùy Chỉnh'}
+            <View
+              style={[
+                styles.customBuzzModalHeader,
+                { borderBottomColor: colors.border },
+              ]}
+            >
+              <Text
+                style={[styles.customBuzzModalTitle, { color: colors.text }]}
+              >
+                {editingTemplate
+                  ? t('createBuzz.editTitle')
+                  : t('createBuzz.createTitle')}
               </Text>
               <TouchableOpacity
                 style={styles.closeButton}
                 onPress={() => setShowCreateModal(false)}
               >
-                <X size={24} color="#888" strokeWidth={2} />
+                <X
+                  size={24}
+                  color={theme.mutedText || '#888'}
+                  strokeWidth={2}
+                />
               </TouchableOpacity>
             </View>
-            
-            <ScrollView 
+
+            <ScrollView
               style={styles.customBuzzModalContent}
               keyboardShouldPersistTaps="handled"
               showsVerticalScrollIndicator={false}
             >
               <View style={styles.emojiSelector}>
-                <Text style={styles.formLabel}>Chọn Emoji:</Text>
+                <Text style={[styles.formLabel, { color: colors.text }]}>
+                  {t('createBuzz.emojiLabel')}
+                </Text>
                 <EmojiSelector />
               </View>
-              
+
               <View style={styles.textInputContainer}>
-                <Text style={styles.formLabel}>Nội dung Buzz:</Text>
+                <Text style={[styles.formLabel, { color: colors.text }]}>
+                  {t('createBuzz.contentLabel')}
+                </Text>
                 <TextInput
-                  style={styles.customBuzzInput}
+                  style={[
+                    styles.customBuzzInput,
+                    {
+                      backgroundColor: colors.card,
+                      borderColor: colors.border,
+                      color: colors.text,
+                    },
+                  ]}
                   value={customBuzzText}
                   onChangeText={setCustomBuzzText}
-                  placeholder="Nhập nội dung buzz (tối đa 20 ký tự)"
+                  placeholder={t('createBuzz.contentPlaceholder') as string}
                   placeholderTextColor="#666"
                   maxLength={20}
                 />
-                <Text style={styles.charCount}>
-                  {customBuzzText.length}/20 ký tự
+                <Text style={[styles.charCount, { color: theme.mutedText }]}>
+                  {customBuzzText.length}/20
                 </Text>
               </View>
-              
+
               <View style={styles.previewContainer}>
-                <Text style={styles.previewLabel}>Xem trước:</Text>
-                <View style={styles.previewBuzz}>
+                <Text style={[styles.previewLabel, { color: theme.mutedText }]}>
+                  {t('createBuzz.previewLabel')}
+                </Text>
+                <View
+                  style={[
+                    styles.previewBuzz,
+                    {
+                      backgroundColor: colors.card,
+                      borderColor: colors.border,
+                    },
+                  ]}
+                >
                   <Text style={styles.previewEmoji}>{customBuzzEmoji}</Text>
-                  <Text style={styles.previewText}>
-                    {customBuzzText || 'Nội dung buzz...'}
+                  <Text style={[styles.previewText, { color: colors.text }]}>
+                    {customBuzzText ||
+                      (t('createBuzz.previewPlaceholder') as string)}
                   </Text>
                 </View>
               </View>
-              
+
               <TouchableOpacity
                 style={[
                   styles.saveCustomBuzzButton,
-                  !customBuzzText.trim() && styles.saveCustomBuzzButtonDisabled
+                  !customBuzzText.trim() && styles.saveCustomBuzzButtonDisabled,
                 ]}
                 onPress={handleSaveCustomBuzz}
                 disabled={!customBuzzText.trim()}
               >
-                <Zap size={20} color="#fff" strokeWidth={2} />
+                <Zap
+                  size={20}
+                  color={theme.onSecondary || '#fff'}
+                  strokeWidth={2}
+                />
                 <Text style={styles.saveCustomBuzzText}>
-                  {editingTemplate ? 'Cập Nhật Buzz' : 'Lưu Buzz Tùy Chỉnh'}
+                  {editingTemplate
+                    ? t('createBuzz.saveUpdate')
+                    : t('createBuzz.saveCreate')}
                 </Text>
               </TouchableOpacity>
             </ScrollView>
@@ -424,7 +573,6 @@ export default function BuzzCallScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#000',
   },
   header: {
     flexDirection: 'row',
@@ -444,7 +592,6 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 20,
     fontWeight: '700',
-    color: '#fff',
   },
   partnerNameSubtitle: {
     fontSize: 12,
@@ -462,7 +609,6 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#fff',
     marginBottom: 8,
   },
   sectionSubtitle: {
@@ -509,7 +655,6 @@ const styles = StyleSheet.create({
   customBuzzText: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#fff',
   },
   defaultBadge: {
     fontSize: 10,
@@ -541,7 +686,6 @@ const styles = StyleSheet.create({
   },
   quickBuzzToggleLabel: {
     fontSize: 14,
-    color: '#fff',
     fontWeight: '500',
   },
   emptyContainer: {
@@ -576,7 +720,6 @@ const styles = StyleSheet.create({
   },
   customBuzzModal: {
     flex: 1,
-    backgroundColor: '#000',
   },
   customBuzzModalHeader: {
     flexDirection: 'row',
@@ -589,7 +732,6 @@ const styles = StyleSheet.create({
   customBuzzModalTitle: {
     fontSize: 20,
     fontWeight: '700',
-    color: '#fff',
   },
   closeButton: {
     padding: 8,
@@ -604,7 +746,6 @@ const styles = StyleSheet.create({
   formLabel: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#fff',
     marginBottom: 12,
   },
   emojiOptions: {
@@ -703,7 +844,6 @@ const styles = StyleSheet.create({
   },
   previewText: {
     fontSize: 16,
-    color: '#fff',
     fontWeight: '500',
   },
   saveCustomBuzzButton: {
@@ -721,6 +861,5 @@ const styles = StyleSheet.create({
   saveCustomBuzzText: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#fff',
   },
 });

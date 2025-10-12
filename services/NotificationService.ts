@@ -55,11 +55,19 @@ class NotificationService {
         return null;
       }
 
-      const projectId = Constants.expoConfig?.extra?.eas?.projectId;
+      const projectId =
+        (Constants as any)?.expoConfig?.extra?.eas?.projectId ||
+        (Constants as any)?.easConfig?.projectId ||
+        (process as any)?.env?.EXPO_PUBLIC_EAS_PROJECT_ID;
 
-      const tokenData = projectId
-        ? await Notifications.getExpoPushTokenAsync({ projectId })
-        : await Notifications.getExpoPushTokenAsync();
+      if (!projectId) {
+        console.warn(
+          'EAS projectId is not configured. Set expo.extra.eas.projectId in app.json or EXPO_PUBLIC_EAS_PROJECT_ID in .env.'
+        );
+        return null;
+      }
+
+      const tokenData = await Notifications.getExpoPushTokenAsync({ projectId });
 
       const token = tokenData.data;
       await AsyncStorage.setItem(this.PUSH_TOKEN_KEY, token);
