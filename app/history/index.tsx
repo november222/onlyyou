@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
   View,
   Text,
@@ -42,7 +42,8 @@ import { useTranslation } from 'react-i18next';
 import TimelineService, { Event, EventType } from '@/services/TimelineService';
 import { isFeatureEnabled } from '../../config/features';
 import PremiumGate from '../../components/PremiumGate';
-import { useTheme, useThemeColors } from '@/providers/ThemeProvider';
+import { useTheme } from '@/providers/ThemeProvider';
+import type { Theme } from '@/theme';
 
 interface ConnectionSession {
   id: string;
@@ -61,6 +62,8 @@ type DragContext = {
 // Timeline Event Card Component
 const TimelineEventCard = ({ event }: { event: Event }) => {
   const { i18n } = useTranslation();
+  const { theme } = useTheme();
+  const styles = useMemo(() => createStyles(theme), [theme]);
   const formatTime = (timestamp: number) => {
     const lng = i18n.language;
     const locale = lng === 'vi' ? 'vi-VN' : lng === 'en' ? 'en-US' : lng === 'ko' ? 'ko-KR' : lng === 'es' ? 'es-ES' : undefined;
@@ -160,6 +163,9 @@ const SwipeableSessionCard = ({
 }) => {
   const translateX = useSharedValue(0);
   const opacity = useSharedValue(1);
+  const { theme } = useTheme();
+  const styles = useMemo(() => createStyles(theme), [theme]);
+  const colors = theme;
 
   const gestureHandler = useAnimatedGestureHandler<PanGestureHandlerGestureEvent, DragContext>({
     onStart: (_, context) => {
@@ -211,28 +217,34 @@ const SwipeableSessionCard = ({
             <View style={styles.sessionHeader}>
               <View style={styles.sessionInfo}>
                 <Text style={styles.sessionRoomCode}>{item.roomCode}</Text>
-                <View style={[
-                  styles.sessionStatus,
-                  { backgroundColor: item.isActive ? '#4ade80' : '#666' }
-                ]}>
+                <View
+                  style={[
+                    styles.sessionStatus,
+                    {
+                      backgroundColor: item.isActive
+                        ? colors.success ?? '#4ade80'
+                        : colors.mutedText ?? '#666',
+                    },
+                  ]}
+                >
                   <Text style={styles.sessionStatusText}>
                     {item.isActive ? 'Đang kết nối' : 'Đã ngắt'}
                   </Text>
                 </View>
               </View>
-              <ChevronRight size={16} color="#666" strokeWidth={2} />
+              <ChevronRight size={16} color={colors.mutedText ?? colors.text} strokeWidth={2} />
             </View>
             
             <View style={styles.sessionDetails}>
               <View style={styles.sessionDetailRow}>
                 <View style={styles.sessionDate}>
-                  <Calendar size={14} color="#888" strokeWidth={2} />
+                  <Calendar size={14} color={colors.mutedText ?? colors.text} strokeWidth={2} />
                   <Text style={styles.sessionDateText}>
                     {formatDateTime(item.startDate)}
                   </Text>
                 </View>
                 <View style={styles.sessionDuration}>
-                  <Timer size={14} color="#ff6b9d" strokeWidth={2} />
+                  <Timer size={14} color={colors.primary} strokeWidth={2} />
                   <Text style={styles.sessionDurationText}>
                     {formatDuration(item.duration)}
                   </Text>
@@ -241,7 +253,7 @@ const SwipeableSessionCard = ({
               
               {item.endDate && (
                 <View style={styles.sessionDate}>
-                  <WifiOff size={14} color="#888" strokeWidth={2} />
+                  <WifiOff size={14} color={colors.mutedText ?? colors.text} strokeWidth={2} />
                   <Text style={styles.sessionDateText}>
                     {formatDateTime(item.endDate)}
                   </Text>
@@ -250,7 +262,7 @@ const SwipeableSessionCard = ({
               
               {/* Buzz Calls Count */}
               <View style={styles.buzzCallsRow}>
-                <Zap size={14} color="#f59e0b" strokeWidth={2} />
+                <Zap size={14} color={colors.secondary} strokeWidth={2} />
                 <Text style={styles.buzzCallsText}>
                   {item.buzzCallsCount} buzz calls
                 </Text>
@@ -267,7 +279,7 @@ const SwipeableSessionCard = ({
             style={styles.swipeDeleteButton}
             onPress={handleDelete}
           >
-            <Trash2 size={20} color="#fff" strokeWidth={2} />
+            <Trash2 size={20} color={colors.onPrimary ?? '#fff'} strokeWidth={2} />
           </TouchableOpacity>
         </Animated.View>
       )}
@@ -277,13 +289,14 @@ const SwipeableSessionCard = ({
 
 export default function HistoryScreen() {
   const { theme } = useTheme();
-  const colors = useThemeColors();
+  const styles = useMemo(() => createStyles(theme), [theme]);
+  const colors = theme;
   const [connectionSessions, setConnectionSessions] = useState<ConnectionSession[]>([]);
   const [timelineEvents, setTimelineEvents] = useState<Event[]>([]);
   const [isPremium, setIsPremium] = useState(false);
   const [showPremiumModal, setShowPremiumModal] = useState(false);
   const [activeTab, setActiveTab] = useState<'sessions' | 'timeline'>('sessions');
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
 
   useEffect(() => {
     loadConnectionHistory();
@@ -437,13 +450,13 @@ export default function HistoryScreen() {
 
   return (
     <>
-      <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]}>
+      <SafeAreaView style={styles.container}>
         {/* Header */}
         <View style={styles.header}>
           <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
             <ArrowLeft size={24} color={colors.text} strokeWidth={2} />
           </TouchableOpacity>
-          <Text style={[styles.title, { color: colors.text }]}>{t('history:title')}</Text>
+          <Text style={styles.title}>{t('history:title')}</Text>
           <View style={styles.headerRight} />
         </View>
 
@@ -451,18 +464,18 @@ export default function HistoryScreen() {
         {isFeatureEnabled('timeline') && (
           <View style={styles.tabNavigation}>
             <TouchableOpacity
-              style={[styles.tabButton, { borderColor: colors.border, backgroundColor: colors.card }, activeTab === 'sessions' && styles.activeTabButton]}
+              style={[styles.tabButton, activeTab === 'sessions' && styles.activeTabButton]}
               onPress={() => setActiveTab('sessions')}
             >
-              <Text style={[styles.tabButtonText, { color: colors.text }, activeTab === 'sessions' && styles.activeTabButtonText]}>
+              <Text style={[styles.tabButtonText, activeTab === 'sessions' && styles.activeTabButtonText]}>
                 {t('history:sessions')}
               </Text>
             </TouchableOpacity>
             <TouchableOpacity
-              style={[styles.tabButton, { borderColor: colors.border, backgroundColor: colors.card }, activeTab === 'timeline' && styles.activeTabButton]}
+              style={[styles.tabButton, activeTab === 'timeline' && styles.activeTabButton]}
               onPress={() => setActiveTab('timeline')}
             >
-              <Text style={[styles.tabButtonText, { color: colors.text }, activeTab === 'timeline' && styles.activeTabButtonText]}>
+              <Text style={[styles.tabButtonText, activeTab === 'timeline' && styles.activeTabButtonText]}>
                 {t('history:timeline')}
               </Text>
             </TouchableOpacity>
@@ -471,26 +484,26 @@ export default function HistoryScreen() {
 
         {/* Summary Stats */}
         {activeTab === 'sessions' && (
-          <View style={[styles.summaryCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
+          <View style={styles.summaryCard}>
             <View style={styles.summaryRow}>
               <View style={styles.summaryItem}>
                 <Text style={styles.summaryValue}>{connectionSessions.length}</Text>
-                <Text style={[styles.summaryLabel, { color: '#888' }]}>{t('history:totalSessions')}</Text>
+                <Text style={styles.summaryLabel}>{t('history:totalSessions')}</Text>
               </View>
               <View style={styles.summaryItem}>
                 <Text style={styles.summaryValue}>{formatDuration(totalDuration)}</Text>
-                <Text style={[styles.summaryLabel, { color: '#888' }]}>{t('history:totalTime')}</Text>
+                <Text style={styles.summaryLabel}>{t('history:totalTime')}</Text>
               </View>
               <View style={styles.summaryItem}>
                 <Text style={styles.summaryValue}>{totalBuzzCalls}</Text>
-                <Text style={[styles.summaryLabel, { color: '#888' }]}>{t('history:buzzCalls')}</Text>
+                <Text style={styles.summaryLabel}>{t('history:buzzCalls')}</Text>
               </View>
             </View>
           </View>
         )}
 
         {activeTab === 'timeline' && (
-          <View style={[styles.summaryCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
+          <View style={styles.summaryCard}>
             <View style={styles.summaryRow}>
               <View style={styles.summaryItem}>
                 <Text style={styles.summaryValue}>{timelineEvents.length}</Text>
@@ -541,51 +554,51 @@ export default function HistoryScreen() {
         presentationStyle="fullScreen"
         onRequestClose={() => setShowPremiumModal(false)}
       >
-        <SafeAreaView style={[styles.premiumModal, { backgroundColor: theme.background }]} edges={['top', 'bottom']}>
-          <View style={[styles.premiumHeader, { borderBottomColor: colors.border }]}>
+        <SafeAreaView style={styles.premiumModal} edges={['top', 'bottom']}>
+          <View style={styles.premiumHeader}>
             <Text style={styles.premiumTitle}>Nâng Cấp Premier</Text>
             <TouchableOpacity
               style={styles.closeButton}
               onPress={() => setShowPremiumModal(false)}
             >
-              <X size={24} color="#888" strokeWidth={2} />
+              <X size={24} color={colors.mutedText ?? colors.text} strokeWidth={2} />
             </TouchableOpacity>
           </View>
-          
+
           <ScrollView style={styles.premiumScrollView} contentContainerStyle={styles.premiumContent}>
             <View style={styles.premiumIcon}>
-              <Crown size={48} color="#f59e0b" strokeWidth={2} fill="#f59e0b" />
+              <Crown size={48} color={colors.secondary} strokeWidth={2} fill={colors.secondary} />
             </View>
-            
+
             <Text style={styles.premiumMainTitle}>Only You Premier</Text>
             <Text style={styles.premiumSubtitle}>
               Mở khóa tính năng xem và quản lý lịch sử kết nối chi tiết
             </Text>
-            
+
             <View style={styles.premiumFeatures}>
               <View style={styles.premiumFeature}>
-                <History size={20} color="#4ade80" strokeWidth={2} />
+                <History size={20} color={colors.success ?? '#4ade80'} strokeWidth={2} />
                 <Text style={styles.premiumFeatureText}>Xem chi tiết từng phiên kết nối</Text>
               </View>
               <View style={styles.premiumFeature}>
-                <Trash2 size={20} color="#4ade80" strokeWidth={2} />
+                <Trash2 size={20} color={colors.success ?? '#4ade80'} strokeWidth={2} />
                 <Text style={styles.premiumFeatureText}>Xóa và quản lý lịch sử</Text>
               </View>
               <View style={styles.premiumFeature}>
-                <Zap size={20} color="#4ade80" strokeWidth={2} />
+                <Zap size={20} color={colors.success ?? '#4ade80'} strokeWidth={2} />
                 <Text style={styles.premiumFeatureText}>Thống kê Buzz Calls chi tiết</Text>
               </View>
               <View style={styles.premiumFeature}>
-                <Shield size={20} color="#4ade80" strokeWidth={2} />
+                <Shield size={20} color={colors.success ?? '#4ade80'} strokeWidth={2} />
                 <Text style={styles.premiumFeatureText}>Bảo mật và sao lưu nâng cao</Text>
               </View>
             </View>
-            
+
             <View style={styles.premiumPricing}>
               <Text style={styles.premiumPrice}>₫399,000/năm</Text>
               <Text style={styles.premiumPriceSubtext}>Hoặc ₫49,000/tháng • Tiết kiệm 32%</Text>
             </View>
-            
+
             <View style={styles.premiumActions}>
               <TouchableOpacity
                 style={styles.upgradeButton}
@@ -594,10 +607,10 @@ export default function HistoryScreen() {
                   router.push('/premium');
                 }}
               >
-                <Crown size={20} color="#fff" strokeWidth={2} />
+                <Crown size={20} color={colors.onSecondary ?? colors.onPrimary ?? '#fff'} strokeWidth={2} />
                 <Text style={styles.upgradeButtonText}>Xem Chi Tiết Gói</Text>
               </TouchableOpacity>
-              
+
               <TouchableOpacity
                 style={styles.laterButton}
                 onPress={() => setShowPremiumModal(false)}
@@ -612,344 +625,360 @@ export default function HistoryScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#000',
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    padding: 20,
-    paddingBottom: 10,
-  },
-  backButton: {
-    padding: 8,
-    marginLeft: -8,
-  },
-  title: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: '#fff',
-  },
-  headerRight: {
-    width: 40,
-  },
-  tabNavigation: {
-    flexDirection: 'row',
-    marginHorizontal: 20,
-    marginBottom: 20,
-    backgroundColor: '#111',
-    borderRadius: 12,
-    padding: 4,
-  },
-  tabButton: {
-    flex: 1,
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    borderRadius: 8,
-    alignItems: 'center',
-  },
-  activeTabButton: {
-    backgroundColor: '#ff6b9d',
-  },
-  tabButtonText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#888',
-  },
-  activeTabButtonText: {
-    color: '#fff',
-  },
-  summaryCard: {
-    backgroundColor: '#111',
-    marginHorizontal: 20,
-    marginBottom: 20,
-    borderRadius: 16,
-    padding: 20,
-    borderWidth: 1,
-    borderColor: '#333',
-  },
-  summaryRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-  },
-  summaryItem: {
-    alignItems: 'center',
-  },
-  summaryValue: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: '#ff6b9d',
-    marginBottom: 4,
-  },
-  summaryLabel: {
-    fontSize: 12,
-    color: '#888',
-  },
-  sessionsList: {
-    flex: 1,
-  },
-  sessionsContent: {
-    paddingHorizontal: 20,
-    paddingBottom: 20,
-  },
-  timelineEventCard: {
-    backgroundColor: '#111',
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: '#333',
-    marginBottom: 12,
-    padding: 16,
-  },
-  timelineEventHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 8,
-  },
-  timelineEventLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flex: 1,
-  },
-  timelineEventIcon: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: 'rgba(255, 107, 157, 0.1)',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 12,
-  },
-  timelineEventInfo: {
-    flex: 1,
-  },
-  timelineEventTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#fff',
-    marginBottom: 2,
-  },
-  timelineEventTime: {
-    fontSize: 12,
-    color: '#888',
-  },
-  timelineEventDescription: {
-    fontSize: 14,
-    color: '#ccc',
-    lineHeight: 20,
-  },
-  swipeContainer: {
-    position: 'relative',
-    marginBottom: 12,
-  },
-  sessionCard: {
-    backgroundColor: '#111',
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: '#333',
-    overflow: 'hidden',
-  },
-  sessionCardContent: {
-    padding: 16,
-  },
-  sessionHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  sessionInfo: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-  },
-  sessionRoomCode: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#fff',
-    fontFamily: 'monospace',
-  },
-  sessionStatus: {
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 12,
-  },
-  sessionStatusText: {
-    fontSize: 12,
-    color: '#fff',
-    fontWeight: '500',
-  },
-  sessionDetails: {
-    gap: 8,
-  },
-  sessionDetailRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  sessionDate: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-  },
-  sessionDateText: {
-    fontSize: 13,
-    color: '#888',
-  },
-  sessionDuration: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-  },
-  sessionRightIcons: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-  },
-  sessionDurationText: {
-    fontSize: 13,
-    color: '#ff6b9d',
-    fontWeight: '500',
-  },
-  buzzCallsRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-  },
-  buzzCallsText: {
-    fontSize: 13,
-    color: '#f59e0b',
-    fontWeight: '500',
-  },
-  deleteButtonContainer: {
-    position: 'absolute',
-    right: 0,
-    top: 0,
-    bottom: 0,
-    width: 80,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  swipeDeleteButton: {
-    backgroundColor: '#ef4444',
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  premiumModal: {
-    flex: 1,
-    backgroundColor: '#000',
-  },
-  premiumHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: 20,
-    borderBottomWidth: 1,
-    borderBottomColor: '#333',
-  },
-  premiumTitle: {
-    fontSize: 20,
-    fontWeight: '700',
-  },
-  closeButton: {
-    padding: 8,
-  },
-  premiumScrollView: {
-    flex: 1,
-  },
-  premiumContent: {
-    flexGrow: 1,
-    padding: 20,
-    paddingTop: 40,
-    paddingBottom: 40,
-  },
-  premiumIcon: {
-    alignSelf: 'center',
-    marginBottom: 24,
-  },
-  premiumMainTitle: {
-    fontSize: 28,
-    fontWeight: '700',
-    marginBottom: 8,
-    textAlign: 'center',
-  },
-  premiumSubtitle: {
-    fontSize: 16,
-    color: '#888',
-    textAlign: 'center',
-    marginBottom: 32,
-    lineHeight: 24,
-    paddingHorizontal: 20,
-  },
-  premiumFeatures: {
-    marginBottom: 32,
-  },
-  premiumFeature: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#111',
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 16,
-    borderWidth: 1,
-    borderColor: '#333',
-  },
-  premiumFeatureText: {
-    fontSize: 16,
-    marginLeft: 12,
-    flex: 1,
-  },
-  premiumPricing: {
-    alignItems: 'center',
-    marginBottom: 32,
-    paddingHorizontal: 20,
-  },
-  premiumPrice: {
-    fontSize: 32,
-    fontWeight: '700',
-    color: '#f59e0b',
-    marginBottom: 4,
-  },
-  premiumPriceSubtext: {
-    fontSize: 14,
-    color: '#888',
-    textAlign: 'center',
-  },
-  premiumActions: {
-    gap: 12,
-    paddingHorizontal: 20,
-  },
-  upgradeButton: {
-    backgroundColor: '#f59e0b',
-    borderRadius: 12,
-    padding: 16,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-  },
-  upgradeButtonText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#fff',
-  },
-  laterButton: {
-    backgroundColor: 'transparent',
-    borderRadius: 12,
-    padding: 16,
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: '#333',
-  },
-  laterButtonText: {
-    fontSize: 16,
-    fontWeight: '500',
-    color: '#888',
-  },
-});
+const createStyles = (theme: Theme) =>
+  StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: theme.background,
+    },
+    header: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      paddingHorizontal: 20,
+      paddingVertical: 16,
+      borderBottomWidth: 1,
+      borderBottomColor: theme.border,
+      backgroundColor: theme.card,
+    },
+    backButton: {
+      width: 40,
+      height: 40,
+      borderRadius: 20,
+      justifyContent: 'center',
+      alignItems: 'center',
+      borderWidth: 1,
+      borderColor: theme.border,
+    },
+    title: {
+      fontSize: 20,
+      fontWeight: '700',
+      color: theme.text,
+    },
+    headerRight: {
+      width: 40,
+      height: 40,
+    },
+    tabNavigation: {
+      flexDirection: 'row',
+      marginHorizontal: 20,
+      marginBottom: 20,
+      backgroundColor: theme.card,
+      borderRadius: 12,
+      padding: 4,
+      borderWidth: 1,
+      borderColor: theme.border,
+    },
+    tabButton: {
+      flex: 1,
+      paddingVertical: 12,
+      paddingHorizontal: 16,
+      borderRadius: 8,
+      alignItems: 'center',
+    },
+    activeTabButton: {
+      backgroundColor: theme.primary,
+    },
+    tabButtonText: {
+      fontSize: 14,
+      fontWeight: '600',
+      color: theme.mutedText ?? theme.text,
+    },
+    activeTabButtonText: {
+      color: theme.onPrimary ?? '#ffffff',
+    },
+    summaryCard: {
+      backgroundColor: theme.card,
+      marginHorizontal: 20,
+      marginBottom: 20,
+      borderRadius: 16,
+      padding: 20,
+      borderWidth: 1,
+      borderColor: theme.border,
+    },
+    summaryRow: {
+      flexDirection: 'row',
+      justifyContent: 'space-around',
+    },
+    summaryItem: {
+      alignItems: 'center',
+    },
+    summaryValue: {
+      fontSize: 18,
+      fontWeight: '700',
+      color: theme.primary,
+      marginBottom: 4,
+    },
+    summaryLabel: {
+      fontSize: 12,
+      color: theme.mutedText ?? theme.text,
+    },
+    sessionsList: {
+      flex: 1,
+    },
+    sessionsContent: {
+      paddingHorizontal: 20,
+      paddingBottom: 20,
+    },
+    timelineEventCard: {
+      backgroundColor: theme.card,
+      borderRadius: 12,
+      borderWidth: 1,
+      borderColor: theme.border,
+      marginBottom: 12,
+      padding: 16,
+    },
+    timelineEventHeader: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      marginBottom: 8,
+    },
+    timelineEventLeft: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      flex: 1,
+    },
+    timelineEventIcon: {
+      width: 32,
+      height: 32,
+      borderRadius: 16,
+      backgroundColor: 'rgba(255, 107, 157, 0.1)',
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginRight: 12,
+    },
+    timelineEventInfo: {
+      flex: 1,
+    },
+    timelineEventTitle: {
+      fontSize: 16,
+      fontWeight: '600',
+      color: theme.text,
+      marginBottom: 2,
+    },
+    timelineEventTime: {
+      fontSize: 12,
+      color: theme.mutedText ?? theme.text,
+    },
+    timelineEventDescription: {
+      fontSize: 14,
+      color: theme.mutedText ?? theme.text,
+      lineHeight: 20,
+    },
+    swipeContainer: {
+      position: 'relative',
+      marginBottom: 12,
+    },
+    sessionCard: {
+      backgroundColor: theme.card,
+      borderRadius: 12,
+      borderWidth: 1,
+      borderColor: theme.border,
+      overflow: 'hidden',
+    },
+    sessionCardContent: {
+      padding: 16,
+    },
+    sessionHeader: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      marginBottom: 12,
+    },
+    sessionInfo: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 12,
+    },
+    sessionRoomCode: {
+      fontSize: 16,
+      fontWeight: '600',
+      color: theme.text,
+      fontFamily: 'monospace',
+    },
+    sessionStatus: {
+      paddingHorizontal: 8,
+      paddingVertical: 4,
+      borderRadius: 12,
+    },
+    sessionStatusText: {
+      fontSize: 12,
+      color: theme.onPrimary ?? '#ffffff',
+      fontWeight: '500',
+    },
+    sessionDetails: {
+      gap: 8,
+    },
+    sessionDetailRow: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+    },
+    sessionDate: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 6,
+    },
+    sessionDateText: {
+      fontSize: 13,
+      color: theme.mutedText ?? theme.text,
+    },
+    sessionDuration: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 4,
+    },
+    sessionRightIcons: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 4,
+    },
+    sessionDurationText: {
+      fontSize: 13,
+      color: theme.primary,
+      fontWeight: '500',
+    },
+    buzzCallsRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 6,
+    },
+    buzzCallsText: {
+      fontSize: 13,
+      color: theme.secondary,
+      fontWeight: '500',
+    },
+    deleteButtonContainer: {
+      position: 'absolute',
+      right: 0,
+      top: 0,
+      bottom: 0,
+      width: 80,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    swipeDeleteButton: {
+      backgroundColor: theme.danger ?? '#ef4444',
+      width: 60,
+      height: 60,
+      borderRadius: 30,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    premiumModal: {
+      flex: 1,
+      backgroundColor: theme.background,
+    },
+    premiumHeader: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      padding: 20,
+      borderBottomWidth: 1,
+      borderBottomColor: theme.border,
+      backgroundColor: theme.card,
+    },
+    premiumTitle: {
+      fontSize: 20,
+      fontWeight: '700',
+      color: theme.text,
+    },
+    closeButton: {
+      padding: 8,
+    },
+    premiumScrollView: {
+      flex: 1,
+    },
+    premiumContent: {
+      flexGrow: 1,
+      padding: 20,
+      paddingTop: 40,
+      paddingBottom: 40,
+    },
+    premiumIcon: {
+      alignSelf: 'center',
+      marginBottom: 24,
+    },
+    premiumMainTitle: {
+      fontSize: 28,
+      fontWeight: '700',
+      marginBottom: 8,
+      textAlign: 'center',
+      color: theme.text,
+    },
+    premiumSubtitle: {
+      fontSize: 16,
+      color: theme.mutedText ?? theme.text,
+      textAlign: 'center',
+      marginBottom: 32,
+      lineHeight: 24,
+      paddingHorizontal: 20,
+    },
+    premiumFeatures: {
+      marginBottom: 32,
+      gap: 16,
+    },
+    premiumFeature: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      backgroundColor: theme.card,
+      borderRadius: 12,
+      padding: 16,
+      borderWidth: 1,
+      borderColor: theme.border,
+    },
+    premiumFeatureText: {
+      fontSize: 16,
+      marginLeft: 12,
+      flex: 1,
+      color: theme.text,
+    },
+    premiumPricing: {
+      alignItems: 'center',
+      marginBottom: 32,
+      paddingHorizontal: 20,
+    },
+    premiumPrice: {
+      fontSize: 32,
+      fontWeight: '700',
+      color: theme.secondary,
+      marginBottom: 4,
+    },
+    premiumPriceSubtext: {
+      fontSize: 14,
+      color: theme.mutedText ?? theme.text,
+      textAlign: 'center',
+    },
+    premiumActions: {
+      gap: 12,
+      paddingHorizontal: 20,
+    },
+    upgradeButton: {
+      backgroundColor: theme.secondary,
+      borderRadius: 12,
+      padding: 16,
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: 8,
+    },
+    upgradeButtonText: {
+      fontSize: 16,
+      fontWeight: '600',
+      color: theme.onSecondary ?? theme.onPrimary ?? '#ffffff',
+    },
+    laterButton: {
+      backgroundColor: 'transparent',
+      borderRadius: 12,
+      padding: 16,
+      alignItems: 'center',
+      borderWidth: 1,
+      borderColor: theme.border,
+    },
+    laterButtonText: {
+      fontSize: 16,
+      fontWeight: '500',
+      color: theme.mutedText ?? theme.text,
+    },
+  });
