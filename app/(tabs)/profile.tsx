@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   View,
@@ -52,6 +52,18 @@ export default function ProfileScreen() {
   const { t } = useTranslation();
   const { theme } = useTheme();
   const colors = useThemeColors();
+  const cardSurfaceStyle = useMemo(
+    () => ({ backgroundColor: colors.card, borderColor: colors.border }),
+    [colors.card, colors.border]
+  );
+  const borderOnlyStyle = useMemo(
+    () => ({ borderColor: colors.border }),
+    [colors.border]
+  );
+  const mutedTextStyle = useMemo(
+    () => ({ color: colors.mutedText || colors.text }),
+    [colors.mutedText, colors.text]
+  );
   const [currentConnectionStart, setCurrentConnectionStart] =
     useState<Date | null>(null);
   const [totalConnectedTime, setTotalConnectedTime] = useState(0);
@@ -126,10 +138,7 @@ export default function ProfileScreen() {
   }) => (
     <TouchableOpacity
       onPress={onPress}
-      style={[
-        styles.historySessionCard,
-        { backgroundColor: colors.card, borderColor: colors.border },
-      ]}
+      style={[styles.historySessionCard, cardSurfaceStyle]}
     >
       <View style={styles.historySessionHeader}>
         <View style={styles.historySessionInfo}>
@@ -137,10 +146,23 @@ export default function ProfileScreen() {
           <View
             style={[
               styles.historySessionStatus,
-              { backgroundColor: item.isActive ? theme.success : (colors.mutedText || colors.text) },
+              {
+                backgroundColor: item.isActive
+                  ? theme.success
+                  : colors.mutedText || colors.text,
+              },
             ]}
           >
-            <Text style={styles.historySessionStatusText}>
+            <Text
+              style={[
+                styles.historySessionStatusText,
+                {
+                  color: item.isActive
+                    ? theme.onPrimary || colors.background
+                    : theme.onCard || colors.text,
+                },
+              ]}
+            >
               {item.isActive
                 ? t('connection:connected')
                 : t('connection:disconnected')}
@@ -484,17 +506,14 @@ export default function ProfileScreen() {
                 </View>
               )}
             </View>
-            <Text style={[styles.subtitle, { color: colors.mutedText || colors.text }]}>
+            <Text style={[styles.subtitle, mutedTextStyle]}>
               {t('profile:subtitle')}
             </Text>
           </View>
 
           {/* Love Counter (L-day) */}
           <View
-            style={[
-              styles.loveCounterCard,
-              { backgroundColor: colors.card, borderColor: colors.border },
-            ]}
+            style={[styles.loveCounterCard, cardSurfaceStyle]}
           >
             <View style={styles.loveCounterHeader}>
               <Sparkles size={24} color={theme.primary} strokeWidth={2} />
@@ -513,7 +532,7 @@ export default function ProfileScreen() {
                 <Text style={[styles.loveCounterLabel, { color: colors.text }]}>
                   {t('profile:daysConnected')}
                 </Text>
-                <Text style={[styles.loveCounterSubtext, { color: colors.mutedText || colors.text }]}>
+                <Text style={[styles.loveCounterSubtext, mutedTextStyle]}>
                   {t('profile:since')} {formatDate(relationshipStartAt)}
                 </Text>
               </View>
@@ -522,10 +541,7 @@ export default function ProfileScreen() {
 
           {/* Total Sessions Navigation */}
           <TouchableOpacity
-            style={[
-              styles.totalSessionsCard,
-              { backgroundColor: colors.card, borderColor: colors.border },
-            ]}
+            style={[styles.totalSessionsCard, cardSurfaceStyle]}
             onPress={() => setShowHistoryModal(true)}
           >
             <View style={styles.totalSessionsHeader}>
@@ -545,10 +561,7 @@ export default function ProfileScreen() {
           {/* Current Session Stats */}
           <View style={styles.statsGrid}>
             <View
-              style={[
-                styles.statCard,
-                { backgroundColor: colors.card, borderColor: colors.border },
-              ]}
+              style={[styles.statCard, cardSurfaceStyle]}
             >
               <View style={styles.statIcon}>
                 {connectionState.isConnected ? (
@@ -569,7 +582,7 @@ export default function ProfileScreen() {
               </Text>
             </View>
 
-            <View style={styles.statCard}>
+            <View style={[styles.statCard, cardSurfaceStyle]}>
               <View style={styles.statIcon}>
                 <Clock size={20} color={theme.primary} strokeWidth={2} />
               </View>
@@ -584,10 +597,7 @@ export default function ProfileScreen() {
 
           <View style={styles.statsGrid}>
             <View
-              style={[
-                styles.statCard,
-                { backgroundColor: colors.card, borderColor: colors.border },
-              ]}
+              style={[styles.statCard, cardSurfaceStyle]}
             >
               <View style={styles.statIcon}>
                 <WifiOff size={20} color={theme.danger} strokeWidth={2} />
@@ -598,10 +608,7 @@ export default function ProfileScreen() {
             </View>
 
             <View
-              style={[
-                styles.statCard,
-                { backgroundColor: colors.card, borderColor: colors.border },
-              ]}
+              style={[styles.statCard, cardSurfaceStyle]}
             >
               <View style={styles.statIcon}>
                 <TrendingUp size={20} color={theme.secondary} strokeWidth={2} />
@@ -625,7 +632,7 @@ export default function ProfileScreen() {
               ]}
               edges={['top', 'bottom']}
             >
-              <View style={styles.premiumHeader}>
+              <View style={[styles.premiumHeader, borderOnlyStyle]}>
                 <Text style={styles.premiumTitle}>
                   {t('profile:premiumTitle')}
                 </Text>
@@ -653,30 +660,30 @@ export default function ProfileScreen() {
                 <Text style={styles.premiumMainTitle}>
                   {t('profile:premiumMainTitle')}
                 </Text>
-                <Text style={styles.premiumSubtitle}>
+                <Text style={[styles.premiumSubtitle, mutedTextStyle]}>
                   {t('profile:premiumSubtitle')}
                 </Text>
 
                 <View style={styles.premiumFeatures}>
-                  <View style={styles.premiumFeature}>
+                  <View style={[styles.premiumFeature, cardSurfaceStyle]}>
                     <History size={20} color={theme.success} strokeWidth={2} />
                     <Text style={styles.premiumFeatureText}>
                       {t('profile:premiumFeature')}
                     </Text>
                   </View>
-                  <View style={styles.premiumFeature}>
+                  <View style={[styles.premiumFeature, cardSurfaceStyle]}>
                     <Zap size={20} color={theme.success} strokeWidth={2} />
                     <Text style={styles.premiumFeatureText}>
                       {t('profile:premiumFeature')}
                     </Text>
                   </View>
-                  <View style={styles.premiumFeature}>
+                  <View style={[styles.premiumFeature, cardSurfaceStyle]}>
                     <Shield size={20} color={theme.success} strokeWidth={2} />
                     <Text style={styles.premiumFeatureText}>
                       {t('profile:premiumFeature')}
                     </Text>
                   </View>
-                  <View style={styles.premiumFeature}>
+                  <View style={[styles.premiumFeature, cardSurfaceStyle]}>
                     <Sparkles size={20} color={theme.success} strokeWidth={2} />
                     <Text style={styles.premiumFeatureText}>
                       {t('profile:premiumFeature')}
@@ -688,29 +695,37 @@ export default function ProfileScreen() {
                   <Text style={styles.premiumPrice}>
                     {t('profile:premiumPriceYear')}
                   </Text>
-                  <Text style={styles.premiumPriceSubtext}>
+                  <Text style={[styles.premiumPriceSubtext, mutedTextStyle]}>
                     {t('profile:premiumPriceMonthSave')}
                   </Text>
                 </View>
                 <View style={styles.premiumActions}>
                   <TouchableOpacity
-                    style={styles.upgradeButton}
+                    style={[
+                      styles.upgradeButton,
+                      { backgroundColor: theme.secondary, borderColor: theme.secondary },
+                    ]}
                     onPress={() => {
                       setShowPremiumModal(false);
                       router.push('/premium?openPayment=1');
                     }}
                   >
                     <Crown size={20} color={theme.onSecondary || colors.text} strokeWidth={2} />
-                    <Text style={styles.upgradeButtonText}>
+                    <Text
+                      style={[
+                        styles.upgradeButtonText,
+                        { color: theme.onSecondary || colors.background },
+                      ]}
+                    >
                       {t('profile:upgradeNow')}
                     </Text>
                   </TouchableOpacity>
 
                   <TouchableOpacity
-                    style={styles.laterButton}
+                    style={[styles.laterButton, borderOnlyStyle]}
                     onPress={() => setShowPremiumModal(false)}
                   >
-                    <Text style={styles.laterButtonText}>
+                    <Text style={[styles.laterButtonText, mutedTextStyle]}>
                       {t('profile:later')}
                     </Text>
                   </TouchableOpacity>
@@ -734,7 +749,7 @@ export default function ProfileScreen() {
               edges={['top', 'bottom']}
             >
               {/* Header */}
-              <View style={styles.historyHeader}>
+              <View style={[styles.historyHeader, borderOnlyStyle]}>
                 <Text style={styles.historyTitle}>
                   {t('profile:historyTitle')}
                 </Text>
@@ -748,10 +763,7 @@ export default function ProfileScreen() {
 
               {/* Summary Stats */}
               <View
-                style={[
-                  styles.historySummaryCard,
-                  { backgroundColor: colors.card, borderColor: colors.border },
-                ]}
+                style={[styles.historySummaryCard, cardSurfaceStyle]}
               >
                 <View style={styles.historySummaryRow}>
                   <View style={styles.historySummaryItem}>
@@ -793,7 +805,7 @@ export default function ProfileScreen() {
             </SafeAreaView>
           </Modal>
 
-          <View style={[styles.quoteCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
+          <View style={[styles.quoteCard, cardSurfaceStyle]}>
             <Text style={[styles.quoteText, { color: colors.text }]}>{t('profile:quoteText')}</Text>
 
             <Text style={[styles.quoteAuthor, { color: theme.primary }]}>{t('profile:quoteAuthor')}</Text>

@@ -1,6 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { rateLimiter, RATE_LIMITS } from '@/services/RateLimiter';
+import { useThemeColors } from '@/providers/ThemeProvider';
+import type { Theme } from '@/theme';
 
 interface RateLimitIndicatorProps {
   actionType: 'buzz' | 'calendar_add' | 'calendar_delete' | 'photo_upload' | 'photo_delete';
@@ -38,6 +40,8 @@ const ACTION_CONFIGS = {
 export function RateLimitIndicator({ actionType, showLabel = false }: RateLimitIndicatorProps) {
   const [remaining, setRemaining] = useState<number>(0);
   const [max, setMax] = useState<number>(0);
+  const colors = useThemeColors();
+  const styles = useMemo(() => createStyles(colors), [colors]);
 
   useEffect(() => {
     const updateQuota = () => {
@@ -60,9 +64,9 @@ export function RateLimitIndicator({ actionType, showLabel = false }: RateLimitI
   const percentage = max > 0 ? (remaining / max) * 100 : 0;
 
   const getColor = () => {
-    if (percentage >= 60) return '#4ade80';
-    if (percentage >= 30) return '#f59e0b';
-    return '#ef4444';
+    if (percentage >= 60) return colors.success ?? '#4ade80';
+    if (percentage >= 30) return colors.secondary ?? '#f59e0b';
+    return colors.danger ?? '#ef4444';
   };
 
   if (!showLabel && remaining === max) {
@@ -94,28 +98,29 @@ export function RateLimitIndicator({ actionType, showLabel = false }: RateLimitI
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    width: '100%',
-  },
-  label: {
-    fontSize: 12,
-    color: '#888',
-    marginBottom: 4,
-  },
-  barContainer: {
-    height: 4,
-    backgroundColor: '#333',
-    borderRadius: 2,
-    overflow: 'hidden',
-  },
-  barFill: {
-    height: '100%',
-    borderRadius: 2,
-  },
-  warningText: {
-    fontSize: 11,
-    color: '#ef4444',
-    marginTop: 4,
-  },
-});
+const createStyles = (colors: Theme) =>
+  StyleSheet.create({
+    container: {
+      width: '100%',
+    },
+    label: {
+      fontSize: 12,
+      color: colors.mutedText ?? colors.text,
+      marginBottom: 4,
+    },
+    barContainer: {
+      height: 4,
+      backgroundColor: colors.border,
+      borderRadius: 2,
+      overflow: 'hidden',
+    },
+    barFill: {
+      height: '100%',
+      borderRadius: 2,
+    },
+    warningText: {
+      fontSize: 11,
+      color: colors.danger ?? '#ef4444',
+      marginTop: 4,
+    },
+  });
