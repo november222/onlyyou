@@ -28,6 +28,7 @@ import {
   Trash2,
   Crown,
 } from 'lucide-react-native';
+import WebRTCService from '@/services/WebRTCService';
 
 interface ConnectionSession {
   id: string;
@@ -111,7 +112,7 @@ export default function SessionDetailScreen() {
     setBuzzCalls(mockBuzzCalls);
   };
 
-  const handleDeleteSession = () => {
+  const handleDeleteSession = async () => {
     if (!isPremium) {
       Alert.alert(
         t('history:premiumFeatureTitle'),
@@ -135,9 +136,13 @@ export default function SessionDetailScreen() {
         {
           text: t('history:delete'),
           style: 'destructive',
-          onPress: () => {
+          onPress: async () => {
+            try {
+              await WebRTCService.deleteSavedConnection(session.roomCode);
+            } catch (e) {
+              console.warn('delete session failed', e);
+            }
             router.back();
-            // In real app, would delete from storage
           },
         },
       ]
@@ -231,9 +236,22 @@ export default function SessionDetailScreen() {
         >
           <View style={styles.overviewHeader}>
             <View style={styles.roomCodeContainer}>
-              <Text style={[styles.roomCode, { color: colors.text }]}>
-                {session.roomCode}
-              </Text>
+              <View style={styles.roomInfo}>
+                <Text
+                  style={[styles.roomName, { color: colors.text }]}
+                  numberOfLines={1}
+                  ellipsizeMode="tail"
+                >
+                  {session.name || session.displayName || t('history:session')}
+                </Text>
+                <Text
+                  style={[styles.roomCodeSmall, { color: colors.muted }]}
+                  numberOfLines={1}
+                  ellipsizeMode="middle"
+                >
+                  {session.roomCode}
+                </Text>
+              </View>
               <View
                 style={[
                   styles.sessionStatus,
@@ -491,11 +509,22 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: 12,
   },
-  roomCode: {
-    fontSize: 24,
+  roomInfo: {
+    alignItems: 'center',
+    maxWidth: '70%',
+  },
+  roomName: {
+    fontSize: 20,
     fontWeight: '700',
     color: '#fff',
+    fontFamily: 'System',
+  },
+  roomCodeSmall: {
+    fontSize: 12,
+    fontWeight: '500',
+    color: '#aaa',
     fontFamily: 'monospace',
+    marginTop: 4,
   },
   sessionStatus: {
     paddingHorizontal: 12,

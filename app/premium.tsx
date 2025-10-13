@@ -26,6 +26,7 @@ import {
 } from 'lucide-react-native';
 import { PurchaseService, Plan } from '@/services/PurchaseService';
 import { usePremium } from '@/providers/PremiumProvider';
+import { useTheme, useThemeColors } from '@/providers/ThemeProvider';
 
 interface PremiumFeature {
   icon: React.ReactNode;
@@ -74,6 +75,8 @@ const premiumFeatures: PremiumFeature[] = [
 ];
 
 export default function PremiumScreen() {
+  const { theme } = useTheme();
+  const colors = useThemeColors();
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState<'monthly' | 'yearly'>('yearly');
   const [isProcessing, setIsProcessing] = useState(false);
@@ -203,14 +206,14 @@ export default function PremiumScreen() {
   return (
     <>
       <Stack.Screen options={{ headerShown: false, header: () => null }} />
-      <SafeAreaView style={styles.container}>
+      <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
         <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
           {/* Header */}
           <View style={styles.header}>
             <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
-              <ArrowLeft size={24} color="#fff" strokeWidth={2} />
+              <ArrowLeft size={24} color={colors.text} strokeWidth={2} />
             </TouchableOpacity>
-            <Text style={styles.title}>Premier</Text>
+            <Text style={[styles.title, { color: colors.text }]}>Premier</Text>
             <View style={styles.headerRight} />
           </View>
 
@@ -223,15 +226,15 @@ export default function PremiumScreen() {
               <Sparkles size={20} color="#4ade80" strokeWidth={2} style={styles.sparkle3} />
             </View>
             
-            <Text style={styles.heroTitle}>Only You Premier</Text>
-            <Text style={styles.heroSubtitle}>
+            <Text style={[styles.heroTitle, { color: colors.text }]}>Only You Premier</Text>
+            <Text style={[styles.heroSubtitle, { color: colors.mutedText || colors.text }]}>
               Nâng cấp trải nghiệm yêu xa của bạn với các tính năng độc quyền
             </Text>
           </View>
 
           {/* Pricing Cards */}
           <View style={styles.pricingSection}>
-            <Text style={styles.pricingSectionTitle}>Chọn Gói Phù Hợp</Text>
+            <Text style={[styles.pricingSectionTitle, { color: colors.text }]}> Chọn Gói Phù Hợp</Text>
             
             <View style={styles.pricingCards}>
               {/* Monthly Plan */}
@@ -243,15 +246,15 @@ export default function PremiumScreen() {
                 onPress={() => setSelectedPlan('monthly')}
               >
                 <View style={styles.pricingHeader}>
-                  <Text style={styles.pricingTitle}>Hàng Tháng</Text>
+                  <Text style={[styles.pricingTitle, { color: colors.text }]}>Hàng Tháng</Text>
                   {selectedPlan === 'monthly' && (
                     <View style={styles.selectedBadge}>
                       <Check size={16} color="#fff" strokeWidth={2} />
                     </View>
                   )}
                 </View>
-                <Text style={styles.pricingPrice}>₫49,000</Text>
-                <Text style={styles.pricingPeriod}>mỗi tháng</Text>
+                <Text style={[styles.pricingPrice, { color: theme.secondary }]}>₫49,000</Text>
+                <Text style={[styles.pricingPeriod, { color: colors.mutedText || colors.text }]}>mỗi tháng</Text>
               </TouchableOpacity>
 
               {/* Yearly Plan (Recommended) */}
@@ -268,7 +271,7 @@ export default function PremiumScreen() {
                   <Text style={styles.recommendedText}>Khuyến Nghị</Text>
                 </View>
                 <View style={styles.pricingHeader}>
-                  <Text style={styles.pricingTitle}>Hàng Năm</Text>
+                  <Text style={[styles.pricingTitle, { color: colors.text }]}>Hàng Năm</Text>
                   {selectedPlan === 'yearly' && (
                     <View style={styles.selectedBadge}>
                       <Check size={16} color="#fff" strokeWidth={2} />
@@ -276,18 +279,18 @@ export default function PremiumScreen() {
                   )}
                 </View>
                 <View style={styles.yearlyPricing}>
-                  <Text style={styles.pricingPrice}>₫399,000</Text>
-                  <Text style={styles.originalPrice}>₫588,000</Text>
+                  <Text style={[styles.pricingPrice, { color: theme.secondary }]}>₫399,000</Text>
+                  <Text style={[styles.originalPrice, { color: colors.mutedText || colors.text }]}>₫588,000</Text>
                 </View>
-                <Text style={styles.pricingPeriod}>mỗi năm</Text>
-                <Text style={styles.savingsText}>Tiết kiệm 32%</Text>
+                <Text style={[styles.pricingPeriod, { color: colors.mutedText || colors.text }]}>mỗi năm</Text>
+                <Text style={[styles.savingsText, { color: theme.success }]}>Tiết kiệm 32%</Text>
               </TouchableOpacity>
             </View>
           </View>
 
           {/* Features List */}
           <View style={styles.featuresSection}>
-            <Text style={styles.featuresSectionTitle}>Tính Năng Premier</Text>
+            <Text style={[styles.featuresSectionTitle, { color: colors.text }]}>Tính Năng Premier</Text>
             
             {premiumFeatures.map((feature, index) => (
               <PremiumFeatureCard key={index} feature={feature} />
@@ -305,15 +308,15 @@ export default function PremiumScreen() {
         </ScrollView>
 
         {/* Bottom CTA */}
-        <View style={styles.bottomSection}>
-          <TouchableOpacity style={styles.upgradeButton} onPress={handleUpgrade}>
+        <View style={[styles.bottomSection, { backgroundColor: colors.card, borderTopColor: colors.border }]}>
+          <TouchableOpacity style={[styles.upgradeButton, { backgroundColor: theme.secondary }]} onPress={handleUpgrade}>
             <Crown size={20} color="#fff" strokeWidth={2} />
-            <Text style={styles.upgradeButtonText}>
+            <Text style={[styles.upgradeButtonText, { color: theme.onSecondary || colors.text }]}>
               Nâng Cấp Premier - {selectedPlan === 'monthly' ? '₫49,000/tháng' : '₫399,000/năm'}
             </Text>
           </TouchableOpacity>
           
-          <Text style={styles.termsText}>
+          <Text style={[styles.termsText, { color: colors.mutedText || colors.text }]}>
             Bằng cách nâng cấp, bạn đồng ý với Điều khoản Dịch vụ và Chính sách Bảo mật
           </Text>
         </View>
@@ -326,67 +329,67 @@ export default function PremiumScreen() {
         presentationStyle="pageSheet"
         onRequestClose={() => setShowPaymentModal(false)}
       >
-        <View style={styles.paymentModal}>
-          <View style={styles.paymentHeader}>
-            <Text style={styles.paymentTitle}>Thanh Toán</Text>
+        <View style={[styles.paymentModal, { backgroundColor: colors.background }]}>
+          <View style={[styles.paymentHeader, { borderBottomColor: colors.border }]}>
+            <Text style={[styles.paymentTitle, { color: colors.text }]}>Thanh Toán</Text>
             <TouchableOpacity
               style={styles.closeButton}
               onPress={() => setShowPaymentModal(false)}
             >
-              <X size={24} color="#888" strokeWidth={2} />
+              <X size={24} color="" strokeWidth={2} />
             </TouchableOpacity>
           </View>
           
           <View style={styles.paymentContent}>
-            <View style={styles.paymentSummary}>
-              <Text style={styles.paymentPlan}>
+            <View style={[styles.paymentSummary, { backgroundColor: colors.card, borderColor: colors.border }]}>
+              <Text style={[styles.paymentPlan, { color: colors.text }]}>
                 Only You Premier - {selectedPlan === 'monthly' ? 'Hàng Tháng' : 'Hàng Năm'}
               </Text>
-              <Text style={styles.paymentPrice}>
+              <Text style={[styles.paymentPrice, { color: theme.secondary }]}>
                 {selectedPlan === 'monthly' ? '₫49,000' : '₫399,000'}
               </Text>
               {selectedPlan === 'yearly' && (
-                <Text style={styles.paymentSavings}>Tiết kiệm ₫189,000</Text>
+                <Text style={[styles.paymentSavings, { color: theme.success }]}>Tiết kiệm ₫189,000</Text>
               )}
             </View>
             
             <View style={styles.paymentMethods}>
-              <Text style={styles.paymentMethodsTitle}>Phương Thức Thanh Toán</Text>
+              <Text style={[styles.paymentMethodsTitle, { color: colors.text }]}>Phương Thức Thanh Toán</Text>
               
-              <TouchableOpacity style={styles.paymentMethod}>
-                <Text style={styles.paymentMethodText}>💳 Thẻ Tín Dụng/Ghi Nợ</Text>
-                <Text style={styles.paymentMethodSubtext}>Visa, Mastercard, JCB</Text>
+              <TouchableOpacity style={[styles.paymentMethod, { backgroundColor: colors.card, borderColor: colors.border }]}>
+                <Text style={[styles.paymentMethodText, { color: colors.text }]}>💳 Thẻ Tín Dụng/Ghi Nợ</Text>
+                <Text style={[styles.paymentMethodSubtext, { color: colors.mutedText || colors.text }]}>Visa, Mastercard, JCB</Text>
               </TouchableOpacity>
               
-              <TouchableOpacity style={styles.paymentMethod}>
-                <Text style={styles.paymentMethodText}>🏦 Chuyển Khoản Ngân Hàng</Text>
-                <Text style={styles.paymentMethodSubtext}>Vietcombank, Techcombank, BIDV</Text>
+              <TouchableOpacity style={[styles.paymentMethod, { backgroundColor: colors.card, borderColor: colors.border }]}>
+                <Text style={[styles.paymentMethodText, { color: colors.text }]}>🏦 Chuyển Khoản Ngân Hàng</Text>
+                <Text style={[styles.paymentMethodSubtext, { color: colors.mutedText || colors.text }]}>Vietcombank, Techcombank, BIDV</Text>
               </TouchableOpacity>
               
-              <TouchableOpacity style={styles.paymentMethod}>
-                <Text style={styles.paymentMethodText}>📱 Ví Điện Tử</Text>
-                <Text style={styles.paymentMethodSubtext}>MoMo, ZaloPay, ViettelPay</Text>
+              <TouchableOpacity style={[styles.paymentMethod, { backgroundColor: colors.card, borderColor: colors.border }]}>
+                <Text style={[styles.paymentMethodText, { color: colors.text }]}>📱 Ví Điện Tử</Text>
+                <Text style={[styles.paymentMethodSubtext, { color: colors.mutedText || colors.text }]}>MoMo, ZaloPay, ViettelPay</Text>
               </TouchableOpacity>
             </View>
             
-            <TouchableOpacity style={styles.purchaseButton} onPress={handlePurchase}>
-              <Lock size={20} color="#fff" strokeWidth={2} />
-              <Text style={styles.purchaseButtonText}>
+            <TouchableOpacity style={[styles.purchaseButton, { backgroundColor: theme.success }]} onPress={handlePurchase}>
+              <Lock size={20} color={theme.onPrimary || colors.text} strokeWidth={2} />
+              <Text style={[styles.purchaseButtonText, { color: theme.onPrimary || colors.text }]}>
                 {isProcessing ? 'Đang xử lý...' : 'Thanh Toán Bảo Mật'}
               </Text>
             </TouchableOpacity>
             
             <TouchableOpacity 
-              style={styles.restoreButton} 
+              style={[styles.restoreButton, { borderColor: colors.border }]} 
               onPress={handleRestore}
               disabled={isProcessing}
             >
-              <Text style={styles.restoreButtonText}>
+              <Text style={[styles.restoreButtonText, { color: colors.mutedText || colors.text }]}>
                 {isProcessing ? 'Đang khôi phục...' : 'Khôi Phục Mua Hàng'}
               </Text>
             </TouchableOpacity>
             
-            <Text style={styles.paymentNote}>
+            <Text style={[styles.paymentNote, { color: colors.mutedText || colors.text }]}>
               Thanh toán được bảo mật bằng mã hóa SSL 256-bit
             </Text>
           </View>
@@ -784,3 +787,11 @@ const styles = StyleSheet.create({
     lineHeight: 16,
   },
 });
+
+
+
+
+
+
+
+

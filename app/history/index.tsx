@@ -20,7 +20,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
-import { 
+import {
   ArrowLeft,
   Calendar,
   Timer,
@@ -36,13 +36,15 @@ import {
   Sparkles,
   Heart,
   Camera,
-  FileText
+  FileText,
 } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
 import TimelineService, { Event, EventType } from '@/services/TimelineService';
+import WebRTCService from '@/services/WebRTCService';
 import { isFeatureEnabled } from '../../config/features';
 import PremiumGate from '../../components/PremiumGate';
 import { useTheme, useThemeColors } from '@/providers/ThemeProvider';
+import { usePremium } from '@/providers/PremiumProvider'; // add this import
 
 interface ConnectionSession {
   id: string;
@@ -63,7 +65,16 @@ const TimelineEventCard = ({ event }: { event: Event }) => {
   const { i18n } = useTranslation();
   const formatTime = (timestamp: number) => {
     const lng = i18n.language;
-    const locale = lng === 'vi' ? 'vi-VN' : lng === 'en' ? 'en-US' : lng === 'ko' ? 'ko-KR' : lng === 'es' ? 'es-ES' : undefined;
+    const locale =
+      lng === 'vi'
+        ? 'vi-VN'
+        : lng === 'en'
+        ? 'en-US'
+        : lng === 'ko'
+        ? 'ko-KR'
+        : lng === 'es'
+        ? 'es-ES'
+        : undefined;
     return new Date(timestamp).toLocaleString(locale, {
       day: '2-digit',
       month: '2-digit',
@@ -116,7 +127,10 @@ const TimelineEventCard = ({ event }: { event: Event }) => {
         return photoData.caption || 'Đã thêm ảnh mới';
       case 'note':
         const noteData = event.data;
-        return noteData.content.substring(0, 100) + (noteData.content.length > 100 ? '...' : '');
+        return (
+          noteData.content.substring(0, 100) +
+          (noteData.content.length > 100 ? '...' : '')
+        );
       default:
         return 'Event data';
     }
@@ -130,8 +144,12 @@ const TimelineEventCard = ({ event }: { event: Event }) => {
             {getEventIcon(event.type)}
           </View>
           <View style={styles.timelineEventInfo}>
-            <Text style={styles.timelineEventTitle}>{getEventTitle(event)}</Text>
-            <Text style={styles.timelineEventTime}>{formatTime(event.timestamp)}</Text>
+            <Text style={styles.timelineEventTitle}>
+              {getEventTitle(event)}
+            </Text>
+            <Text style={styles.timelineEventTime}>
+              {formatTime(event.timestamp)}
+            </Text>
           </View>
         </View>
       </View>
@@ -143,25 +161,17 @@ const TimelineEventCard = ({ event }: { event: Event }) => {
 };
 
 // Swipeable Session Card Component
-const SwipeableSessionCard = ({ 
-  item, 
-  onDelete, 
-  onPress,
-  isPremium, 
-  formatDuration, 
-  formatDateTime 
-}: {
-  item: ConnectionSession;
-  onDelete: () => void;
-  onPress: () => void;
-  isPremium: boolean;
-  formatDuration: (seconds: number) => string;
-  formatDateTime: (date: Date) => string;
-}) => {
+const SwipeableSessionCard = ({ item, onDelete, onPress, isPremium }: any) => {
+  const { t } = useTranslation();
+  const colors = useThemeColors();
+
   const translateX = useSharedValue(0);
   const opacity = useSharedValue(1);
 
-  const gestureHandler = useAnimatedGestureHandler<PanGestureHandlerGestureEvent, DragContext>({
+  const gestureHandler = useAnimatedGestureHandler<
+    PanGestureHandlerGestureEvent,
+    DragContext
+  >({
     onStart: (_, context) => {
       context.startX = translateX.value;
     },
@@ -210,67 +220,57 @@ const SwipeableSessionCard = ({
           <TouchableOpacity onPress={onPress} style={styles.sessionCardContent}>
             <View style={styles.sessionHeader}>
               <View style={styles.sessionInfo}>
-                <Text style={styles.sessionRoomCode}>{item.roomCode}</Text>
-                <View style={[
-                  styles.sessionStatus,
-                  { backgroundColor: item.isActive ? '#4ade80' : '#666' }
-                ]}>
-                  <Text style={styles.sessionStatusText}>
-                    {item.isActive ? 'Đang kết nối' : 'Đã ngắt'}
+                <View style={{ flex: 1, minWidth: 0 }}>
+                  <Text
+                    style={[styles.sessionTitle, { color: colors.text }]}
+                    numberOfLines={1}
+                    ellipsizeMode="tail"
+                  >
+                    {(item as any).name ||
+                      (item as any).partnerName ||
+                      item.roomCode}
+                  </Text>
+
+                  <Text
+                    style={[styles.sessionSubtitle, { color: colors.muted }]}
+                    numberOfLines={1}
+                    ellipsizeMode="middle"
+                  >
+                    {item.roomCode}
+                  </Text>
+                </View>
+
+                <View
+                  style={[
+                    styles.sessionStatus,
+                    {
+                      backgroundColor: item.isActive
+                        ? colors.success || '#4ade80'
+                        : colors.border || '#666',
+                    },
+                  ]}
+                >
+                  <Text
+                    style={[styles.sessionStatusText, { color: colors.text }]}
+                  >
+                    {item.isActive
+                      ? t('history:statusConnected')
+                      : t('history:statusDisconnected')}
                   </Text>
                 </View>
               </View>
-              <ChevronRight size={16} color="#666" strokeWidth={2} />
+
+              <ChevronRight
+                size={16}
+                color={colors.muted || '#666'}
+                strokeWidth={2}
+              />
             </View>
-            
-            <View style={styles.sessionDetails}>
-              <View style={styles.sessionDetailRow}>
-                <View style={styles.sessionDate}>
-                  <Calendar size={14} color="#888" strokeWidth={2} />
-                  <Text style={styles.sessionDateText}>
-                    {formatDateTime(item.startDate)}
-                  </Text>
-                </View>
-                <View style={styles.sessionDuration}>
-                  <Timer size={14} color="#ff6b9d" strokeWidth={2} />
-                  <Text style={styles.sessionDurationText}>
-                    {formatDuration(item.duration)}
-                  </Text>
-                </View>
-              </View>
-              
-              {item.endDate && (
-                <View style={styles.sessionDate}>
-                  <WifiOff size={14} color="#888" strokeWidth={2} />
-                  <Text style={styles.sessionDateText}>
-                    {formatDateTime(item.endDate)}
-                  </Text>
-                </View>
-              )}
-              
-              {/* Buzz Calls Count */}
-              <View style={styles.buzzCallsRow}>
-                <Zap size={14} color="#f59e0b" strokeWidth={2} />
-                <Text style={styles.buzzCallsText}>
-                  {item.buzzCallsCount} buzz calls
-                </Text>
-              </View>
-            </View>
+
+            {/* Keep footer/meta if exists */}
           </TouchableOpacity>
         </Animated.View>
       </PanGestureHandler>
-      
-      {/* Delete Button (appears when swiped) */}
-      {!item.isActive && (
-        <Animated.View style={[styles.deleteButtonContainer, deleteButtonStyle]}>
-          <TouchableOpacity
-            style={styles.swipeDeleteButton}
-            onPress={handleDelete}
-          >
-            <Trash2 size={20} color="#fff" strokeWidth={2} />
-          </TouchableOpacity>
-        </Animated.View>
-      )}
     </View>
   );
 };
@@ -278,18 +278,38 @@ const SwipeableSessionCard = ({
 export default function HistoryScreen() {
   const { theme } = useTheme();
   const colors = useThemeColors();
-  const [connectionSessions, setConnectionSessions] = useState<ConnectionSession[]>([]);
+  const [connectionSessions, setConnectionSessions] = useState<
+    ConnectionSession[]
+  >([]);
   const [timelineEvents, setTimelineEvents] = useState<Event[]>([]);
-  const [isPremium, setIsPremium] = useState(false);
-  const [showPremiumModal, setShowPremiumModal] = useState(false);
-  const [activeTab, setActiveTab] = useState<'sessions' | 'timeline'>('sessions');
-  const { t } = useTranslation();
+  const { isPremium } = usePremium(); // use provider value
+  const [activeTab, setActiveTab] = useState<'sessions' | 'timeline'>(
+    'sessions'
+  );
+  const { t, i18n } = useTranslation();
 
   useEffect(() => {
     loadConnectionHistory();
     if (isFeatureEnabled('timeline')) {
       loadTimelineEvents();
     }
+  }, []);
+
+  useEffect(() => {
+    // initial load
+    (async () => {
+      const saved = await WebRTCService.getSavedConnections();
+      setConnectionSessions(saved);
+    })();
+
+    // subscribe updates
+    WebRTCService.onSavedConnectionsChanged = (list) => {
+      setConnectionSessions(list);
+    };
+
+    return () => {
+      WebRTCService.onSavedConnectionsChanged = null;
+    };
   }, []);
 
   const loadTimelineEvents = async () => {
@@ -356,29 +376,27 @@ export default function HistoryScreen() {
 
   const handleDeleteSession = (sessionId: string) => {
     if (!isPremium) {
-      setShowPremiumModal(true);
+      router.push('/premium');
       return;
     }
 
-    Alert.alert(
-      t('history:deleteSession'),
-      t('history:deleteSessionDesc'),
-      [
-        { text: t('cancel'), style: 'cancel' },
-        {
-          text: t('delete'),
-          style: 'destructive',
-          onPress: () => {
-            setConnectionSessions(prev => prev.filter(session => session.id !== sessionId));
-          },
+    Alert.alert(t('history:deleteSession'), t('history:deleteSessionDesc'), [
+      { text: t('cancel'), style: 'cancel' },
+      {
+        text: t('delete'),
+        style: 'destructive',
+        onPress: () => {
+          setConnectionSessions((prev) =>
+            prev.filter((session) => session.id !== sessionId)
+          );
         },
-      ]
-    );
+      },
+    ]);
   };
 
   const handleSessionPress = (session: ConnectionSession) => {
     if (!isPremium) {
-      setShowPremiumModal(true);
+      router.push('/premium');
       return;
     }
 
@@ -386,13 +404,13 @@ export default function HistoryScreen() {
       Alert.alert(t('history.activeSession'), t('history.activeSessionDesc'));
       return;
     }
-    
+
     router.push({
       pathname: '/history/[id]',
-      params: { 
+      params: {
         id: session.id,
-        sessionData: JSON.stringify(session)
-      }
+        sessionData: JSON.stringify(session),
+      },
     });
   };
 
@@ -405,7 +423,16 @@ export default function HistoryScreen() {
 
   const formatDateTime = (date: Date): string => {
     const lng = i18n.language;
-    const locale = lng === 'vi' ? 'vi-VN' : lng === 'en' ? 'en-US' : lng === 'ko' ? 'ko-KR' : lng === 'es' ? 'es-ES' : undefined;
+    const locale =
+      lng === 'vi'
+        ? 'vi-VN'
+        : lng === 'en'
+        ? 'en-US'
+        : lng === 'ko'
+        ? 'ko-KR'
+        : lng === 'es'
+        ? 'es-ES'
+        : undefined;
     return date.toLocaleString(locale, {
       day: '2-digit',
       month: '2-digit',
@@ -415,35 +442,77 @@ export default function HistoryScreen() {
     });
   };
 
-  const renderConnectionSession = ({ item }: { item: ConnectionSession }) => (
-    <PremiumGate feature="Chi tiết lịch sử kết nối">
-      <SwipeableSessionCard
-        item={item}
-        onDelete={() => handleDeleteSession(item.id)}
+  const renderConnectionSession = ({ item }: { item: any }) => {
+    const { t } = useTranslation();
+    const colors = useThemeColors();
+
+    return (
+      <TouchableOpacity
         onPress={() => handleSessionPress(item)}
-        isPremium={isPremium}
-        formatDuration={formatDuration}
-        formatDateTime={formatDateTime}
-      />
-    </PremiumGate>
-  );
+        style={styles.sessionCardTouchable}
+      >
+        <View style={styles.sessionCardRow}>
+          <View style={styles.sessionLeft}>{/* avatar/icon if any */}</View>
+
+          <View style={{ flex: 1, minWidth: 0 }}>
+            <Text
+              style={[styles.sessionTitle, { color: colors.text }]}
+              numberOfLines={1}
+              ellipsizeMode="tail"
+            >
+              {item.name || item.partnerName || item.roomCode}
+            </Text>
+
+            <Text
+              style={[styles.sessionSubtitle, { color: colors.muted }]}
+              numberOfLines={1}
+              ellipsizeMode="middle"
+            >
+              {item.roomCode}
+            </Text>
+          </View>
+
+          <View style={styles.sessionRight}>
+            <Text style={[styles.sessionStatusText, { color: colors.text }]}>
+              {item.isActive
+                ? t('history:statusConnected')
+                : t('history:statusDisconnected')}
+            </Text>
+          </View>
+        </View>
+      </TouchableOpacity>
+    );
+  };
 
   const renderTimelineEvent = ({ item }: { item: Event }) => (
     <TimelineEventCard event={item} />
   );
 
-  const totalDuration = connectionSessions.reduce((sum, session) => sum + session.duration, 0);
-  const totalBuzzCalls = connectionSessions.reduce((sum, session) => sum + session.buzzCallsCount, 0);
+  const totalDuration = connectionSessions.reduce(
+    (sum, session) => sum + session.duration,
+    0
+  );
+  const totalBuzzCalls = connectionSessions.reduce(
+    (sum, session) => sum + session.buzzCallsCount,
+    0
+  );
 
   return (
     <>
-      <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]}>
+      <SafeAreaView
+        style={[styles.container, { backgroundColor: theme.background }]}
+      >
         {/* Header */}
         <View style={styles.header}>
-          <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
+          <TouchableOpacity
+            style={styles.backButton}
+            onPress={() => router.back()}
+          >
             <ArrowLeft size={24} color={colors.text} strokeWidth={2} />
           </TouchableOpacity>
-          <Text style={[styles.title, { color: colors.text }]}>{t('history:title')}</Text>
+          <Text style={[styles.title, { color: colors.text }]}>
+            {t('history:title')}
+          </Text>
           <View style={styles.headerRight} />
         </View>
 
@@ -451,18 +520,38 @@ export default function HistoryScreen() {
         {isFeatureEnabled('timeline') && (
           <View style={styles.tabNavigation}>
             <TouchableOpacity
-              style={[styles.tabButton, { borderColor: colors.border, backgroundColor: colors.card }, activeTab === 'sessions' && styles.activeTabButton]}
+              style={[
+                styles.tabButton,
+                { borderColor: colors.border, backgroundColor: colors.card },
+                activeTab === 'sessions' && styles.activeTabButton,
+              ]}
               onPress={() => setActiveTab('sessions')}
             >
-              <Text style={[styles.tabButtonText, { color: colors.text }, activeTab === 'sessions' && styles.activeTabButtonText]}>
+              <Text
+                style={[
+                  styles.tabButtonText,
+                  { color: colors.text },
+                  activeTab === 'sessions' && styles.activeTabButtonText,
+                ]}
+              >
                 {t('history:sessions')}
               </Text>
             </TouchableOpacity>
             <TouchableOpacity
-              style={[styles.tabButton, { borderColor: colors.border, backgroundColor: colors.card }, activeTab === 'timeline' && styles.activeTabButton]}
+              style={[
+                styles.tabButton,
+                { borderColor: colors.border, backgroundColor: colors.card },
+                activeTab === 'timeline' && styles.activeTabButton,
+              ]}
               onPress={() => setActiveTab('timeline')}
             >
-              <Text style={[styles.tabButtonText, { color: colors.text }, activeTab === 'timeline' && styles.activeTabButtonText]}>
+              <Text
+                style={[
+                  styles.tabButtonText,
+                  { color: colors.text },
+                  activeTab === 'timeline' && styles.activeTabButtonText,
+                ]}
+              >
                 {t('history:timeline')}
               </Text>
             </TouchableOpacity>
@@ -471,26 +560,46 @@ export default function HistoryScreen() {
 
         {/* Summary Stats */}
         {activeTab === 'sessions' && (
-          <View style={[styles.summaryCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
+          <View
+            style={[
+              styles.summaryCard,
+              { backgroundColor: colors.card, borderColor: colors.border },
+            ]}
+          >
             <View style={styles.summaryRow}>
               <View style={styles.summaryItem}>
-                <Text style={styles.summaryValue}>{connectionSessions.length}</Text>
-                <Text style={[styles.summaryLabel, { color: '#888' }]}>{t('history:totalSessions')}</Text>
+                <Text style={styles.summaryValue}>
+                  {connectionSessions.length}
+                </Text>
+                <Text style={[styles.summaryLabel, { color: colors.mutedText || colors.text }]}>
+                  {t('history:totalSessions')}
+                </Text>
               </View>
               <View style={styles.summaryItem}>
-                <Text style={styles.summaryValue}>{formatDuration(totalDuration)}</Text>
-                <Text style={[styles.summaryLabel, { color: '#888' }]}>{t('history:totalTime')}</Text>
+                <Text style={styles.summaryValue}>
+                  {formatDuration(totalDuration)}
+                </Text>
+                <Text style={[styles.summaryLabel, { color: colors.mutedText || colors.text }]}>
+                  {t('history:totalTime')}
+                </Text>
               </View>
               <View style={styles.summaryItem}>
                 <Text style={styles.summaryValue}>{totalBuzzCalls}</Text>
-                <Text style={[styles.summaryLabel, { color: '#888' }]}>{t('history:buzzCalls')}</Text>
+                <Text style={[styles.summaryLabel, { color: colors.mutedText || colors.text }]}>
+                  {t('history:buzzCalls')}
+                </Text>
               </View>
             </View>
           </View>
         )}
 
         {activeTab === 'timeline' && (
-          <View style={[styles.summaryCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
+          <View
+            style={[
+              styles.summaryCard,
+              { backgroundColor: colors.card, borderColor: colors.border },
+            ]}
+          >
             <View style={styles.summaryRow}>
               <View style={styles.summaryItem}>
                 <Text style={styles.summaryValue}>{timelineEvents.length}</Text>
@@ -498,13 +607,13 @@ export default function HistoryScreen() {
               </View>
               <View style={styles.summaryItem}>
                 <Text style={styles.summaryValue}>
-                  {timelineEvents.filter(e => e.type === 'buzz').length}
+                  {timelineEvents.filter((e) => e.type === 'buzz').length}
                 </Text>
                 <Text style={styles.summaryLabel}>Buzz</Text>
               </View>
               <View style={styles.summaryItem}>
                 <Text style={styles.summaryValue}>
-                  {timelineEvents.filter(e => e.type === 'ping').length}
+                  {timelineEvents.filter((e) => e.type === 'ping').length}
                 </Text>
                 <Text style={styles.summaryLabel}>Ping</Text>
               </View>
@@ -517,7 +626,7 @@ export default function HistoryScreen() {
           <FlatList
             data={connectionSessions}
             renderItem={renderConnectionSession}
-            keyExtractor={item => item.id}
+            keyExtractor={(item) => item.id}
             style={styles.sessionsList}
             contentContainerStyle={styles.sessionsContent}
             showsVerticalScrollIndicator={false}
@@ -526,88 +635,13 @@ export default function HistoryScreen() {
           <FlatList
             data={timelineEvents}
             renderItem={renderTimelineEvent}
-            keyExtractor={item => item.id}
+            keyExtractor={(item) => item.id}
             style={styles.sessionsList}
             contentContainerStyle={styles.sessionsContent}
             showsVerticalScrollIndicator={false}
           />
         )}
       </SafeAreaView>
-
-      {/* Premium Modal */}
-      <Modal
-        visible={showPremiumModal}
-        animationType="slide"
-        presentationStyle="fullScreen"
-        onRequestClose={() => setShowPremiumModal(false)}
-      >
-        <SafeAreaView style={[styles.premiumModal, { backgroundColor: theme.background }]} edges={['top', 'bottom']}>
-          <View style={[styles.premiumHeader, { borderBottomColor: colors.border }]}>
-            <Text style={styles.premiumTitle}>Nâng Cấp Premier</Text>
-            <TouchableOpacity
-              style={styles.closeButton}
-              onPress={() => setShowPremiumModal(false)}
-            >
-              <X size={24} color="#888" strokeWidth={2} />
-            </TouchableOpacity>
-          </View>
-          
-          <ScrollView style={styles.premiumScrollView} contentContainerStyle={styles.premiumContent}>
-            <View style={styles.premiumIcon}>
-              <Crown size={48} color="#f59e0b" strokeWidth={2} fill="#f59e0b" />
-            </View>
-            
-            <Text style={styles.premiumMainTitle}>Only You Premier</Text>
-            <Text style={styles.premiumSubtitle}>
-              Mở khóa tính năng xem và quản lý lịch sử kết nối chi tiết
-            </Text>
-            
-            <View style={styles.premiumFeatures}>
-              <View style={styles.premiumFeature}>
-                <History size={20} color="#4ade80" strokeWidth={2} />
-                <Text style={styles.premiumFeatureText}>Xem chi tiết từng phiên kết nối</Text>
-              </View>
-              <View style={styles.premiumFeature}>
-                <Trash2 size={20} color="#4ade80" strokeWidth={2} />
-                <Text style={styles.premiumFeatureText}>Xóa và quản lý lịch sử</Text>
-              </View>
-              <View style={styles.premiumFeature}>
-                <Zap size={20} color="#4ade80" strokeWidth={2} />
-                <Text style={styles.premiumFeatureText}>Thống kê Buzz Calls chi tiết</Text>
-              </View>
-              <View style={styles.premiumFeature}>
-                <Shield size={20} color="#4ade80" strokeWidth={2} />
-                <Text style={styles.premiumFeatureText}>Bảo mật và sao lưu nâng cao</Text>
-              </View>
-            </View>
-            
-            <View style={styles.premiumPricing}>
-              <Text style={styles.premiumPrice}>₫399,000/năm</Text>
-              <Text style={styles.premiumPriceSubtext}>Hoặc ₫49,000/tháng • Tiết kiệm 32%</Text>
-            </View>
-            
-            <View style={styles.premiumActions}>
-              <TouchableOpacity
-                style={styles.upgradeButton}
-                onPress={() => {
-                  setShowPremiumModal(false);
-                  router.push('/premium');
-                }}
-              >
-                <Crown size={20} color="#fff" strokeWidth={2} />
-                <Text style={styles.upgradeButtonText}>Xem Chi Tiết Gói</Text>
-              </TouchableOpacity>
-              
-              <TouchableOpacity
-                style={styles.laterButton}
-                onPress={() => setShowPremiumModal(false)}
-              >
-                <Text style={styles.laterButtonText}>Để Sau</Text>
-              </TouchableOpacity>
-            </View>
-          </ScrollView>
-        </SafeAreaView>
-      </Modal>
     </>
   );
 }
@@ -765,11 +799,15 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
+    minWidth: 0,
   },
-  sessionRoomCode: {
+  sessionTitle: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#fff',
+  },
+  sessionSubtitle: {
+    fontSize: 12,
+    marginTop: 2,
     fontFamily: 'monospace',
   },
   sessionStatus: {
@@ -951,5 +989,42 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '500',
     color: '#888',
+  },
+  sessionItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 12,
+    borderRadius: 12,
+    backgroundColor: 'transparent',
+  },
+  sessionCardTouchable: {
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+  },
+  sessionCardRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  sessionLeft: {
+    marginRight: 12,
+  },
+  sessionInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    minWidth: 0,
+  },
+  sessionTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  sessionSubtitle: {
+    fontSize: 12,
+    marginTop: 2,
+    fontFamily: 'monospace',
+  },
+  sessionRight: {
+    marginLeft: 12,
+    alignItems: 'flex-end',
   },
 });

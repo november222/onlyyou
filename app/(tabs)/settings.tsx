@@ -424,7 +424,9 @@ export default function SettingsScreen() {
                       >
                         <Text
                           style={{
-                            color: selected ? '#fff' : colors.text,
+                            color: selected
+                              ? theme.onPrimary || '#fff'
+                              : colors.text,
                             fontSize: 12,
                             fontWeight: '600',
                           }}
@@ -612,7 +614,6 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 24,
     fontWeight: '700',
-    color: '#fff',
     marginLeft: 12,
   },
   section: {
@@ -638,7 +639,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     padding: 16,
     borderBottomWidth: 1,
-    borderBottomColor: '#222',
+    borderBottomColor: 'transparent',
   },
   settingLeft: {
     flexDirection: 'row',
@@ -658,7 +659,6 @@ const styles = StyleSheet.create({
   settingTitle: {
     fontSize: 16,
     fontWeight: '500',
-    color: '#fff',
     marginBottom: 2,
   },
   settingSubtitle: {
@@ -695,7 +695,6 @@ const styles = StyleSheet.create({
   languageTitle: {
     fontSize: 20,
     fontWeight: '700',
-    color: '#fff',
   },
   closeButton: {
     padding: 8,
@@ -724,7 +723,6 @@ const styles = StyleSheet.create({
   },
   languageName: {
     fontSize: 16,
-    color: '#fff',
     fontWeight: '500',
   },
 });

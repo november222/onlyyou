@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
+import { useThemeColors } from '@/providers/ThemeProvider';
 import { rateLimiter, RATE_LIMITS } from '@/services/RateLimiter';
 
 interface RateLimitIndicatorProps {
@@ -38,6 +39,7 @@ const ACTION_CONFIGS = {
 export function RateLimitIndicator({ actionType, showLabel = false }: RateLimitIndicatorProps) {
   const [remaining, setRemaining] = useState<number>(0);
   const [max, setMax] = useState<number>(0);
+  const colors = useThemeColors();
 
   useEffect(() => {
     const updateQuota = () => {
@@ -72,11 +74,11 @@ export function RateLimitIndicator({ actionType, showLabel = false }: RateLimitI
   return (
     <View style={styles.container}>
       {showLabel && (
-        <Text style={styles.label}>
+        <Text style={[styles.label, { color: colors.mutedText || colors.text }]}>
           {ACTION_CONFIGS[actionType].label}: {remaining}/{max}
         </Text>
       )}
-      <View style={styles.barContainer}>
+      <View style={[styles.barContainer, { backgroundColor: colors.border }]}>
         <View
           style={[
             styles.barFill,
@@ -100,12 +102,10 @@ const styles = StyleSheet.create({
   },
   label: {
     fontSize: 12,
-    color: '#888',
     marginBottom: 4,
   },
   barContainer: {
     height: 4,
-    backgroundColor: '#333',
     borderRadius: 2,
     overflow: 'hidden',
   },

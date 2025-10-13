@@ -85,6 +85,10 @@
   "endSessionConfirmMessage": "This will end the current session with \"{{name}}\". The session will be saved in Profile.",
   "endSessionSuccessTitle": "Session ended",
   "endSessionSuccessMessage": "The session was saved to history. You can view it in Profile.",
-  "endSessionFailedMessage": "Could not end the session"
+  "endSessionFailedMessage": "Could not end the session",
+  "partnerLabel": "Partner name",
+  "partnerPlaceholder": "Enter partner name (optional)",
+  "nameTooLongTitle": "Name too long",
+  "nameTooLongDesc": "Please use at most {{max}} characters for the partner name."
 }
 

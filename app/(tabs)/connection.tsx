@@ -15,19 +15,41 @@ import {
   Image,
   NativeModules,
 } from 'react-native';
-import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import {
+  SafeAreaView,
+  useSafeAreaInsets,
+} from 'react-native-safe-area-context';
 import { useTheme, useThemeColors } from '@/providers/ThemeProvider';
-import { Heart, Shield, Wifi, WifiOff, Copy, Key, Plus, RefreshCw, Trash2, QrCode, X, Scan } from 'lucide-react-native';
+import {
+  Heart,
+  Shield,
+  Wifi,
+  WifiOff,
+  Copy,
+  Key,
+  Plus,
+  RefreshCw,
+  Trash2,
+  QrCode,
+  X,
+  Scan,
+} from 'lucide-react-native';
 import WebRTCService, { ConnectionState } from '@/services/WebRTCService';
 import AuthService from '@/services/AuthService';
 import { router } from 'expo-router';
 // Lazy-load barcode scanner to avoid native module errors without rebuild
 import * as Linking from 'expo-linking';
 
+const MAX_PARTNER_NAME_LENGTH = 12;
+
 export default function ConnectionScreen() {
   const { t } = useTranslation();
-  const { theme } = useTheme();
+  const { theme, isDark } = useTheme();
   const colors = useThemeColors();
+  const mutedTextStyle = React.useMemo(
+    () => ({ color: colors.mutedText || colors.text }),
+    [colors.mutedText, colors.text]
+  );
   const insets = useSafeAreaInsets();
   const [connectionState, setConnectionState] = useState<ConnectionState>({
     isConnected: false,
@@ -41,15 +63,19 @@ export default function ConnectionScreen() {
   const [isGeneratingCode, setIsGeneratingCode] = useState(false);
   const [isConnectingToServer, setIsConnectingToServer] = useState(false);
   const [isJoining, setIsJoining] = useState(false);
-  const [savedConnection, setSavedConnection] = useState(WebRTCService.getSavedConnection());
+  const [savedConnection, setSavedConnection] = useState(
+    WebRTCService.getSavedConnection()
+  );
   const [showQRCode, setShowQRCode] = useState(false);
   const [showQRScanner, setShowQRScanner] = useState(false);
   const [showNamePrompt, setShowNamePrompt] = useState(false);
   const [partnerName, setPartnerName] = useState('');
   const [hasQRPermission, setHasQRPermission] = useState<null | boolean>(null);
-  const [hasRequestedQRPermission, setHasRequestedQRPermission] = useState(false);
+  const [hasRequestedQRPermission, setHasRequestedQRPermission] =
+    useState(false);
   const [qrScanned, setQrScanned] = useState(false);
-  const [ScannerComp, setScannerComp] = useState<null | React.ComponentType<any>>(null);
+  const [ScannerComp, setScannerComp] =
+    useState<null | React.ComponentType<any>>(null);
 
   useEffect(() => {
     // Set up WebRTC event listeners
@@ -61,7 +87,11 @@ export default function ConnectionScreen() {
       setSavedConnection(currentSaved);
 
       // Show name prompt when partner joins AND no saved connection exists
-      if (state.partnerConnected && !state.isWaitingForPartner && !currentSaved) {
+      if (
+        state.partnerConnected &&
+        !state.isWaitingForPartner &&
+        !currentSaved
+      ) {
         setShowNamePrompt(true);
       }
     };
@@ -163,7 +193,10 @@ export default function ConnectionScreen() {
       Alert.alert(t('common:success'), t('connection:qrScanSuccess'));
     } catch (err) {
       console.error('QR scan failed:', err);
-      Alert.alert(t('connection:qrScanFailedTitle'), t('connection:qrScanFailed'));
+      Alert.alert(
+        t('connection:qrScanFailedTitle'),
+        t('connection:qrScanFailed')
+      );
       // allow re-scan
       setQrScanned(false);
     }
@@ -171,7 +204,7 @@ export default function ConnectionScreen() {
 
   const connectToServer = async () => {
     if (isConnectingToServer) return;
-    
+
     setIsConnectingToServer(true);
     try {
       await WebRTCService.connectToSignalingServer();
@@ -179,11 +212,14 @@ export default function ConnectionScreen() {
     } catch (error) {
       console.error('Failed to connect to signaling server:', error);
       Alert.alert(
-        t('connection:serverConnectFailedTitle'), 
+        t('connection:serverConnectFailedTitle'),
         t('connection:serverConnectFailed'),
         [
-          { text: t('connection:retry'), onPress: () => setTimeout(connectToServer, 1000) },
-          { text: t('common:cancel'), style: 'cancel' }
+          {
+            text: t('connection:retry'),
+            onPress: () => setTimeout(connectToServer, 1000),
+          },
+          { text: t('common:cancel'), style: 'cancel' },
         ]
       );
     } finally {
@@ -193,33 +229,36 @@ export default function ConnectionScreen() {
 
   const generateRoomCode = async () => {
     if (isGeneratingCode || isConnectingToServer) return;
-    
+
     setIsGeneratingCode(true);
     try {
       // Ensure we're connected to signaling server first
       if (isConnectingToServer) {
-        await new Promise(resolve => setTimeout(resolve, 2000));
+        await new Promise((resolve) => setTimeout(resolve, 2000));
       }
-      
+
       const roomCode = await WebRTCService.generateRoomCode();
       await WebRTCService.joinRoom(roomCode);
-      
+
       Alert.alert(
-        t('connection:roomCreatedTitle'), 
+        t('connection:roomCreatedTitle'),
         t('connection:roomCreatedMessage', { code: roomCode }),
         [
-          { text: t('connection:copyCode'), onPress: () => copyRoomCode(roomCode) },
-          { text: t('common:ok') }
+          {
+            text: t('connection:copyCode'),
+            onPress: () => copyRoomCode(roomCode),
+          },
+          { text: t('common:ok') },
         ]
       );
     } catch (error) {
       console.error('Failed to generate room code:', error);
       Alert.alert(
-        t('connection:createRoomFailedTitle'), 
+        t('connection:createRoomFailedTitle'),
         t('connection:createRoomFailed'),
         [
           { text: t('connection:retry'), onPress: generateRoomCode },
-          { text: t('common:cancel'), style: 'cancel' }
+          { text: t('common:cancel'), style: 'cancel' },
         ]
       );
     } finally {
@@ -229,22 +268,25 @@ export default function ConnectionScreen() {
 
   const joinRoom = async () => {
     if (!inputRoomCode.trim()) {
-      Alert.alert(t('connection:invalidCodeTitle'), t('connection:enterRoomCode'));
+      Alert.alert(
+        t('connection:invalidCodeTitle'),
+        t('connection:enterRoomCode')
+      );
       return;
     }
 
     if (isJoining || isConnectingToServer) return;
-    
+
     setIsJoining(true);
     try {
       // Ensure we're connected to signaling server first
       if (isConnectingToServer) {
-        await new Promise(resolve => setTimeout(resolve, 2000));
+        await new Promise((resolve) => setTimeout(resolve, 2000));
       }
-      
+
       await WebRTCService.joinRoom(inputRoomCode.trim());
       setInputRoomCode(''); // Clear input on success
-      
+
       Alert.alert(
         t('connection:joinSuccessTitle'),
         t('connection:joinSuccessMessage'),
@@ -261,14 +303,10 @@ export default function ConnectionScreen() {
           [{ text: t('common:ok') }]
         );
       } else {
-        Alert.alert(
-          t('connection:joinFailedTitle'),
-          errorMessage,
-          [
-            { text: t('connection:retry'), onPress: joinRoom },
-            { text: t('common:cancel'), style: 'cancel' }
-          ]
-        );
+        Alert.alert(t('connection:joinFailedTitle'), errorMessage, [
+          { text: t('connection:retry'), onPress: joinRoom },
+          { text: t('common:cancel'), style: 'cancel' },
+        ]);
       }
     } finally {
       setIsJoining(false);
@@ -287,7 +325,9 @@ export default function ConnectionScreen() {
 
     Alert.alert(
       t('connection:disconnectConfirmTitle'),
-      t('connection:disconnectConfirmMessage', { name: savedConnection.partnerName }),
+      t('connection:disconnectConfirmMessage', {
+        name: savedConnection.partnerName,
+      }),
       [
         { text: t('common:cancel'), style: 'cancel' },
         {
@@ -309,7 +349,10 @@ export default function ConnectionScreen() {
     const roomCode = code || connectionState.roomCode;
     if (roomCode) {
       // In a real app, this would copy to clipboard using @react-native-clipboard/clipboard
-      Alert.alert(t('connection:copiedTitle'), t('connection:copiedRoomCode', { code: roomCode }));
+      Alert.alert(
+        t('connection:copiedTitle'),
+        t('connection:copiedRoomCode', { code: roomCode })
+      );
     }
   };
 
@@ -345,7 +388,10 @@ export default function ConnectionScreen() {
           onPress: () => {
             WebRTCService.clearSavedConnection();
             setSavedConnection(null);
-            Alert.alert(t('connection:deletedTitle'), t('connection:deletedMessage'));
+            Alert.alert(
+              t('connection:deletedTitle'),
+              t('connection:deletedMessage')
+            );
           },
         },
       ]
@@ -357,7 +403,9 @@ export default function ConnectionScreen() {
 
     Alert.alert(
       t('connection:endSessionConfirmTitle'),
-      t('connection:endSessionConfirmMessage', { name: savedConnection.partnerName }),
+      t('connection:endSessionConfirmMessage', {
+        name: savedConnection.partnerName,
+      }),
       [
         { text: t('common:cancel'), style: 'cancel' },
         {
@@ -372,7 +420,10 @@ export default function ConnectionScreen() {
                 t('connection:endSessionSuccessMessage')
               );
             } catch (error) {
-              Alert.alert(t('common:error'), t('connection:endSessionFailedMessage'));
+              Alert.alert(
+                t('common:error'),
+                t('connection:endSessionFailedMessage')
+              );
             }
           },
         },
@@ -385,7 +436,10 @@ export default function ConnectionScreen() {
 
     try {
       await WebRTCService.joinRoom(savedConnection.roomCode, true); // isReconnecting = true
-      Alert.alert(t('connection:reconnectSuccessTitle'), t('connection:reconnectSuccessMessage'));
+      Alert.alert(
+        t('connection:reconnectSuccessTitle'),
+        t('connection:reconnectSuccessMessage')
+      );
     } catch (error) {
       Alert.alert(
         t('connection:reconnectFailedTitle'),
@@ -405,226 +459,392 @@ export default function ConnectionScreen() {
   };
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top', 'bottom']}>
+    <SafeAreaView
+      style={[styles.container, { backgroundColor: colors.background }]}
+      edges={['top', 'bottom']}
+    >
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         keyboardVerticalOffset={insets.bottom}
         style={{ flex: 1 }}
       >
-        <ScrollView 
+        <ScrollView
           keyboardShouldPersistTaps="handled"
-          contentContainerStyle={[styles.scrollContent, { paddingBottom: insets.bottom + 24 }]}
+          contentContainerStyle={[
+            styles.scrollContent,
+            { paddingBottom: insets.bottom + 24 },
+          ]}
           showsVerticalScrollIndicator={false}
         >
           {/* Header */}
           <View style={styles.header}>
-            <Heart size={32} color={theme.primary} strokeWidth={2} fill={theme.primary} />
-            <Text style={[styles.title, { color: colors.text }]}>{t('connection:title')}</Text>
-            <Text style={[styles.subtitle, { color: (colors.mutedText || colors.text) }]}>{t('connection:subtitle')}</Text>
-          </View>
-
-        {/* Connection Status */}
-        <View style={[styles.statusCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
-          <View style={styles.statusHeader}>
-            {connectionState.isWaitingForPartner ? (
-              <RefreshCw size={24} color={theme.secondary} strokeWidth={2} />
-            ) : connectionState.isConnected ? (
-              <Wifi size={24} color={theme.success} strokeWidth={2} />
-            ) : (
-              <WifiOff size={24} color={theme.danger} strokeWidth={2} />
-            )}
-            <Text style={[
-              styles.statusText,
-              {
-                color: connectionState.isWaitingForPartner
-                  ? (theme.secondary)
-                  : connectionState.isConnected
-                    ? theme.success
-                    : connectionState.isConnecting
-                      ? (theme.secondary)
-                      : theme.danger
-              }
-            ]}>
-              {connectionState.isWaitingForPartner
-                ? t('connection:waitingForPartnerStatus')
-                : connectionState.isConnected
-                  ? t('connection:connected')
-                  : connectionState.isConnecting
-                    ? t('connection:connecting')
-                    : t('connection:disconnected')
-              }
+            <Heart
+              size={32}
+              color={theme.primary}
+              strokeWidth={2}
+              fill={theme.primary}
+            />
+            <Text style={[styles.title, { color: colors.text }]}>
+              {t('connection:title')}
+            </Text>
+            <Text
+              style={[
+                styles.subtitle,
+                { color: colors.mutedText || colors.text },
+              ]}
+            >
+              {t('connection:subtitle')}
             </Text>
           </View>
 
-          <Text style={[styles.statusDescription, { color: colors.text }]}>
-            {connectionState.isWaitingForPartner && savedConnection
-              ? t('connection:waitingDescWithName', { name: savedConnection.partnerName })
-              : connectionState.isWaitingForPartner
+          {/* Connection Status */}
+          <View
+            style={[
+              styles.statusCard,
+              { backgroundColor: colors.card, borderColor: colors.border },
+            ]}
+          >
+            <View style={styles.statusHeader}>
+              {connectionState.isWaitingForPartner ? (
+                <RefreshCw size={24} color={theme.secondary} strokeWidth={2} />
+              ) : connectionState.isConnected ? (
+                <Wifi size={24} color={theme.success} strokeWidth={2} />
+              ) : (
+                <WifiOff size={24} color={theme.danger} strokeWidth={2} />
+              )}
+              <Text
+                style={[
+                  styles.statusText,
+                  {
+                    color: connectionState.isWaitingForPartner
+                      ? theme.secondary
+                      : connectionState.isConnected
+                      ? theme.success
+                      : connectionState.isConnecting
+                      ? theme.secondary
+                      : theme.danger,
+                  },
+                ]}
+              >
+                {connectionState.isWaitingForPartner
+                  ? t('connection:waitingForPartnerStatus')
+                  : connectionState.isConnected
+                  ? t('connection:connected')
+                  : connectionState.isConnecting
+                  ? t('connection:connecting')
+                  : t('connection:disconnected')}
+              </Text>
+            </View>
+
+            <Text style={[styles.statusDescription, { color: colors.text }]}>
+              {connectionState.isWaitingForPartner && savedConnection
+                ? t('connection:waitingDescWithName', {
+                    name: savedConnection.partnerName,
+                  })
+                : connectionState.isWaitingForPartner
                 ? t('connection:roomCreatedWaiting')
                 : connectionState.isConnected
-                  ? t('connection:connectedDesc')
-                  : connectionState.isConnecting
-                    ? t('connection:connectingDesc')
-                    : (typeof connectionState.error === 'string' ? connectionState.error : null) || t('connection:readyToConnect')
-            }
-          </Text>
+                ? t('connection:connectedDesc')
+                : connectionState.isConnecting
+                ? t('connection:connectingDesc')
+                : (typeof connectionState.error === 'string'
+                    ? connectionState.error
+                    : null) || t('connection:readyToConnect')}
+            </Text>
 
-          {connectionState.roomCode && (
-            <View style={styles.roomCodeDisplay}>
-              <Text style={styles.roomCodeLabel}>{t('connection:roomCode')}:</Text>
-              <TouchableOpacity onPress={() => copyRoomCode()}>
-                <Text style={styles.roomCodeValue}>{connectionState.roomCode}</Text>
-              </TouchableOpacity>
-            </View>
-          )}
-
-          {/* Saved Connection Info */}
-          {savedConnection && !connectionState.isConnected && (
-            <View style={styles.savedConnectionInfo}>
-              <Text style={styles.savedConnectionLabel}>{t('connection:savedConnectionWith')}:</Text>
-              <Text style={styles.savedPartnerName}>{savedConnection.partnerName} 💕</Text>
-              <TouchableOpacity onPress={() => copyRoomCode(savedConnection.roomCode)}>
-                <Text style={styles.savedConnectionValue}>{savedConnection.roomCode}</Text>
-              </TouchableOpacity>
-              <Text style={styles.savedConnectionDate}>
-                {t('connection:sinceDate', { date: new Date(savedConnection.connectionDate).toLocaleDateString('vi-VN') })}
-              </Text>
-
-              {connectionState.isWaitingForPartner && (
-                <View style={styles.waitingNotice}>
-                  <RefreshCw size={16} color={theme.secondary} strokeWidth={2} />
-                  <Text style={styles.waitingNoticeText}>
-                    {t('connection:partnerWaiting', { name: savedConnection.partnerName })}
+            {connectionState.roomCode && (
+              <View style={styles.roomCodeDisplay}>
+                <Text style={[styles.roomCodeLabel, mutedTextStyle]}>
+                  {t('connection:roomCode')}:
+                </Text>
+                <TouchableOpacity onPress={() => copyRoomCode()}>
+                  <Text style={[styles.roomCodeValue, { color: colors.text }]}>
+                    {connectionState.roomCode}
                   </Text>
-                </View>
-              )}
+                </TouchableOpacity>
+              </View>
+            )}
 
-              <TouchableOpacity style={[styles.reconnectButton, { }]} onPress={handleReconnect}>
-                <RefreshCw size={16} color={theme.success} strokeWidth={2} />
-                <Text style={styles.reconnectButtonText}>{t('connection:reconnect')}</Text>
-              </TouchableOpacity>
-              <TouchableOpacity style={[styles.endSessionButton, { borderColor: theme.danger }]} onPress={handleEndSession}>
-                <Text style={[styles.endSessionButtonText, { color: theme.danger }]}>{t('connection:endSessionButton')}</Text>
-              </TouchableOpacity>
-            </View>
-          )}
+            {/* Saved Connection Info */}
+            {savedConnection && !connectionState.isConnected && (
+              <View style={styles.savedConnectionInfo}>
+                <Text style={[styles.savedConnectionLabel, mutedTextStyle]}>
+                  {t('connection:savedConnectionWith')}:
+                </Text>
+                <Text style={[styles.savedPartnerName, { color: colors.text }]}>
+                  {savedConnection.partnerName} 💕
+                </Text>
+                <TouchableOpacity
+                  onPress={() => copyRoomCode(savedConnection.roomCode)}
+                >
+                  <Text style={[styles.savedConnectionValue, { color: colors.text }]}>
+                    {savedConnection.roomCode}
+                  </Text>
+                </TouchableOpacity>
+                <Text style={[styles.savedConnectionDate, mutedTextStyle]}>
+                  {t('connection:sinceDate', {
+                    date: new Date(
+                      savedConnection.connectionDate
+                    ).toLocaleDateString('vi-VN'),
+                  })}
+                </Text>
 
-          {/* Server Connection Status */}
-          {isConnectingToServer && (
-            <View style={styles.serverStatus}>
-              <ActivityIndicator size="small" color={theme.secondary} />
-              <Text style={styles.serverStatusText}>{t('connection:connectingServer')}</Text>
-            </View>
-          )}
-        </View>
+                {connectionState.isWaitingForPartner && (
+                  <View style={styles.waitingNotice}>
+                    <RefreshCw
+                      size={16}
+                      color={theme.secondary}
+                      strokeWidth={2}
+                    />
+                    <Text style={[styles.waitingNoticeText, mutedTextStyle]}>
+                      {t('connection:partnerWaiting', {
+                        name: savedConnection.partnerName,
+                      })}
+                    </Text>
+                  </View>
+                )}
 
-        {/* Security Info */}
-        <View style={styles.securityCard}>
-          <View style={styles.securityHeader}>
-            <Shield size={20} color={theme.primary} strokeWidth={2} />
-            <Text style={styles.securityTitle}>{t('connection:endToEndTitle')}</Text>
+                <TouchableOpacity
+                  style={[styles.reconnectButton, {}]}
+                  onPress={handleReconnect}
+                >
+                  <RefreshCw size={16} color={theme.success} strokeWidth={2} />
+                  <Text style={styles.reconnectButtonText}>
+                    {t('connection:reconnect')}
+                  </Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[
+                    styles.endSessionButton,
+                    { borderColor: theme.danger },
+                  ]}
+                  onPress={handleEndSession}
+                >
+                  <Text
+                    style={[
+                      styles.endSessionButtonText,
+                      { color: theme.danger },
+                    ]}
+                  >
+                    {t('connection:endSessionButton')}
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            )}
+
+            {/* Server Connection Status */}
+            {isConnectingToServer && (
+              <View style={styles.serverStatus}>
+                <ActivityIndicator size="small" color={theme.secondary} />
+                <Text style={[styles.serverStatusText, mutedTextStyle]}>
+                  {t('connection:connectingServer')}
+                </Text>
+              </View>
+            )}
           </View>
-          <Text style={styles.securityDescription}>
-            {t('connection:endToEndDesc')}
-          </Text>
-        </View>
 
-        {/* Connection Setup */}
-        {!connectionState.isConnected && !connectionState.isConnecting && !savedConnection && (
-          <View style={styles.setupCard}>
-            <Text style={styles.setupTitle}>{t('connection:setupTitle')}</Text>
+          {/* Security Info */}
+          <View style={styles.securityCard}>
+            <View style={styles.securityHeader}>
+              <Shield size={20} color={theme.primary} strokeWidth={2} />
+              <Text style={[styles.securityTitle, { color: colors.text }]}>
+                {t('connection:endToEndTitle')}
+              </Text>
+            </View>
+            <Text style={[styles.securityDescription, mutedTextStyle]}>
+              {t('connection:endToEndDesc')}
+            </Text>
+          </View>
 
-            {/* Generate Room Code */}
+          {/* Connection Setup */}
+          {!connectionState.isConnected &&
+            !connectionState.isConnecting &&
+            !savedConnection && (
+              <View style={styles.setupCard}>
+                <Text style={[styles.setupTitle, { color: colors.text }]}>
+                  {t('connection:setupTitle')}
+                </Text>
+
+                {/* Generate Room Code */}
+                <TouchableOpacity
+                  style={[
+                    styles.generateButton,
+                    { backgroundColor: theme.primary },
+                  ]}
+                  onPress={generateRoomCode}
+                  disabled={isGeneratingCode || isConnectingToServer}
+                >
+                  {isGeneratingCode ? (
+                    <ActivityIndicator
+                      size="small"
+                      color={theme.onPrimary || colors.text}
+                    />
+                  ) : (
+                    <Plus
+                      size={20}
+                      color={theme.onPrimary || colors.text}
+                      strokeWidth={2}
+                    />
+                  )}
+                  <Text
+                    style={[
+                      styles.generateButtonText,
+                      { color: theme.onPrimary || colors.text },
+                    ]}
+                  >
+                    {isGeneratingCode
+                      ? t('connection:creating')
+                      : t('connection:createNewRoom')}
+                  </Text>
+                </TouchableOpacity>
+
+                <Text style={[styles.orText, mutedTextStyle]}>{t('connection:or')}</Text>
+
+                {/* Join Room */}
+                <View style={styles.joinContainer}>
+                  <TextInput
+                    style={[
+                      styles.roomCodeInput,
+                      {
+                        backgroundColor: colors.card,
+                        borderColor: colors.border,
+                        color: colors.text,
+                      },
+                    ]}
+                    value={inputRoomCode}
+                    onChangeText={setInputRoomCode}
+                    placeholder={t('connection:enterRoomCode')}
+                    placeholderTextColor={colors.mutedText || colors.text}
+                    autoCapitalize="characters"
+                  />
+                  <TouchableOpacity
+                    style={[
+                      styles.joinButton,
+                      { backgroundColor: theme.primary },
+                    ]}
+                    onPress={joinRoom}
+                    disabled={
+                      !inputRoomCode.trim() || isConnectingToServer || isJoining
+                    }
+                  >
+                    {isJoining ? (
+                      <ActivityIndicator
+                        size="small"
+                        color={theme.onPrimary || colors.text}
+                      />
+                    ) : (
+                      <Text
+                        style={[
+                          styles.joinButtonText,
+                          { color: theme.onPrimary || colors.text },
+                        ]}
+                      >
+                        {t('connection:join')}
+                      </Text>
+                    )}
+                  </TouchableOpacity>
+                </View>
+
+                {/* Scan QR Code Button */}
+                <TouchableOpacity
+                  style={[styles.scanQRButton, { borderColor: colors.border }]}
+                  onPress={() => setShowQRScanner(true)}
+                  disabled={isConnectingToServer}
+                >
+                  <Scan size={20} color={theme.success} strokeWidth={2} />
+                  <Text
+                    style={[styles.scanQRButtonText, { color: colors.text }]}
+                  >
+                    {t('connection:scanQRCode')}
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            )}
+
+          {/* Action Buttons */}
+          {connectionState.isConnected && (
+            <>
+              <View style={styles.actions}>
+                {connectionState.roomCode && (
+                  <>
+                    <TouchableOpacity
+                      style={[
+                        styles.copyCodeButton,
+                        { borderColor: colors.border },
+                      ]}
+                      onPress={() => copyRoomCode()}
+                    >
+                      <Copy size={16} color={theme.primary} strokeWidth={2} />
+                      <Text
+                        style={[
+                          styles.copyCodeButtonText,
+                          { color: colors.text },
+                        ]}
+                      >
+                        {t('connection:copyRoomCode')}
+                      </Text>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                      style={[
+                        styles.qrCodeButton,
+                        { borderColor: theme.success },
+                      ]}
+                      onPress={() => setShowQRCode(true)}
+                    >
+                      <QrCode size={16} color={theme.success} strokeWidth={2} />
+                      <Text
+                        style={[
+                          styles.qrCodeButtonText,
+                          { color: theme.success },
+                        ]}
+                      >
+                        {t('connection:showQRCode')}
+                      </Text>
+                    </TouchableOpacity>
+                  </>
+                )}
+
+                <TouchableOpacity
+                  style={[
+                    styles.disconnectButton,
+                    { borderColor: theme.danger },
+                  ]}
+                  onPress={handleDisconnect}
+                >
+                  <Text
+                    style={[
+                      styles.disconnectButtonText,
+                      { color: theme.danger },
+                    ]}
+                  >
+                    {t('connection:disconnect')}
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            </>
+          )}
+
+          {/* Privacy Notice */}
+          <View style={styles.privacyNotice}>
+            <Text style={[styles.privacyText, mutedTextStyle]}>
+              {t('connection:privacyBlurb')}
+            </Text>
+          </View>
+
+          {/* Onboarding shortcut */}
+          <View
+            style={{ alignItems: 'center', marginTop: 8, marginBottom: 12 }}
+          >
             <TouchableOpacity
-              style={[styles.generateButton, { backgroundColor: theme.primary }]}
-              onPress={generateRoomCode}
-              disabled={isGeneratingCode || isConnectingToServer}
+              style={[styles.onboardingButton, { borderColor: colors.border }]}
+              onPress={() => router.push('/onboarding')}
             >
-              {isGeneratingCode ? (
-                <ActivityIndicator size="small" color={theme.onPrimary || colors.text} />
-              ) : (
-                <Plus size={20} color={theme.onPrimary || colors.text} strokeWidth={2} />
-              )}
-              <Text style={[styles.generateButtonText, { color: (theme.onPrimary || colors.text) }]}>
-                {isGeneratingCode ? t('connection:creating') : t('connection:createNewRoom')}
+              <Text style={[styles.onboardingButtonText, { color: colors.text }]}>
+                {t('connection:viewOnboarding')}
               </Text>
             </TouchableOpacity>
-            
-            <Text style={styles.orText}>{t('connection:or')}</Text>
-            
-            {/* Join Room */}
-            <View style={styles.joinContainer}>
-              <TextInput
-                style={[styles.roomCodeInput, { backgroundColor: colors.card, borderColor: colors.border, color: colors.text }]}
-                value={inputRoomCode}
-                onChangeText={setInputRoomCode}
-                placeholder={t('connection:enterRoomCode')}
-                placeholderTextColor={colors.mutedText || colors.text}
-                autoCapitalize="characters"
-              />
-              <TouchableOpacity
-                style={[styles.joinButton, { backgroundColor: theme.primary }]}
-                onPress={joinRoom}
-                disabled={!inputRoomCode.trim() || isConnectingToServer || isJoining}
-              >
-                {isJoining ? (
-                  <ActivityIndicator size="small" color={theme.onPrimary || colors.text} />
-                ) : (
-                  <Text style={[styles.joinButtonText, { color: (theme.onPrimary || colors.text) }]}>{t('connection:join')}</Text>
-                )}
-              </TouchableOpacity>
-            </View>
-
-            {/* Scan QR Code Button */}
-            <TouchableOpacity
-              style={[styles.scanQRButton, { borderColor: colors.border }]}
-              onPress={() => setShowQRScanner(true)}
-              disabled={isConnectingToServer}
-            >
-              <Scan size={20} color={theme.success} strokeWidth={2} />
-              <Text style={[styles.scanQRButtonText, { color: colors.text }]}>{t('connection:scanQRCode')}</Text>
-            </TouchableOpacity>
           </View>
-        )}
-
-        {/* Action Buttons */}
-        {connectionState.isConnected && (
-          <>
-            <View style={styles.actions}>
-              {connectionState.roomCode && (
-                <>
-                  <TouchableOpacity style={[styles.copyCodeButton, { borderColor: colors.border }]} onPress={() => copyRoomCode()}>
-                    <Copy size={16} color={theme.primary} strokeWidth={2} />
-                    <Text style={[styles.copyCodeButtonText, { color: colors.text }]}>{t('connection:copyRoomCode')}</Text>
-                  </TouchableOpacity>
-
-                  <TouchableOpacity style={[styles.qrCodeButton, { borderColor: theme.success }]} onPress={() => setShowQRCode(true)}>
-                    <QrCode size={16} color={theme.success} strokeWidth={2} />
-                    <Text style={[styles.qrCodeButtonText, { color: theme.success }]}>{t('connection:showQRCode')}</Text>
-                  </TouchableOpacity>
-                </>
-              )}
-              
-              <TouchableOpacity style={[styles.disconnectButton, { borderColor: theme.danger }]} onPress={handleDisconnect}>
-                <Text style={[styles.disconnectButtonText, { color: theme.danger }]}>{t('connection:disconnect')}</Text>
-              </TouchableOpacity>
-            </View>
-          </>
-        )}
-
-        {/* Privacy Notice */}
-        <View style={styles.privacyNotice}>
-          <Text style={styles.privacyText}>
-            {t('connection:privacyBlurb')}
-          </Text>
-        </View>
-
-        {/* Onboarding shortcut */}
-        <View style={{ alignItems: 'center', marginTop: 8, marginBottom: 12 }}>
-          <TouchableOpacity style={styles.onboardingButton} onPress={() => router.push('/onboarding')}>
-            <Text style={styles.onboardingButtonText}>{t('connection:viewOnboarding')}</Text>
-          </TouchableOpacity>
-        </View>
         </ScrollView>
       </KeyboardAvoidingView>
 
@@ -635,10 +855,22 @@ export default function ConnectionScreen() {
         animationType="fade"
         onRequestClose={() => setShowQRCode(false)}
       >
-        <View style={[styles.qrModalOverlay, { backgroundColor: 'rgba(0,0,0,0.5)' }]}>
-          <View style={[styles.qrModalContent, { backgroundColor: colors.card, borderColor: colors.border }]}>
+        <View
+          style={[
+            styles.qrModalOverlay,
+            { backgroundColor: colors.overlay },
+          ]}
+        >
+          <View
+            style={[
+              styles.qrModalContent,
+              { backgroundColor: colors.card, borderColor: colors.border },
+            ]}
+          >
             <View style={styles.qrModalHeader}>
-              <Text style={styles.qrModalTitle}>{t('connection:qrModalTitle')}</Text>
+              <Text style={[styles.qrModalTitle, { color: colors.text }]}>
+                {t('connection:qrModalTitle')}
+              </Text>
               <TouchableOpacity onPress={() => setShowQRCode(false)}>
                 <X size={24} color={colors.text} strokeWidth={2} />
               </TouchableOpacity>
@@ -650,15 +882,23 @@ export default function ConnectionScreen() {
                   <View style={styles.qrCodeDisplay}>
                     <Image
                       source={{
-                        uri: `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(`onlyyou://connect/${connectionState.roomCode}`)}&bgcolor=ffffff&color=000000&margin=10`
+                        uri: `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(
+                          `onlyyou://connect/${connectionState.roomCode}`
+                        )}&bgcolor=ffffff&color=000000&margin=10`,
                       }}
                       style={styles.qrCodeImage}
                       resizeMode="contain"
                     />
                   </View>
-                  <Text style={styles.qrCodeText}>{connectionState.roomCode}</Text>
-                  <Text style={styles.qrCodeHint}>{t('connection:qrCodeHint')}</Text>
-                  <Text style={styles.qrCodeSubHint}>{t('connection:qrCodeSubHint')}</Text>
+                  <Text style={[styles.qrCodeText, { color: colors.text }]}>
+                    {connectionState.roomCode}
+                  </Text>
+                  <Text style={[styles.qrCodeHint, mutedTextStyle]}>
+                    {t('connection:qrCodeHint')}
+                  </Text>
+                  <Text style={[styles.qrCodeSubHint, mutedTextStyle]}>
+                    {t('connection:qrCodeSubHint')}
+                  </Text>
                 </View>
               )}
             </View>
@@ -667,7 +907,14 @@ export default function ConnectionScreen() {
               style={[styles.closeQrButton, { backgroundColor: theme.primary }]}
               onPress={() => setShowQRCode(false)}
             >
-              <Text style={[styles.closeQrButtonText, { color: (theme.onPrimary || colors.text) }]}>{t('common:close')}</Text>
+              <Text
+                style={[
+                  styles.closeQrButtonText,
+                  { color: theme.onPrimary || colors.text },
+                ]}
+              >
+                {t('common:close')}
+              </Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -680,10 +927,22 @@ export default function ConnectionScreen() {
         animationType="slide"
         onRequestClose={() => setShowQRScanner(false)}
       >
-        <View style={[styles.scannerModalOverlay, { backgroundColor: 'rgba(0,0,0,0.5)' }]}>
-          <View style={[styles.scannerModalContent, { backgroundColor: colors.card, borderColor: colors.border }]}>
+        <View
+          style={[
+            styles.scannerModalOverlay,
+            { backgroundColor: colors.overlay },
+          ]}
+        >
+          <View
+            style={[
+              styles.scannerModalContent,
+              { backgroundColor: colors.card, borderColor: colors.border },
+            ]}
+          >
             <View style={styles.scannerModalHeader}>
-              <Text style={styles.scannerModalTitle}>{t('connection:scanQrTitle')}</Text>
+              <Text style={[styles.scannerModalTitle, { color: colors.text }]}>
+                {t('connection:scanQrTitle')}
+              </Text>
               <TouchableOpacity onPress={() => setShowQRScanner(false)}>
                 <X size={24} color={colors.text} strokeWidth={2} />
               </TouchableOpacity>
@@ -692,8 +951,12 @@ export default function ConnectionScreen() {
             <View style={styles.scannerContainer}>
               <View style={styles.scannerPlaceholder}>
                 <Scan size={80} color={theme.success} strokeWidth={1.5} />
-                <Text style={styles.scannerHint}>{t('connection:scannerPointHint')}</Text>
-                <Text style={styles.scannerSubHint}>{t('connection:scannerNeedCamera')}</Text>
+                <Text style={[styles.scannerHint, mutedTextStyle]}>
+                  {t('connection:scannerPointHint')}
+                </Text>
+                <Text style={[styles.scannerSubHint, mutedTextStyle]}>
+                  {t('connection:scannerNeedCamera')}
+                </Text>
               </View>
             </View>
 
@@ -701,18 +964,27 @@ export default function ConnectionScreen() {
               style={[styles.cancelScanButton, { borderColor: colors.border }]}
               onPress={() => setShowQRScanner(false)}
             >
-              <Text style={[styles.cancelScanButtonText, { color: colors.text }]}>{t('common:cancel')}</Text>
+              <Text
+                style={[styles.cancelScanButtonText, { color: colors.text }]}
+              >
+                {t('common:cancel')}
+              </Text>
             </TouchableOpacity>
           </View>
         </View>
       </Modal>
 
       {/* QR Scanner Overlay (functional) */}
-      {showQRScanner && (
-        hasQRPermission === true ? (
-          <View style={styles.fullscreenScannerOverlay}>
+      {showQRScanner &&
+        (hasQRPermission === true ? (
+          <View style={[
+            styles.fullscreenScannerOverlay,
+            { backgroundColor: colors.overlay }
+          ]}>
             <View style={styles.scannerModalHeader}>
-              <Text style={styles.scannerModalTitle}>{t('connection:scanQrTitle')}</Text>
+              <Text style={[styles.scannerModalTitle, { color: colors.text }]}>
+                {t('connection:scanQrTitle')}
+              </Text>
               <TouchableOpacity onPress={() => setShowQRScanner(false)}>
                 <X size={24} color={colors.text} strokeWidth={2} />
               </TouchableOpacity>
@@ -724,26 +996,58 @@ export default function ConnectionScreen() {
               />
             ) : (
               <View style={styles.scannerPlaceholder}>
-                <ActivityIndicator size="large" color={theme.onPrimary || colors.text} />
-                <Text style={styles.scannerHint}>{t('connection:loadingCameraModule')}</Text>
+                <ActivityIndicator
+                  size="large"
+                  color={theme.onPrimary || colors.text}
+                />
+                <Text style={[styles.scannerHint, mutedTextStyle]}>
+                  {t('connection:loadingCameraModule')}
+                </Text>
               </View>
             )}
           </View>
         ) : hasQRPermission === false ? (
-          <View style={styles.fullscreenScannerOverlay}>
+          <View style={[
+            styles.fullscreenScannerOverlay,
+            { backgroundColor: colors.overlay }
+          ]}>
             <View style={styles.scannerPlaceholder}>
               <Scan size={80} color={theme.secondary} strokeWidth={1.5} />
-              <Text style={styles.scannerHint}>{t('connection:scannerNeedCamera')}</Text>
-              <TouchableOpacity style={[styles.openSettingsButton, { backgroundColor: theme.primary }]} onPress={() => Linking.openSettings()}>
-                <Text style={[styles.openSettingsText, { color: (theme.onPrimary || colors.text) }]}>{t('connection:openSettings')}</Text>
+              <Text style={styles.scannerHint}>
+                {t('connection:scannerNeedCamera')}
+              </Text>
+              <TouchableOpacity
+                style={[
+                  styles.openSettingsButton,
+                  { backgroundColor: theme.primary },
+                ]}
+                onPress={() => Linking.openSettings()}
+              >
+                <Text
+                  style={[
+                    styles.openSettingsText,
+                    { color: theme.onPrimary || colors.text },
+                  ]}
+                >
+                  {t('connection:openSettings')}
+                </Text>
               </TouchableOpacity>
-              <TouchableOpacity style={[styles.cancelScanButton, { borderColor: colors.border }]} onPress={() => setShowQRScanner(false)}>
-                <Text style={[styles.cancelScanButtonText, { color: colors.text }]}>{t('common:close')}</Text>
+              <TouchableOpacity
+                style={[
+                  styles.cancelScanButton,
+                  { borderColor: colors.border },
+                ]}
+                onPress={() => setShowQRScanner(false)}
+              >
+                <Text
+                  style={[styles.cancelScanButtonText, { color: colors.text }]}
+                >
+                  {t('common:close')}
+                </Text>
               </TouchableOpacity>
             </View>
           </View>
-        ) : null
-      )}
+        ) : null)}
 
       {/* Partner Name Prompt Modal */}
       <Modal
@@ -752,31 +1056,62 @@ export default function ConnectionScreen() {
         animationType="fade"
         onRequestClose={() => {}}
       >
-        <View style={[styles.namePromptOverlay, { backgroundColor: 'rgba(0,0,0,0.5)' }]}>
-          <View style={[styles.namePromptContent, { backgroundColor: colors.card, borderColor: colors.border }]}>
-            <Heart size={48} color={theme.primary} strokeWidth={2} fill={theme.primary} />
+        <View
+          style={[
+            styles.namePromptOverlay,
+            { backgroundColor: colors.overlay || 'rgba(0, 0, 0, 0.95)' },
+          ]}
+        >
+          <View
+            style={[
+              styles.namePromptContent,
+              { backgroundColor: colors.card, borderColor: colors.border },
+            ]}
+          >
+            <Heart
+              size={48}
+              color={theme.primary}
+              strokeWidth={2}
+              fill={theme.primary}
+            />
 
-            <Text style={styles.namePromptTitle}>{t('connection:namePromptTitle')}</Text>
-            <Text style={styles.namePromptSubtitle}>
+            <Text style={[styles.namePromptTitle, { color: colors.text }]}>
+              {t('connection:namePromptTitle')}
+            </Text>
+            <Text style={[styles.namePromptSubtitle, mutedTextStyle]}>
               {t('connection:namePromptSubtitle')}
             </Text>
 
             <TextInput
-              style={styles.nameInput}
+              style={[
+                styles.nameInput,
+                { backgroundColor: colors.card, borderColor: colors.border, color: colors.text },
+              ]}
               value={partnerName}
               onChangeText={setPartnerName}
-              placeholder={t('connection:namePromptPlaceholder')}
+              maxLength={MAX_PARTNER_NAME_LENGTH}
+              placeholder={t('connection:partnerPlaceholder')}
               placeholderTextColor={colors.mutedText || colors.text}
               autoFocus
-              maxLength={30}
+              // ...styles...
             />
 
+            <Text style={{ color: colors.mutedText || colors.text, fontSize: 12 }}>
+              {partnerName.length}/{MAX_PARTNER_NAME_LENGTH}
+            </Text>
+
             <TouchableOpacity
-              style={[styles.saveNameButton, !partnerName.trim() && styles.saveNameButtonDisabled]}
+              style={[
+                styles.saveNameButton,
+                { backgroundColor: theme.primary },
+                !partnerName.trim() && styles.saveNameButtonDisabled,
+              ]}
               onPress={savePartnerName}
               disabled={!partnerName.trim()}
             >
-              <Text style={styles.saveNameButtonText}>{t('connection:saveAndContinue')}</Text>
+              <Text style={[styles.saveNameButtonText, { color: theme.onPrimary || colors.text }]}>
+                {t('connection:saveAndContinue')}
+              </Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -788,7 +1123,6 @@ export default function ConnectionScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    
   },
   content: {
     flex: 1,
@@ -805,21 +1139,19 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 28,
     fontWeight: '700',
-    
+
     marginTop: 12,
   },
   subtitle: {
     fontSize: 16,
-    
+
     marginTop: 4,
   },
   statusCard: {
-    
     borderRadius: 16,
     padding: 20,
     marginBottom: 20,
     borderWidth: 1,
-    
   },
   statusHeader: {
     flexDirection: 'row',
@@ -833,7 +1165,7 @@ const styles = StyleSheet.create({
   },
   statusDescription: {
     fontSize: 14,
-    
+
     marginBottom: 16,
   },
   connectionDetails: {
@@ -846,40 +1178,36 @@ const styles = StyleSheet.create({
   },
   ipLabel: {
     fontSize: 14,
-    
   },
   ipValue: {
     fontSize: 14,
-    
+
     fontFamily: 'monospace',
   },
   roomCodeDisplay: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    
+
     borderRadius: 8,
     padding: 12,
     marginTop: 12,
   },
   roomCodeLabel: {
     fontSize: 14,
-    
   },
   roomCodeValue: {
     fontSize: 16,
-    
+
     fontFamily: 'monospace',
     fontWeight: '600',
     textDecorationLine: 'underline',
   },
   securityCard: {
-    
     borderRadius: 16,
     padding: 20,
     marginBottom: 20,
     borderWidth: 1,
-    
   },
   securityHeader: {
     flexDirection: 'row',
@@ -889,26 +1217,24 @@ const styles = StyleSheet.create({
   securityTitle: {
     fontSize: 16,
     fontWeight: '600',
-    
+
     marginLeft: 8,
   },
   securityDescription: {
     fontSize: 14,
-    
+
     lineHeight: 20,
   },
   setupCard: {
-    
     borderRadius: 16,
     padding: 20,
     marginBottom: 20,
     borderWidth: 1,
-    
   },
   setupTitle: {
     fontSize: 18,
     fontWeight: '600',
-    
+
     marginBottom: 12,
     textAlign: 'center',
   },
@@ -925,11 +1251,10 @@ const styles = StyleSheet.create({
   generateButtonText: {
     fontSize: 16,
     fontWeight: '600',
-    
   },
   orText: {
     fontSize: 14,
-    
+
     textAlign: 'center',
     marginBottom: 16,
   },
@@ -945,9 +1270,8 @@ const styles = StyleSheet.create({
     padding: 12,
     fontSize: 16,
     // text/border colors via theme
-    },
+  },
   joinButton: {
-
     borderRadius: 8,
     paddingHorizontal: 20,
     paddingVertical: 12,
@@ -958,10 +1282,8 @@ const styles = StyleSheet.create({
   joinButtonText: {
     fontSize: 16,
     fontWeight: '600',
-    
   },
   messagesButton: {
-
     borderRadius: 12,
     padding: 16,
     flexDirection: 'row',
@@ -973,7 +1295,6 @@ const styles = StyleSheet.create({
   messagesButtonText: {
     fontSize: 16,
     fontWeight: '600',
-    
   },
   actions: {
     marginBottom: 20,
@@ -988,12 +1309,10 @@ const styles = StyleSheet.create({
     padding: 16,
     gap: 8,
     borderWidth: 1,
-
   },
   copyCodeButtonText: {
     fontSize: 16,
     fontWeight: '600',
-    
   },
   disconnectButton: {
     backgroundColor: 'transparent',
@@ -1001,46 +1320,41 @@ const styles = StyleSheet.create({
     padding: 16,
     alignItems: 'center',
     borderWidth: 1,
-
   },
   disconnectButtonText: {
     fontSize: 16,
     fontWeight: '600',
-
   },
   privacyNotice: {
-    
     borderRadius: 12,
     padding: 16,
     borderWidth: 1,
-    
   },
   privacyText: {
     fontSize: 14,
-    
+
     textAlign: 'center',
     lineHeight: 20,
   },
   savedConnectionInfo: {
-    
     borderRadius: 8,
     padding: 12,
     marginTop: 12,
   },
   savedConnectionLabel: {
     fontSize: 12,
-    
+
     marginBottom: 4,
   },
   savedPartnerName: {
     fontSize: 18,
-    
+
     fontWeight: '700',
     marginBottom: 8,
   },
   savedConnectionValue: {
     fontSize: 16,
-    
+
     fontFamily: 'monospace',
     fontWeight: '600',
     marginBottom: 2,
@@ -1048,7 +1362,7 @@ const styles = StyleSheet.create({
   },
   savedConnectionDate: {
     fontSize: 12,
-    
+
     marginBottom: 8,
   },
   waitingNotice: {
@@ -1057,16 +1371,15 @@ const styles = StyleSheet.create({
     gap: 8,
     paddingVertical: 10,
     paddingHorizontal: 12,
-    
+
     borderRadius: 8,
     marginTop: 8,
     marginBottom: 8,
     borderWidth: 1,
-
   },
   waitingNoticeText: {
     fontSize: 13,
-    
+
     fontWeight: '600',
     flex: 1,
   },
@@ -1079,7 +1392,7 @@ const styles = StyleSheet.create({
   },
   reconnectButtonText: {
     fontSize: 14,
-    
+
     fontWeight: '500',
   },
   endSessionButton: {
@@ -1093,7 +1406,7 @@ const styles = StyleSheet.create({
   },
   endSessionButtonText: {
     fontSize: 13,
-    
+
     fontWeight: '500',
   },
   serverStatus: {
@@ -1103,11 +1416,9 @@ const styles = StyleSheet.create({
     marginTop: 8,
     paddingTop: 8,
     borderTopWidth: 1,
-    
   },
   serverStatusText: {
     fontSize: 12,
-    
   },
   forgetActions: {
     marginBottom: 12,
@@ -1121,10 +1432,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: 8,
     borderWidth: 1,
-
   },
   forgetButtonText: {
-    
     fontSize: 14,
     fontWeight: '500',
   },
@@ -1137,41 +1446,36 @@ const styles = StyleSheet.create({
     padding: 16,
     gap: 8,
     borderWidth: 1,
-
   },
   qrCodeButtonText: {
     fontSize: 16,
     fontWeight: '600',
-    
   },
   onboardingButton: {
     paddingHorizontal: 16,
     paddingVertical: 10,
     borderRadius: 12,
     borderWidth: 1,
-    
+
     backgroundColor: 'transparent',
   },
   onboardingButtonText: {
     fontSize: 14,
-    
+
     fontWeight: '600',
   },
   qrModalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.9)',
     justifyContent: 'center',
     alignItems: 'center',
     padding: 20,
   },
   qrModalContent: {
-    
     borderRadius: 24,
     padding: 24,
     width: '100%',
     maxWidth: 400,
     borderWidth: 1,
-    
   },
   qrModalHeader: {
     flexDirection: 'row',
@@ -1192,7 +1496,6 @@ const styles = StyleSheet.create({
     gap: 16,
   },
   qrCodeDisplay: {
-
     padding: 20,
     borderRadius: 16,
     alignItems: 'center',
@@ -1207,23 +1510,22 @@ const styles = StyleSheet.create({
   qrCodeText: {
     fontSize: 18,
     fontWeight: '600',
-    
+
     fontFamily: 'monospace',
     textAlign: 'center',
   },
   qrCodeHint: {
     fontSize: 14,
-    
+
     textAlign: 'center',
   },
   qrCodeSubHint: {
     fontSize: 12,
-    
+
     textAlign: 'center',
     fontWeight: '500',
   },
   closeQrButton: {
-
     borderRadius: 12,
     padding: 16,
     alignItems: 'center',
@@ -1231,7 +1533,6 @@ const styles = StyleSheet.create({
   closeQrButtonText: {
     fontSize: 16,
     fontWeight: '600',
-    
   },
   scanQRButton: {
     flexDirection: 'row',
@@ -1248,7 +1549,6 @@ const styles = StyleSheet.create({
   scanQRButtonText: {
     fontSize: 16,
     fontWeight: '600',
-    
   },
   scannerModalOverlay: {
     flex: 1,
@@ -1258,13 +1558,11 @@ const styles = StyleSheet.create({
     padding: 20,
   },
   scannerModalContent: {
-    
     borderRadius: 24,
     padding: 24,
     width: '100%',
     maxWidth: 400,
     borderWidth: 1,
-    
   },
   scannerModalHeader: {
     flexDirection: 'row',
@@ -1289,18 +1587,17 @@ const styles = StyleSheet.create({
   },
   scannerHint: {
     fontSize: 16,
-    
+
     textAlign: 'center',
     fontWeight: '500',
   },
   scannerSubHint: {
     fontSize: 14,
-    
+
     textAlign: 'center',
     lineHeight: 20,
   },
   openSettingsButton: {
-
     borderRadius: 12,
     paddingVertical: 10,
     paddingHorizontal: 16,
@@ -1308,10 +1605,8 @@ const styles = StyleSheet.create({
   openSettingsText: {
     fontSize: 16,
     fontWeight: '600',
-    
   },
   cancelScanButton: {
-    
     borderRadius: 12,
     padding: 16,
     alignItems: 'center',
@@ -1319,17 +1614,14 @@ const styles = StyleSheet.create({
   cancelScanButtonText: {
     fontSize: 16,
     fontWeight: '600',
-    
   },
   namePromptOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.95)',
     justifyContent: 'center',
     alignItems: 'center',
     padding: 20,
   },
   namePromptContent: {
-    
     borderRadius: 24,
     padding: 32,
     width: '100%',
@@ -1337,7 +1629,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 16,
     borderWidth: 1,
-    
   },
   namePromptTitle: {
     fontSize: 24,
@@ -1368,13 +1659,11 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
   saveNameButtonDisabled: {
-    
     opacity: 0.5,
   },
   saveNameButtonText: {
     fontSize: 16,
     fontWeight: '600',
-    
   },
   fullscreenScannerOverlay: {
     position: 'absolute',
@@ -1382,7 +1671,6 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    backgroundColor: 'rgba(0,0,0,0.96)',
     justifyContent: 'flex-start',
     padding: 16,
   },
@@ -1392,10 +1680,5 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     overflow: 'hidden',
     borderWidth: 1,
-    
   },
 });
-
-
-
-

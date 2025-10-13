@@ -1,12 +1,13 @@
-{
-  "title": "프로필",
-  "subtitle": "연결 통계",
-  "daysConnected": "일 연결됨",
-  "since": "시작일",
-  "viewAllSessions": "모든 연결 세션 보기",
-  "currentlyConnected": "현재 연결됨",
-  "lastSession": "마지막 세션",
-  "totalConnectedTime": "총 연결 시간",
-  "totalDisconnectedTime": "총 연결 해제 시간",
-  "totalSessions": "총 세션"
+﻿{`n  "historyTitle": "연결 기록",
+  "title": "í”„ë¡œí•„",
+  "subtitle": "ì—°ê²° í†µê³„",
+  "daysConnected": "ì¼ ì—°ê²°ë¨",
+  "since": "ì‹œìž‘ì¼",
+  "viewAllSessions": "ëª¨ë“  ì—°ê²° ì„¸ì…˜ ë³´ê¸°",
+  "currentlyConnected": "í˜„ìž¬ ì—°ê²°ë¨",
+  "lastSession": "ë§ˆì§€ë§‰ ì„¸ì…˜",
+  "totalConnectedTime": "ì´ ì—°ê²° ì‹œê°„",
+  "totalDisconnectedTime": "ì´ ì—°ê²° í•´ì œ ì‹œê°„",
+  "totalSessions": "ì´ ì„¸ì…˜"
 }
+

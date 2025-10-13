@@ -85,5 +85,9 @@
   "endSessionConfirmMessage": "Esto finalizará la sesión actual con \"{{name}}\". La sesión se guardará en el Perfil.",
   "endSessionSuccessTitle": "Sesión finalizada",
   "endSessionSuccessMessage": "La sesión se guardó en el historial. Puedes verla en Perfil.",
-  "endSessionFailedMessage": "No se pudo finalizar la sesión"
+  "endSessionFailedMessage": "No se pudo finalizar la sesión",
+  "partnerLabel": "Nombre del socio",
+  "partnerPlaceholder": "Introduce el nombre del socio (opcional)",
+  "nameTooLongTitle": "Nombre demasiado largo",
+  "nameTooLongDesc": "Usa como máximo {{max}} caracteres para el nombre del socio."
 }

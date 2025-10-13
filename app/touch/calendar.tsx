@@ -13,7 +13,7 @@ import {
   ScrollView,
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useTheme } from '@/providers/ThemeProvider';
+import { useTheme, useThemeColors } from '@/providers/ThemeProvider';
 import { router } from 'expo-router';
 import { ArrowLeft, Plus, Calendar as CalendarIcon, Clock, Edit, Trash2, X } from 'lucide-react-native';
 import CalendarService, { CalItem } from '@/services/CalendarService';
@@ -23,6 +23,7 @@ import WebRTCService from '@/services/WebRTCService';
 export default function CalendarScreen() {
   const insets = useSafeAreaInsets();
   const { theme } = useTheme();
+  const colors = useThemeColors();
   const [items, setItems] = useState<CalItem[]>([]);
   const [groupedItems, setGroupedItems] = useState<Record<string, CalItem[]>>({});
   const [showAddModal, setShowAddModal] = useState(false);
@@ -371,7 +372,7 @@ export default function CalendarScreen() {
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
-          <ArrowLeft size={24} color={theme.onBackground || '#111'} strokeWidth={2} />
+          <ArrowLeft size={24} color={theme.onBackground || colors.text} strokeWidth={2} />
         </TouchableOpacity>
         <View style={styles.titleContainer}>
           <Text style={styles.title}>Calendar</Text>
@@ -392,7 +393,7 @@ export default function CalendarScreen() {
         showsVerticalScrollIndicator={false}
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
-            <CalendarIcon size={64} color="#333" strokeWidth={1} />
+            <CalendarIcon size={64} color={colors.border || colors.mutedText || colors.text} strokeWidth={1} />
             <Text style={styles.emptyText}>No events yet</Text>
             <Text style={styles.emptySubtext}>Tap + to add your first event</Text>
           </View>
@@ -423,7 +424,7 @@ export default function CalendarScreen() {
                   }
                 }}
               >
-                <ArrowLeft size={24} color="#888" strokeWidth={2} />
+                <ArrowLeft size={24} color={colors.mutedText || colors.text} strokeWidth={2} />
               </TouchableOpacity>
               <Text style={styles.modalTitle}>
                 {modalView === 'datePicker' ? 'Chọn Ngày' :
@@ -434,7 +435,7 @@ export default function CalendarScreen() {
                 style={styles.closeButton}
                 onPress={() => setShowAddModal(false)}
               >
-                <X size={24} color="#888" strokeWidth={2} />
+                <X size={24} color={colors.mutedText || colors.text} strokeWidth={2} />
               </TouchableOpacity>
             </View>
 
@@ -450,7 +451,7 @@ export default function CalendarScreen() {
                   value={title}
                   onChangeText={setTitle}
                   placeholder="Event title"
-                  placeholderTextColor="#666"
+                  placeholderTextColor={colors.mutedText || colors.text}
                   maxLength={20}
                 />
               </View>
@@ -490,7 +491,7 @@ export default function CalendarScreen() {
                   value={note}
                   onChangeText={setNote}
                   placeholder="Additional notes"
-                  placeholderTextColor="#666"
+                  placeholderTextColor={colors.mutedText || colors.text}
                   multiline
                   maxLength={120}
                   textAlignVertical="top"
@@ -501,7 +502,7 @@ export default function CalendarScreen() {
                 style={styles.saveButton}
                 onPress={editingItem ? handleEditItem : handleAddItem}
               >
-                <CalendarIcon size={20} color={theme.onBackground || '#111'} strokeWidth={2} />
+                <CalendarIcon size={20} color={theme.onBackground || colors.text} strokeWidth={2} />
                 <Text style={styles.saveButtonText}>
                   {editingItem ? 'Update Event' : 'Add Event'}
                 </Text>
@@ -1149,3 +1150,4 @@ const styles = StyleSheet.create({
     color: '#fff',
   },
 });
+

@@ -39,6 +39,10 @@ export default function BuzzCallScreen() {
   const insets = useSafeAreaInsets();
   const { theme } = useTheme();
   const colors = useThemeColors();
+  const mutedTextStyle = React.useMemo(
+    () => ({ color: colors.mutedText || colors.text }),
+    [colors.mutedText, colors.text]
+  );
   const { t, i18n } = useTranslation('touch');
   const [customBuzzTemplates, setCustomBuzzTemplates] = useState<
     BuzzTemplate[]
@@ -268,31 +272,41 @@ export default function BuzzCallScreen() {
               key={emoji}
               style={[
                 styles.emojiOption,
+                { backgroundColor: colors.card, borderColor: colors.border },
                 customBuzzEmoji === emoji && styles.selectedEmojiOption,
               ]}
               onPress={() => setCustomBuzzEmoji(emoji)}
             >
-              <Text style={styles.emojiOptionText}>{emoji}</Text>
+              <Text style={[styles.emojiOptionText, { color: colors.text }]}>
+                {emoji}
+              </Text>
             </TouchableOpacity>
           ))}
 
           {/* Expand/Collapse Button */}
           {!showAllEmojis && (
             <TouchableOpacity
-              style={styles.expandEmojiButton}
+              style={[
+                styles.expandEmojiButton,
+                { backgroundColor: colors.card, borderColor: colors.border },
+              ]}
               onPress={() => setShowAllEmojis(true)}
             >
-              <Text style={styles.expandEmojiText}>+</Text>
+              <Text style={[styles.expandEmojiText, { color: colors.mutedText || colors.text }]}>
+                +
+              </Text>
             </TouchableOpacity>
           )}
         </View>
 
         {showAllEmojis && (
           <TouchableOpacity
-            style={styles.collapseButton}
+            style={[styles.collapseButton, { backgroundColor: colors.card }]}
             onPress={() => setShowAllEmojis(false)}
           >
-            <Text style={styles.collapseButtonText}>{t('createBuzz.collapse')}</Text>
+            <Text style={[styles.collapseButtonText, { color: colors.mutedText || colors.text }]}>
+              {t('createBuzz.collapse')}
+            </Text>
           </TouchableOpacity>
         )}
       </View>
@@ -311,12 +325,12 @@ export default function BuzzCallScreen() {
           <Text style={styles.customBuzzEmoji}>{item.emoji || '💫'}</Text>
           <View style={styles.customBuzzInfo}>
             <View style={styles.customBuzzTextRow}>
-              <Text style={styles.customBuzzText}>{item.text}</Text>
+              <Text style={[styles.customBuzzText, { color: colors.text }]}>{item.text}</Text>
               {item.type === 'default' && (
                 <Text style={styles.defaultBadge}>{t('createBuzz.defaultBadge')}</Text>
               )}
             </View>
-            <Text style={styles.customBuzzMeta}>
+            <Text style={[styles.customBuzzMeta, { color: colors.mutedText || colors.text }]}>
               {(() => {
                 const ts = parseInt(item.id.split('_')[1]) || Date.now();
                 const locale = i18n.language === 'vi' ? 'vi-VN' : i18n.language === 'en' ? 'en-US' : i18n.language === 'ko' ? 'ko-KR' : i18n.language === 'es' ? 'es-ES' : undefined;
@@ -335,9 +349,9 @@ export default function BuzzCallScreen() {
             onPress={() => handleToggleQuickBuzz(item)}
           >
             {item.showInQuickBuzz ? (
-              <Eye size={20} color="#4ade80" strokeWidth={2} />
+              <Eye size={20} color={theme.success || '#4ade80'} strokeWidth={2} />
             ) : (
-              <EyeOff size={20} color="#666" strokeWidth={2} />
+              <EyeOff size={20} color={colors.mutedText || colors.text} strokeWidth={2} />
             )}
           </TouchableOpacity>
 
@@ -347,14 +361,14 @@ export default function BuzzCallScreen() {
                 style={styles.actionButton}
                 onPress={() => openEditModal(item)}
               >
-                <Edit size={20} color="#888" strokeWidth={2} />
+                <Edit size={20} color={colors.mutedText || colors.text} strokeWidth={2} />
               </TouchableOpacity>
 
               <TouchableOpacity
                 style={styles.actionButton}
                 onPress={() => handleDeleteTemplate(item)}
               >
-                <Trash2 size={20} color="#ef4444" strokeWidth={2} />
+              <Trash2 size={20} color={theme.danger || '#ef4444'} strokeWidth={2} />
               </TouchableOpacity>
             </>
           )}
@@ -362,14 +376,14 @@ export default function BuzzCallScreen() {
       </View>
 
       <View style={[styles.quickBuzzToggle, { borderTopColor: colors.border }]}>
-        <Text style={styles.quickBuzzToggleLabel}>
+        <Text style={[styles.quickBuzzToggleLabel, { color: colors.text }]}>
           {t('createBuzz.showInQuickBuzz')}
         </Text>
         <Switch
           value={item.showInQuickBuzz || false}
           onValueChange={() => handleToggleQuickBuzz(item)}
-          trackColor={{ false: '#333', true: '#ff6b9d' }}
-          thumbColor="#fff"
+          trackColor={{ false: colors.border as any, true: theme.primary as any }}
+          thumbColor={theme.onPrimary || colors.text}
         />
       </View>
     </View>
@@ -398,20 +412,20 @@ export default function BuzzCallScreen() {
             />
           </TouchableOpacity>
           <View style={styles.titleContainer}>
-            <Text style={styles.title}>{t('manageBuzz.title')}</Text>
+            <Text style={[styles.title, { color: colors.text }]}>{t('manageBuzz.title')}</Text>
             <Text style={styles.partnerNameSubtitle}>
               {t('manageBuzz.for', { name: partnerName })}
             </Text>
           </View>
           <TouchableOpacity style={styles.addButton} onPress={openCreateModal}>
-            <Plus size={24} color="#ff6b9d" strokeWidth={2} />
+            <Plus size={24} color={theme.primary} strokeWidth={2} />
           </TouchableOpacity>
         </View>
 
         {/* Custom Buzz List */}
         <View style={styles.content}>
-          <Text style={styles.sectionTitle}>{t('manageBuzz.title')}</Text>
-          <Text style={styles.sectionSubtitle}>{t('manageBuzz.desc')}</Text>
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>{t('manageBuzz.title')}</Text>
+            <Text style={[styles.sectionSubtitle, { color: colors.mutedText || colors.text }]}>{t('manageBuzz.desc')}</Text>
 
           <FlatList
             data={customBuzzTemplates}
@@ -421,22 +435,22 @@ export default function BuzzCallScreen() {
             showsVerticalScrollIndicator={false}
             ListEmptyComponent={
               <View style={styles.emptyContainer}>
-                <Zap size={64} color="#333" strokeWidth={1} />
-                <Text style={styles.emptyText}>
+                <Zap size={64} color={colors.mutedText || colors.text} strokeWidth={1} />
+                <Text style={[styles.emptyText, { color: colors.text }]}>
                   {t('createBuzz.emptyTitle')}
                 </Text>
 
-                <Text style={styles.emptySubtext}>
+                <Text style={[styles.emptySubtext, { color: colors.mutedText || colors.text }]}>
                   {isPremium
                     ? (t('createBuzz.emptyHintFirst') as string)
                     : (t('createBuzz.emptyHintUpgrade') as string)}
                 </Text>
                 {!isPremium && (
                   <TouchableOpacity
-                    style={styles.upgradeButton}
+                    style={[styles.upgradeButton, { backgroundColor: theme.secondary }]}
                     onPress={() => router.push('/premium')}
                   >
-                    <Text style={styles.upgradeButtonText}>
+                    <Text style={[styles.upgradeButtonText, { color: theme.onSecondary || colors.text }]}>
                       {t('createBuzz.upgrade')}
                     </Text>
                   </TouchableOpacity>
@@ -478,11 +492,7 @@ export default function BuzzCallScreen() {
                 style={styles.closeButton}
                 onPress={() => setShowCreateModal(false)}
               >
-                <X
-                  size={24}
-                  color={theme.mutedText || '#888'}
-                  strokeWidth={2}
-                />
+                <X size={24} color={colors.mutedText || colors.text} strokeWidth={2} />
               </TouchableOpacity>
             </View>
 
@@ -514,16 +524,16 @@ export default function BuzzCallScreen() {
                   value={customBuzzText}
                   onChangeText={setCustomBuzzText}
                   placeholder={t('createBuzz.contentPlaceholder') as string}
-                  placeholderTextColor="#666"
+                  placeholderTextColor={colors.mutedText || colors.text}
                   maxLength={20}
                 />
-                <Text style={[styles.charCount, { color: theme.mutedText }]}>
+                <Text style={[styles.charCount, { color: colors.mutedText || colors.text }]}>
                   {customBuzzText.length}/20
                 </Text>
               </View>
 
               <View style={styles.previewContainer}>
-                <Text style={[styles.previewLabel, { color: theme.mutedText }]}>
+                <Text style={[styles.previewLabel, { color: colors.mutedText || colors.text }]}>
                   {t('createBuzz.previewLabel')}
                 </Text>
                 <View
@@ -546,17 +556,14 @@ export default function BuzzCallScreen() {
               <TouchableOpacity
                 style={[
                   styles.saveCustomBuzzButton,
+                  { backgroundColor: theme.secondary },
                   !customBuzzText.trim() && styles.saveCustomBuzzButtonDisabled,
                 ]}
                 onPress={handleSaveCustomBuzz}
                 disabled={!customBuzzText.trim()}
               >
-                <Zap
-                  size={20}
-                  color={theme.onSecondary || '#fff'}
-                  strokeWidth={2}
-                />
-                <Text style={styles.saveCustomBuzzText}>
+                <Zap size={20} color={theme.onSecondary || colors.text} strokeWidth={2} />
+                <Text style={[styles.saveCustomBuzzText, { color: theme.onSecondary || colors.text }]}>
                   {editingTemplate
                     ? t('createBuzz.saveUpdate')
                     : t('createBuzz.saveCreate')}
@@ -613,7 +620,7 @@ const styles = StyleSheet.create({
   },
   sectionSubtitle: {
     fontSize: 14,
-    color: '#888',
+    // color via theme
     marginBottom: 20,
     lineHeight: 20,
   },
@@ -621,12 +628,12 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   customBuzzCard: {
-    backgroundColor: '#111',
+    // background via theme
     borderRadius: 12,
     padding: 16,
     marginBottom: 12,
     borderWidth: 1,
-    borderColor: '#333',
+    // border via theme
   },
   customBuzzHeader: {
     flexDirection: 'row',
@@ -667,7 +674,7 @@ const styles = StyleSheet.create({
   },
   customBuzzMeta: {
     fontSize: 12,
-    color: '#888',
+    // color via theme
   },
   customBuzzActions: {
     flexDirection: 'row',
@@ -682,7 +689,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingTop: 12,
     borderTopWidth: 1,
-    borderTopColor: '#333',
+    // border via theme
   },
   quickBuzzToggleLabel: {
     fontSize: 14,
@@ -697,18 +704,18 @@ const styles = StyleSheet.create({
   emptyText: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#666',
+    // color via theme
     marginTop: 16,
     marginBottom: 8,
   },
   emptySubtext: {
     fontSize: 14,
-    color: '#888',
+    // color via theme
     textAlign: 'center',
     marginBottom: 20,
   },
   upgradeButton: {
-    backgroundColor: '#f59e0b',
+    // background via theme
     paddingHorizontal: 20,
     paddingVertical: 12,
     borderRadius: 20,
@@ -716,7 +723,7 @@ const styles = StyleSheet.create({
   upgradeButtonText: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#fff',
+    // color via theme
   },
   customBuzzModal: {
     flex: 1,
@@ -727,7 +734,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 20,
     borderBottomWidth: 1,
-    borderBottomColor: '#333',
+    // border via theme
   },
   customBuzzModalTitle: {
     fontSize: 20,

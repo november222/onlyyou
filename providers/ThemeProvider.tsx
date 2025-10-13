@@ -64,7 +64,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
       : { ...((RNText as any).defaultProps.style || {}), ...textStyle };
 
     (RNTextInput as any).defaultProps = (RNTextInput as any).defaultProps || {};
-    (RNTextInput as any).defaultProps.placeholderTextColor = isDark ? '#999' : '#666';
+    (RNTextInput as any).defaultProps.placeholderTextColor = (theme.mutedText as string) || (isDark ? '#999' : '#666');
     (RNTextInput as any).defaultProps.style = Array.isArray((RNTextInput as any).defaultProps.style)
       ? [...(RNTextInput as any).defaultProps.style, textStyle]
       : { ...((RNTextInput as any).defaultProps.style || {}), ...textStyle };

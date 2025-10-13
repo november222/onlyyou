@@ -85,5 +85,9 @@
   "endSessionConfirmMessage": "Điều này sẽ kết thúc phiên kết nối với \"{{name}}\". Phiên sẽ được lưu vào Profile.",
   "endSessionSuccessTitle": "Đã kết thúc phiên",
   "endSessionSuccessMessage": "Phiên kết nối đã được lưu vào lịch sử. Bạn có thể xem trong Profile.",
-  "endSessionFailedMessage": "Không thể kết thúc phiên kết nối"
+  "endSessionFailedMessage": "Không thể kết thúc phiên kết nối",
+  "partnerLabel": "Tên đối tác",
+  "partnerPlaceholder": "Nhập tên đối tác (tùy chọn)",
+  "nameTooLongTitle": "Tên quá dài",
+  "nameTooLongDesc": "Vui lòng dùng tối đa {{max}} ký tự cho tên đối tác."
 }

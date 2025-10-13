@@ -1,21 +1,18 @@
 import React from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  TouchableOpacity,
-  Alert,
-} from 'react-native';
+import { useTheme, useThemeColors } from '@/providers/ThemeProvider';
+import { View, Text, StyleSheet, TouchableOpacity, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Shield, Fingerprint, Heart } from 'lucide-react-native';
 import { usePrivacy } from '@/providers/PrivacyProvider';
 
 export default function LockScreen() {
   const { authenticate } = usePrivacy();
+  const { theme } = useTheme();
+  const colors = useThemeColors();
 
   const handleUnlock = async () => {
     const success = await authenticate();
-    
+
     if (!success) {
       Alert.alert(
         'Xác thực thất bại',
@@ -26,31 +23,68 @@ export default function LockScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView
+      style={[styles.container, { backgroundColor: colors?.background }]}
+    >
       <View style={styles.content}>
         {/* Logo */}
         <View style={styles.logoContainer}>
-          <Heart size={64} color="#ff6b9d" strokeWidth={2} fill="#ff6b9d" />
-          <Text style={styles.appName}>Only You</Text>
+          <Heart
+            size={64}
+            color={theme?.primary || '#ff6b9d'}
+            strokeWidth={2}
+            fill={theme?.primary || '#ff6b9d'}
+          />
+          <Text style={[styles.appName, { color: colors?.text }]}>
+            Only You
+          </Text>
         </View>
 
         {/* Lock Icon */}
         <View style={styles.lockContainer}>
-          <Shield size={80} color="#666" strokeWidth={1.5} />
+          <Shield
+            size={80}
+            color={colors?.mutedText || colors?.text || '#666'}
+            strokeWidth={1.5}
+          />
         </View>
 
         {/* Message */}
         <View style={styles.messageContainer}>
-          <Text style={styles.title}>Ứng dụng đã được khóa</Text>
-          <Text style={styles.subtitle}>
+          <Text style={[styles.title, { color: colors?.text }]}>
+            Ứng dụng đã được khóa
+          </Text>
+          <Text
+            style={[
+              styles.subtitle,
+              { color: colors?.mutedText || colors?.text },
+            ]}
+          >
             Sử dụng sinh trắc học hoặc mật khẩu để mở khóa
           </Text>
         </View>
 
         {/* Unlock Button */}
-        <TouchableOpacity style={styles.unlockButton} onPress={handleUnlock}>
-          <Fingerprint size={24} color="#fff" strokeWidth={2} />
-          <Text style={styles.unlockButtonText}>Mở khóa</Text>
+        <TouchableOpacity
+          style={[
+            styles.unlockButton,
+            { backgroundColor: theme?.primary || '#ff6b9d' },
+          ]}
+          onPress={handleUnlock}
+        >
+          <Fingerprint
+            size={24}
+            color={theme?.onPrimary || colors?.text || '#fff'}
+            strokeWidth={2}
+          />
+          <Text
+            style={[
+              styles.unlockButtonText,
+              { color: theme?.onPrimary || colors?.text || '#fff' },
+            ]}
+          >
+            Mở khóa
+          </Text>
         </TouchableOpacity>
       </View>
     </SafeAreaView>
@@ -60,7 +94,6 @@ export default function LockScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#000',
   },
   content: {
     flex: 1,
@@ -75,7 +108,6 @@ const styles = StyleSheet.create({
   appName: {
     fontSize: 24,
     fontWeight: '700',
-    color: '#fff',
     marginTop: 12,
   },
   lockContainer: {
@@ -88,13 +120,11 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 20,
     fontWeight: '600',
-    color: '#fff',
     marginBottom: 8,
     textAlign: 'center',
   },
   subtitle: {
     fontSize: 16,
-    color: '#888',
     textAlign: 'center',
     lineHeight: 22,
   },
@@ -102,7 +132,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#ff6b9d',
+    backgroundColor: 'transparent',
     paddingHorizontal: 32,
     paddingVertical: 16,
     borderRadius: 25,
@@ -111,6 +141,5 @@ const styles = StyleSheet.create({
   unlockButtonText: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#fff',
   },
 });

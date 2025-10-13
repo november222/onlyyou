@@ -2,6 +2,9 @@ import { Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { isFeatureEnabled } from '@/config/features';
 
+const SAVED_CONNECTIONS_KEY = 'savedConnections';
+const MAX_PARTNER_NAME_LENGTH = 32;
+
 export interface WebRTCMessage {
   id: string;
   text: string;
@@ -500,14 +503,11 @@ class WebRTCService {
     try {
       await AsyncStorage.removeItem('savedConnection');
       this.savedConnection = null;
-      
+
       if (this.reconnectTimer) {
         clearTimeout(this.reconnectTimer);
         this.reconnectTimer = null;
       }
-      
-      this.disconnect();
-      console.log('Forgot saved connection');
     } catch (error) {
       console.error('Failed to forget connection:', error);
     }
@@ -684,16 +684,25 @@ class WebRTCService {
       throw new Error('No active room to save');
     }
 
+    const name = (partnerName || '').trim();
+    if (name.length > MAX_PARTNER_NAME_LENGTH) {
+      // truncate to be safe, or throw to force UI validation
+      // throw new Error(`Partner name must be <= ${MAX_PARTNER_NAME_LENGTH} characters`);
+      partnerName = name.slice(0, MAX_PARTNER_NAME_LENGTH);
+    } else {
+      partnerName = name;
+    }
+
     const connection: SavedConnection = {
       roomCode: this.connectionState.roomCode,
-      partnerName: partnerName,
+      partnerName,
       connectionDate: new Date().toISOString(),
       lastConnected: new Date().toISOString(),
       currentSessionStart: new Date().toISOString(),
       totalConnectedTime: this.totalConnectedTime,
       buzzCallsCount: 0,
     };
-
+    
     this.savedConnection = connection;
     await AsyncStorage.setItem('savedConnection', JSON.stringify(connection));
     console.log('Saved connection with name:', partnerName);
@@ -714,6 +723,38 @@ class WebRTCService {
     }
     return null;
   }
+
+  // load all saved connections
+  public async getSavedConnections(): Promise<SavedConnection[]> {
+    try {
+      const raw = await AsyncStorage.getItem(SAVED_CONNECTIONS_KEY);
+      return raw ? (JSON.parse(raw) as SavedConnection[]) : [];
+    } catch (e) {
+      console.warn('getSavedConnections failed', e);
+      return [];
+    }
+  }
+
+  // delete by roomCode (or use id if you have one)
+  public async deleteSavedConnection(roomCode: string): Promise<void> {
+    try {
+      const list = await this.getSavedConnections();
+      const filtered = list.filter((c) => c.roomCode !== roomCode);
+      await AsyncStorage.setItem(SAVED_CONNECTIONS_KEY, JSON.stringify(filtered));
+      // update in-memory if needed
+      if (this.savedConnection && this.savedConnection.roomCode === roomCode) {
+        this.savedConnection = null as any;
+      }
+      // optional callback/notification
+      if (this.onSavedConnectionsChanged) this.onSavedConnectionsChanged(filtered);
+    } catch (e) {
+      console.warn('deleteSavedConnection failed', e);
+      throw e;
+    }
+  }
+
+  // optional listener
+  public onSavedConnectionsChanged: ((list: SavedConnection[]) => void) | null = null;
 }
 
 export default new WebRTCService();

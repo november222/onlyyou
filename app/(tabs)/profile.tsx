@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   View,
@@ -38,6 +38,20 @@ import {
 } from '@/lib/loveDay';
 import { useTheme, useThemeColors } from '@/providers/ThemeProvider';
 
+// Helper: convert hex color to rgba with alpha
+function hexToRgba(hex: string, alpha: number) {
+  try {
+    const raw = hex.replace('#', '');
+    const isShort = raw.length === 3;
+    const r = parseInt(isShort ? raw[0] + raw[0] : raw.slice(0, 2), 16);
+    const g = parseInt(isShort ? raw[1] + raw[1] : raw.slice(2, 4), 16);
+    const b = parseInt(isShort ? raw[2] + raw[2] : raw.slice(4, 6), 16);
+    return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+  } catch {
+    return hex; // fallback to original if parse fails
+  }
+}
+
 interface ConnectionSession {
   id: string;
   startDate: Date;
@@ -50,8 +64,20 @@ interface ConnectionSession {
 
 export default function ProfileScreen() {
   const { t } = useTranslation();
-  const { theme } = useTheme();
+  const { theme, isDark } = useTheme();
   const colors = useThemeColors();
+  const cardSurfaceStyle = useMemo(
+    () => ({ backgroundColor: colors.card, borderColor: colors.border }),
+    [colors.card, colors.border]
+  );
+  const borderOnlyStyle = useMemo(
+    () => ({ borderColor: colors.border }),
+    [colors.border]
+  );
+  const mutedTextStyle = useMemo(
+    () => ({ color: colors.mutedText || colors.text }),
+    [colors.mutedText, colors.text]
+  );
   const [currentConnectionStart, setCurrentConnectionStart] =
     useState<Date | null>(null);
   const [totalConnectedTime, setTotalConnectedTime] = useState(0);
@@ -87,6 +113,12 @@ export default function ProfileScreen() {
 
   // Mock Premier status - in real app this would come from user data/API
   const isPremierUser = isPremium;
+
+  // Tint for stat icon backgrounds derived from theme.primary
+  const primaryTint = useMemo(
+    () => hexToRgba(theme.primary as string, isDark ? 0.12 : 0.08),
+    [theme.primary, isDark]
+  );
 
   const showPremiumAlert = () => {
     setShowPremiumModal(true);
@@ -126,41 +158,68 @@ export default function ProfileScreen() {
   }) => (
     <TouchableOpacity
       onPress={onPress}
-      style={[
-        styles.historySessionCard,
-        { backgroundColor: colors.card, borderColor: colors.border },
-      ]}
+      style={[styles.historySessionCard, cardSurfaceStyle]}
     >
       <View style={styles.historySessionHeader}>
         <View style={styles.historySessionInfo}>
-          <Text style={styles.historySessionRoomCode}>{item.roomCode}</Text>
+          <Text
+            style={[
+              styles.historySessionRoomCode,
+              { color: colors.text, flexShrink: 1 },
+            ]}
+            numberOfLines={1}
+            ellipsizeMode="tail"
+          >
+            {item.roomCode}
+          </Text>
           <View
             style={[
               styles.historySessionStatus,
-              { backgroundColor: item.isActive ? theme.success : (colors.mutedText || colors.text) },
+              {
+                backgroundColor: item.isActive
+                  ? theme.success
+                  : colors.mutedText || colors.text,
+              },
             ]}
           >
-            <Text style={styles.historySessionStatusText}>
+            <Text
+              style={[
+                styles.historySessionStatusText,
+                {
+                  color: item.isActive
+                    ? theme.onPrimary || colors.background
+                    : theme.onCard || colors.text,
+                },
+              ]}
+            >
               {item.isActive
                 ? t('connection:connected')
                 : t('connection:disconnected')}
             </Text>
           </View>
         </View>
-        <ChevronRight size={16} color={colors.mutedText || colors.text} strokeWidth={2} />
+        <ChevronRight
+          size={16}
+          color={colors.mutedText || colors.text}
+          strokeWidth={2}
+        />
       </View>
 
       <View style={styles.historySessionDetails}>
         <View style={styles.historySessionDetailRow}>
           <View style={styles.historySessionDate}>
-            <Calendar size={14} color={colors.mutedText || colors.text} strokeWidth={2} />
-            <Text style={styles.historySessionDateText}>
+            <Calendar
+              size={14}
+              color={colors.mutedText || colors.text}
+              strokeWidth={2}
+            />
+            <Text style={[styles.historySessionDateText, mutedTextStyle]}>
               {formatDateTime(item.startDate)}
             </Text>
           </View>
           <View style={styles.historySessionDuration}>
             <Timer size={14} color={theme.primary} strokeWidth={2} />
-            <Text style={styles.historySessionDurationText}>
+            <Text style={[styles.historySessionDurationText, { color: colors.text }]}>
               {formatDuration(item.duration)}
             </Text>
           </View>
@@ -168,8 +227,12 @@ export default function ProfileScreen() {
 
         {item.endDate && (
           <View style={styles.historySessionDate}>
-            <WifiOff size={14} color={colors.mutedText || colors.text} strokeWidth={2} />
-            <Text style={styles.historySessionDateText}>
+            <WifiOff
+              size={14}
+              color={colors.mutedText || colors.text}
+              strokeWidth={2}
+            />
+            <Text style={[styles.historySessionDateText, mutedTextStyle]}>
               {formatDateTime(item.endDate)}
             </Text>
           </View>
@@ -178,7 +241,7 @@ export default function ProfileScreen() {
         {/* {t('profile:historyTotalBuzzCalls')} Count */}
         <View style={styles.historyBuzzCallsRow}>
           <Zap size={14} color={theme.secondary} strokeWidth={2} />
-          <Text style={styles.historyBuzzCallsText}>
+          <Text style={[styles.historyBuzzCallsText, mutedTextStyle]}>
             {item.buzzCallsCount} {t('profile:historyTotalBuzzCalls')}
           </Text>
         </View>
@@ -467,35 +530,47 @@ export default function ProfileScreen() {
         <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
           {/* Header */}
           <View style={styles.header}>
-            <Heart size={32} color={theme.primary} strokeWidth={2} fill={theme.primary} />
+            <Heart
+              size={32}
+              color={theme.primary}
+              strokeWidth={2}
+              fill={theme.primary}
+            />
             <View style={styles.titleContainer}>
               <Text style={[styles.title, { color: colors.text }]}>
                 {authState.user?.name || t('profile:title')}
               </Text>
               {isPremierUser && (
-                <View style={[styles.premierBadge, { backgroundColor: theme.secondary }]}> 
+                <View
+                  style={[
+                    styles.premierBadge,
+                    { backgroundColor: theme.secondary },
+                  ]}
+                >
                   <Crown
                     size={16}
                     color={theme.onSecondary || colors.text}
                     strokeWidth={2}
                     fill={theme.secondary}
                   />
-                  <Text style={[styles.premierBadgeText, { color: theme.onSecondary || colors.text }]}>Premier</Text>
+                  <Text
+                    style={[
+                      styles.premierBadgeText,
+                      { color: theme.onSecondary || colors.text },
+                    ]}
+                  >
+                    Premier
+                  </Text>
                 </View>
               )}
             </View>
-            <Text style={[styles.subtitle, { color: colors.mutedText || colors.text }]}>
+            <Text style={[styles.subtitle, mutedTextStyle]}>
               {t('profile:subtitle')}
             </Text>
           </View>
 
           {/* Love Counter (L-day) */}
-          <View
-            style={[
-              styles.loveCounterCard,
-              { backgroundColor: colors.card, borderColor: colors.border },
-            ]}
-          >
+          <View style={[styles.loveCounterCard, cardSurfaceStyle]}>
             <View style={styles.loveCounterHeader}>
               <Sparkles size={24} color={theme.primary} strokeWidth={2} />
               <Text style={[styles.loveCounterTitle, { color: colors.text }]}>
@@ -513,7 +588,7 @@ export default function ProfileScreen() {
                 <Text style={[styles.loveCounterLabel, { color: colors.text }]}>
                   {t('profile:daysConnected')}
                 </Text>
-                <Text style={[styles.loveCounterSubtext, { color: colors.mutedText || colors.text }]}>
+                <Text style={[styles.loveCounterSubtext, mutedTextStyle]}>
                   {t('profile:since')} {formatDate(relationshipStartAt)}
                 </Text>
               </View>
@@ -522,20 +597,21 @@ export default function ProfileScreen() {
 
           {/* Total Sessions Navigation */}
           <TouchableOpacity
-            style={[
-              styles.totalSessionsCard,
-              { backgroundColor: colors.card, borderColor: colors.border },
-            ]}
+            style={[styles.totalSessionsCard, cardSurfaceStyle]}
             onPress={() => setShowHistoryModal(true)}
           >
             <View style={styles.totalSessionsHeader}>
               <View style={styles.totalSessionsLeft}>
                 <History size={24} color={theme.primary} strokeWidth={2} />
-                <Text style={styles.totalSessionsTitle}>
+                <Text style={[styles.totalSessionsTitle, { color: colors.text }]}>
                   {t('profile:viewAllSessions')}
                 </Text>
               </View>
-              <ChevronRight size={20} color={colors.mutedText || colors.text} strokeWidth={2} />
+              <ChevronRight
+                size={20}
+                color={colors.mutedText || colors.text}
+                strokeWidth={2}
+              />
             </View>
           </TouchableOpacity>
 
@@ -544,70 +620,55 @@ export default function ProfileScreen() {
 
           {/* Current Session Stats */}
           <View style={styles.statsGrid}>
-            <View
-              style={[
-                styles.statCard,
-                { backgroundColor: colors.card, borderColor: colors.border },
-              ]}
-            >
-              <View style={styles.statIcon}>
+            <View style={[styles.statCard, cardSurfaceStyle]}>
+              <View style={[styles.statIcon, { backgroundColor: primaryTint }]}>
                 {connectionState.isConnected ? (
                   <Wifi size={20} color={theme.success} strokeWidth={2} />
                 ) : (
                   <WifiOff size={20} color={theme.danger} strokeWidth={2} />
                 )}
               </View>
-              <Text style={styles.statValue}>
+              <Text style={[styles.statValue, { color: colors.text }]}>
                 {connectionState.isConnected
                   ? formatDuration(currentSessionDuration)
                   : formatDuration(currentSessionDuration)}
               </Text>
-              <Text style={styles.statLabel}>
+              <Text style={[styles.statLabel, mutedTextStyle]}>
                 {connectionState.isConnected
                   ? t('profile:currentlyConnected')
                   : t('profile:lastSession')}
               </Text>
             </View>
 
-            <View style={styles.statCard}>
-              <View style={styles.statIcon}>
+            <View style={[styles.statCard, cardSurfaceStyle]}>
+              <View style={[styles.statIcon, { backgroundColor: primaryTint }]}>
                 <Clock size={20} color={theme.primary} strokeWidth={2} />
               </View>
-              <Text style={styles.statValue}>
+              <Text style={[styles.statValue, { color: colors.text }]}>
                 {formatDuration(totalConnectedTime)}
               </Text>
-              <Text style={styles.statLabel}>
+              <Text style={[styles.statLabel, mutedTextStyle]}>
                 {t('profile:totalConnectedTime')}
               </Text>
             </View>
           </View>
 
           <View style={styles.statsGrid}>
-            <View
-              style={[
-                styles.statCard,
-                { backgroundColor: colors.card, borderColor: colors.border },
-              ]}
-            >
-              <View style={styles.statIcon}>
+            <View style={[styles.statCard, cardSurfaceStyle]}>
+              <View style={[styles.statIcon, { backgroundColor: primaryTint }]}>
                 <WifiOff size={20} color={theme.danger} strokeWidth={2} />
               </View>
-              <Text style={styles.statValue}>
+              <Text style={[styles.statValue, { color: colors.text }]}>
                 {formatDuration(totalDisconnectedTime)}
               </Text>
             </View>
 
-            <View
-              style={[
-                styles.statCard,
-                { backgroundColor: colors.card, borderColor: colors.border },
-              ]}
-            >
-              <View style={styles.statIcon}>
+            <View style={[styles.statCard, cardSurfaceStyle]}>
+              <View style={[styles.statIcon, { backgroundColor: primaryTint }]}>
                 <TrendingUp size={20} color={theme.secondary} strokeWidth={2} />
               </View>
-              <Text style={styles.statValue}>{connectionSessions.length}</Text>
-              <Text style={styles.statLabel}>{t('profile:totalSessions')}</Text>
+              <Text style={[styles.statValue, { color: colors.text }]}>{connectionSessions.length}</Text>
+              <Text style={[styles.statLabel, mutedTextStyle]}>{t('profile:totalSessions')}</Text>
             </View>
           </View>
 
@@ -625,7 +686,7 @@ export default function ProfileScreen() {
               ]}
               edges={['top', 'bottom']}
             >
-              <View style={styles.premiumHeader}>
+              <View style={[styles.premiumHeader, { borderColor: colors.border }]}>
                 <Text style={styles.premiumTitle}>
                   {t('profile:premiumTitle')}
                 </Text>
@@ -633,7 +694,11 @@ export default function ProfileScreen() {
                   style={styles.closeButton}
                   onPress={() => setShowPremiumModal(false)}
                 >
-                  <X size={24} color={colors.mutedText || colors.text} strokeWidth={2} />
+                  <X
+                    size={24}
+                    color={colors.mutedText || colors.text}
+                    strokeWidth={2}
+                  />
                 </TouchableOpacity>
               </View>
 
@@ -650,33 +715,33 @@ export default function ProfileScreen() {
                   />
                 </View>
 
-                <Text style={styles.premiumMainTitle}>
+                <Text style={[styles.premiumMainTitle, { color: colors.text }]}>
                   {t('profile:premiumMainTitle')}
                 </Text>
-                <Text style={styles.premiumSubtitle}>
+                <Text style={[styles.premiumSubtitle, mutedTextStyle]}>
                   {t('profile:premiumSubtitle')}
                 </Text>
 
                 <View style={styles.premiumFeatures}>
-                  <View style={styles.premiumFeature}>
+                  <View style={[styles.premiumFeature, cardSurfaceStyle]}>
                     <History size={20} color={theme.success} strokeWidth={2} />
                     <Text style={styles.premiumFeatureText}>
                       {t('profile:premiumFeature')}
                     </Text>
                   </View>
-                  <View style={styles.premiumFeature}>
+                  <View style={[styles.premiumFeature, cardSurfaceStyle]}>
                     <Zap size={20} color={theme.success} strokeWidth={2} />
                     <Text style={styles.premiumFeatureText}>
                       {t('profile:premiumFeature')}
                     </Text>
                   </View>
-                  <View style={styles.premiumFeature}>
+                  <View style={[styles.premiumFeature, cardSurfaceStyle]}>
                     <Shield size={20} color={theme.success} strokeWidth={2} />
                     <Text style={styles.premiumFeatureText}>
                       {t('profile:premiumFeature')}
                     </Text>
                   </View>
-                  <View style={styles.premiumFeature}>
+                  <View style={[styles.premiumFeature, cardSurfaceStyle]}>
                     <Sparkles size={20} color={theme.success} strokeWidth={2} />
                     <Text style={styles.premiumFeatureText}>
                       {t('profile:premiumFeature')}
@@ -694,20 +759,24 @@ export default function ProfileScreen() {
                 </View>
                 <View style={styles.premiumActions}>
                   <TouchableOpacity
-                    style={styles.upgradeButton}
+                    style={[styles.upgradeButton, { backgroundColor: theme.secondary }]}
                     onPress={() => {
                       setShowPremiumModal(false);
                       router.push('/premium?openPayment=1');
                     }}
                   >
-                    <Crown size={20} color={theme.onSecondary || colors.text} strokeWidth={2} />
-                    <Text style={styles.upgradeButtonText}>
+                    <Crown
+                      size={20}
+                      color={theme.onSecondary || colors.text}
+                      strokeWidth={2}
+                    />
+                    <Text style={[styles.upgradeButtonText, { color: theme.onSecondary || colors.text }]}>
                       {t('profile:upgradeNow')}
                     </Text>
                   </TouchableOpacity>
 
                   <TouchableOpacity
-                    style={styles.laterButton}
+                    style={[styles.laterButton, { borderColor: colors.border }]}
                     onPress={() => setShowPremiumModal(false)}
                   >
                     <Text style={styles.laterButtonText}>
@@ -734,15 +803,19 @@ export default function ProfileScreen() {
               edges={['top', 'bottom']}
             >
               {/* Header */}
-              <View style={styles.historyHeader}>
-                <Text style={styles.historyTitle}>
+              <View style={[styles.historyHeader, { borderColor: colors.border }]}>
+                <Text style={[styles.historyTitle, { color: colors.text }]}>
                   {t('profile:historyTitle')}
                 </Text>
                 <TouchableOpacity
                   style={styles.closeButton}
                   onPress={() => setShowHistoryModal(false)}
                 >
-                  <X size={24} color={colors.mutedText || colors.text} strokeWidth={2} />
+                  <X
+                    size={24}
+                    color={colors.mutedText || colors.text}
+                    strokeWidth={2}
+                  />
                 </TouchableOpacity>
               </View>
 
@@ -755,26 +828,26 @@ export default function ProfileScreen() {
               >
                 <View style={styles.historySummaryRow}>
                   <View style={styles.historySummaryItem}>
-                    <Text style={styles.historySummaryValue}>
+                    <Text style={[styles.historySummaryValue, { color: colors.text }]}>
                       {allConnectionSessions.length}
                     </Text>
-                    <Text style={styles.historySummaryLabel}>
+                    <Text style={[styles.historySummaryLabel, mutedTextStyle]}>
                       {t('profile:historyTotalSessions')}
                     </Text>
                   </View>
                   <View style={styles.historySummaryItem}>
-                    <Text style={styles.historySummaryValue}>
+                    <Text style={[styles.historySummaryValue, { color: colors.text }]}>
                       {formatDuration(totalHistoryDuration)}
                     </Text>
-                    <Text style={styles.historySummaryLabel}>
+                    <Text style={[styles.historySummaryLabel, mutedTextStyle]}>
                       {t('profile:historyTotalTime')}
                     </Text>
                   </View>
                   <View style={styles.historySummaryItem}>
-                    <Text style={styles.historySummaryValue}>
+                    <Text style={[styles.historySummaryValue, { color: colors.text }]}>
                       {totalHistoryBuzzCalls}
                     </Text>
-                    <Text style={styles.historySummaryLabel}>
+                    <Text style={[styles.historySummaryLabel, mutedTextStyle]}>
                       {t('profile:historyTotalBuzzCalls')}
                     </Text>
                   </View>
@@ -793,10 +866,19 @@ export default function ProfileScreen() {
             </SafeAreaView>
           </Modal>
 
-          <View style={[styles.quoteCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
-            <Text style={[styles.quoteText, { color: colors.text }]}>{t('profile:quoteText')}</Text>
+          <View
+            style={[
+              styles.quoteCard,
+              { backgroundColor: colors.card, borderColor: colors.border },
+            ]}
+          >
+            <Text style={[styles.quoteText, { color: colors.text }]}>
+              {t('profile:quoteText')}
+            </Text>
 
-            <Text style={[styles.quoteAuthor, { color: theme.primary }]}>{t('profile:quoteAuthor')}</Text>
+            <Text style={[styles.quoteAuthor, { color: theme.primary }]}>
+              {t('profile:quoteAuthor')}
+            </Text>
           </View>
         </ScrollView>
       </View>
@@ -807,7 +889,6 @@ export default function ProfileScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    
   },
   content: {
     flex: 1,
@@ -827,7 +908,6 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 24,
     fontWeight: '700',
-    
   },
   premierBadge: {
     flexDirection: 'row',
@@ -840,20 +920,17 @@ const styles = StyleSheet.create({
   premierBadgeText: {
     fontSize: 12,
     fontWeight: '600',
-    
   },
   subtitle: {
     fontSize: 14,
-    
   },
   loveCounterCard: {
-    
     marginHorizontal: 20,
     marginBottom: 20,
     borderRadius: 20,
     padding: 24,
     borderWidth: 1,
-    
+
     alignItems: 'center',
   },
   loveCounterHeader: {
@@ -864,7 +941,7 @@ const styles = StyleSheet.create({
   loveCounterTitle: {
     fontSize: 18,
     fontWeight: '600',
-    
+
     marginLeft: 8,
   },
   loveCounterContent: {
@@ -873,17 +950,16 @@ const styles = StyleSheet.create({
   loveCounterNumber: {
     fontSize: 48,
     fontWeight: '700',
-    
+
     marginBottom: 8,
   },
   loveCounterLabel: {
     fontSize: 16,
-    
+
     marginBottom: 4,
   },
   loveCounterSubtext: {
     fontSize: 14,
-    
   },
   statsGrid: {
     flexDirection: 'row',
@@ -893,12 +969,11 @@ const styles = StyleSheet.create({
   },
   statCard: {
     flex: 1,
-    
+
     borderRadius: 16,
     padding: 16,
     alignItems: 'center',
     borderWidth: 1,
-    
   },
   statIcon: {
     width: 40,
@@ -912,13 +987,13 @@ const styles = StyleSheet.create({
   statValue: {
     fontSize: 16,
     fontWeight: '700',
-    
+
     marginBottom: 4,
     textAlign: 'center',
   },
   statLabel: {
     fontSize: 12,
-    
+
     textAlign: 'center',
     lineHeight: 16,
   },
@@ -939,12 +1014,11 @@ const styles = StyleSheet.create({
   historySectionTitle: {
     fontSize: 18,
     fontWeight: '600',
-    
+
     marginLeft: 8,
   },
   premiumModal: {
     flex: 1,
-    
   },
   premiumHeader: {
     flexDirection: 'row',
@@ -952,12 +1026,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 20,
     borderBottomWidth: 1,
-    
   },
   premiumTitle: {
     fontSize: 20,
     fontWeight: '700',
-    
   },
   closeButton: {
     padding: 8,
@@ -978,13 +1050,13 @@ const styles = StyleSheet.create({
   premiumMainTitle: {
     fontSize: 28,
     fontWeight: '700',
-    
+
     marginBottom: 8,
     textAlign: 'center',
   },
   premiumSubtitle: {
     fontSize: 16,
-    
+
     textAlign: 'center',
     marginBottom: 32,
     lineHeight: 24,
@@ -996,16 +1068,15 @@ const styles = StyleSheet.create({
   premiumFeature: {
     flexDirection: 'row',
     alignItems: 'center',
-    
+
     borderRadius: 12,
     padding: 16,
     marginBottom: 16,
     borderWidth: 1,
-    
   },
   premiumFeatureText: {
     fontSize: 16,
-    
+
     marginLeft: 12,
     flex: 1,
   },
@@ -1017,12 +1088,12 @@ const styles = StyleSheet.create({
   premiumPrice: {
     fontSize: 32,
     fontWeight: '700',
-    
+
     marginBottom: 4,
   },
   premiumPriceSubtext: {
     fontSize: 14,
-    
+
     textAlign: 'center',
   },
   premiumActions: {
@@ -1040,7 +1111,6 @@ const styles = StyleSheet.create({
   upgradeButtonText: {
     fontSize: 16,
     fontWeight: '600',
-    
   },
   laterButton: {
     backgroundColor: 'transparent',
@@ -1048,16 +1118,13 @@ const styles = StyleSheet.create({
     padding: 16,
     alignItems: 'center',
     borderWidth: 1,
-    
   },
   laterButtonText: {
     fontSize: 16,
     fontWeight: '500',
-    
   },
   premiumDetailsModal: {
     flex: 1,
-    
   },
   premiumDetailsScrollView: {
     flex: 1,
@@ -1076,7 +1143,6 @@ const styles = StyleSheet.create({
   premiumDetailsTitle: {
     fontSize: 20,
     fontWeight: '700',
-    
   },
   headerRight: {
     width: 40,
@@ -1112,14 +1178,14 @@ const styles = StyleSheet.create({
   heroTitle: {
     fontSize: 32,
     fontWeight: '700',
-    
+
     marginBottom: 12,
     textAlign: 'center',
     paddingHorizontal: 20,
   },
   heroSubtitle: {
     fontSize: 16,
-    
+
     textAlign: 'center',
     lineHeight: 24,
     paddingHorizontal: 20,
@@ -1132,7 +1198,7 @@ const styles = StyleSheet.create({
   pricingSectionTitle: {
     fontSize: 20,
     fontWeight: '600',
-    
+
     textAlign: 'center',
     marginBottom: 20,
   },
@@ -1143,17 +1209,16 @@ const styles = StyleSheet.create({
   },
   pricingCard: {
     flex: 1,
-    
+
     borderRadius: 16,
     padding: 20,
     borderWidth: 2,
-    
+
     position: 'relative',
     minHeight: 120,
     justifyContent: 'space-between',
   },
-  recommendedCard: {
-  },
+  recommendedCard: {},
   recommendedBadge: {
     position: 'absolute',
     top: -12,
@@ -1169,7 +1234,6 @@ const styles = StyleSheet.create({
   recommendedText: {
     fontSize: 12,
     fontWeight: '600',
-    
   },
   pricingHeader: {
     flexDirection: 'row',
@@ -1181,13 +1245,13 @@ const styles = StyleSheet.create({
   pricingTitle: {
     fontSize: 16,
     fontWeight: '600',
-    
+
     flex: 1,
   },
   pricingPrice: {
     fontSize: 24,
     fontWeight: '700',
-    
+
     marginBottom: 4,
   },
   yearlyPricing: {
@@ -1199,17 +1263,17 @@ const styles = StyleSheet.create({
   },
   originalPrice: {
     fontSize: 16,
-    
+
     textDecorationLine: 'line-through',
   },
   pricingPeriod: {
     fontSize: 14,
-    
+
     marginBottom: 8,
   },
   savingsText: {
     fontSize: 12,
-    
+
     fontWeight: '600',
   },
   featuresSection: {
@@ -1219,18 +1283,18 @@ const styles = StyleSheet.create({
   featuresSectionTitle: {
     fontSize: 20,
     fontWeight: '600',
-    
+
     marginBottom: 20,
   },
   featureCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    
+
     borderRadius: 12,
     padding: 16,
     marginBottom: 12,
     borderWidth: 1,
-    
+
     minHeight: 80,
   },
   featureIcon: {
@@ -1249,13 +1313,13 @@ const styles = StyleSheet.create({
   featureTitle: {
     fontSize: 16,
     fontWeight: '600',
-    
+
     marginBottom: 4,
     lineHeight: 22,
   },
   featureDescription: {
     fontSize: 14,
-    
+
     lineHeight: 20,
     flexWrap: 'wrap',
   },
@@ -1266,7 +1330,6 @@ const styles = StyleSheet.create({
   },
   loadingText: {
     fontSize: 16,
-    
   },
   guaranteeSection: {
     alignItems: 'center',
@@ -1276,13 +1339,13 @@ const styles = StyleSheet.create({
   guaranteeTitle: {
     fontSize: 18,
     fontWeight: '600',
-    
+
     marginTop: 12,
     marginBottom: 8,
   },
   guaranteeDescription: {
     fontSize: 14,
-    
+
     textAlign: 'center',
     lineHeight: 20,
   },
@@ -1290,22 +1353,20 @@ const styles = StyleSheet.create({
     padding: 20,
     paddingTop: 16,
     borderTopWidth: 1,
-    
-    
+
     marginHorizontal: 20,
     borderRadius: 16,
     marginBottom: 40,
   },
   termsText: {
     fontSize: 12,
-    
+
     textAlign: 'center',
     lineHeight: 16,
     marginTop: 12,
   },
   historyModal: {
     flex: 1,
-    
   },
   historyHeader: {
     flexDirection: 'row',
@@ -1313,21 +1374,17 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 20,
     borderBottomWidth: 1,
-    
   },
   historyTitle: {
     fontSize: 20,
     fontWeight: '700',
-    
   },
   historySummaryCard: {
-    
     marginHorizontal: 20,
     marginVertical: 20,
     borderRadius: 16,
     padding: 20,
     borderWidth: 1,
-    
   },
   historySummaryRow: {
     flexDirection: 'row',
@@ -1339,12 +1396,11 @@ const styles = StyleSheet.create({
   historySummaryValue: {
     fontSize: 18,
     fontWeight: '700',
-    
+
     marginBottom: 4,
   },
   historySummaryLabel: {
     fontSize: 12,
-    
   },
   historySessionsList: {
     flex: 1,
@@ -1354,10 +1410,9 @@ const styles = StyleSheet.create({
     paddingBottom: 20,
   },
   historySessionCard: {
-    
     borderRadius: 12,
     borderWidth: 1,
-    
+
     marginBottom: 12,
     padding: 16,
   },
@@ -1371,11 +1426,13 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
+    flex: 1,
+    minWidth: 0,
   },
   historySessionRoomCode: {
     fontSize: 16,
     fontWeight: '600',
-    
+
     fontFamily: 'monospace',
   },
   historySessionStatus: {
@@ -1385,7 +1442,7 @@ const styles = StyleSheet.create({
   },
   historySessionStatusText: {
     fontSize: 12,
-    
+
     fontWeight: '500',
   },
   historySessionDetails: {
@@ -1403,7 +1460,6 @@ const styles = StyleSheet.create({
   },
   historySessionDateText: {
     fontSize: 13,
-    
   },
   historySessionDuration: {
     flexDirection: 'row',
@@ -1412,7 +1468,7 @@ const styles = StyleSheet.create({
   },
   historySessionDurationText: {
     fontSize: 13,
-    
+
     fontWeight: '500',
   },
   historyBuzzCallsRow: {
@@ -1422,22 +1478,21 @@ const styles = StyleSheet.create({
   },
   historyBuzzCallsText: {
     fontSize: 13,
-    
+
     fontWeight: '500',
   },
   quoteCard: {
-    
     marginHorizontal: 20,
     marginBottom: 40,
     borderRadius: 16,
     padding: 20,
     borderWidth: 1,
-    
+
     alignItems: 'center',
   },
   quoteText: {
     fontSize: 16,
-    
+
     textAlign: 'center',
     lineHeight: 24,
     fontStyle: 'italic',
@@ -1445,17 +1500,15 @@ const styles = StyleSheet.create({
   },
   quoteAuthor: {
     fontSize: 14,
-    
+
     fontWeight: '500',
   },
   totalSessionsCard: {
-    
     marginHorizontal: 20,
     marginBottom: 20,
     borderRadius: 16,
     padding: 20,
     borderWidth: 1,
-    
   },
   totalSessionsHeader: {
     flexDirection: 'row',
@@ -1470,18 +1523,13 @@ const styles = StyleSheet.create({
   totalSessionsTitle: {
     fontSize: 18,
     fontWeight: '600',
-    
+
     marginLeft: 12,
   },
   totalSessionsSubtitle: {
     fontSize: 14,
-    
   },
   chevronIcon: {
     marginLeft: 4,
   },
 });
-
-
-
-

@@ -85,5 +85,9 @@
   "endSessionConfirmMessage": "\"{{name}}\"과(와)의 현재 세션을 종료합니다. 세션은 프로필에 저장됩니다.",
   "endSessionSuccessTitle": "세션이 종료되었습니다",
   "endSessionSuccessMessage": "세션이 기록에 저장되었습니다. 프로필에서 확인할 수 있습니다.",
-  "endSessionFailedMessage": "세션을 종료할 수 없습니다"
+  "endSessionFailedMessage": "세션을 종료할 수 없습니다",
+  "partnerLabel": "파트너 이름",
+  "partnerPlaceholder": "파트너 이름을 입력하세요 (선택 사항)",
+  "nameTooLongTitle": "이름이 너무 깁니다",
+  "nameTooLongDesc": "파트너 이름은 최대 {{max}}자까지 입력해주세요."
 }

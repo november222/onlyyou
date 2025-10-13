@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, ActivityIndicator } from 'react-native';
-import { useTheme } from '@/providers/ThemeProvider';
+import { useTheme, useThemeColors } from '@/providers/ThemeProvider';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Sparkles, Settings, Heart, User } from 'lucide-react-native';
 import { router } from 'expo-router';
@@ -20,6 +20,7 @@ const tabs = [
 
 export default function TabLayout() {
   const { theme, isDark } = useTheme();
+  const colors = useThemeColors();
   const [activeTab, setActiveTab] = useState('profile');
   const [isCheckingAuth, setIsCheckingAuth] = useState(false);
 
@@ -64,12 +65,12 @@ export default function TabLayout() {
               >
                 <Icon 
                   size={20} 
-                  color={isActive ? theme.primary : (isDark ? '#888' : '#666')} 
+                  color={isActive ? theme.primary : (colors.mutedText || colors.text)} 
                   strokeWidth={2} 
                 />
                 <Text style={[
                   styles.navText,
-                  { color: isActive ? theme.primary : (isDark ? '#888' : '#666') }
+                  { color: isActive ? theme.primary : (colors.mutedText || colors.text) }
                 ]}>
                   {tab.title}
                 </Text>
@@ -85,18 +86,14 @@ export default function TabLayout() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#000',
   },
   loadingContainer: {
     flex: 1,
-    backgroundColor: '#000',
     justifyContent: 'center',
     alignItems: 'center',
   },
   bottomNavBar: {
-    backgroundColor: '#111',
     borderTopWidth: 1,
-    borderTopColor: '#333',
     paddingHorizontal: 20,
     paddingVertical: 12,
   },

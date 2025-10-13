@@ -26,6 +26,7 @@ import {
 } from 'lucide-react-native';
 import AuthService from '@/services/AuthService';
 import { useTranslation } from 'react-i18next';
+import { useTheme, useThemeColors } from '@/providers/ThemeProvider';
 
 const { width: screenWidth } = Dimensions.get('window');
 
@@ -45,6 +46,8 @@ export default function OnboardingScreen() {
   const flatListRef = useRef<FlatList>(null);
   const scrollX = useRef(new Animated.Value(0)).current;
   const { t } = useTranslation();
+  const { theme } = useTheme();
+  const colors = useThemeColors();
 
   // Updated slides to reflect current features and mock state
   const slides: OnboardingSlide[] = [
@@ -136,9 +139,9 @@ export default function OnboardingScreen() {
 
         {/* Text Content */}
         <View style={styles.textContainer}>
-          <Text style={styles.title}>{item.title}</Text>
+          <Text style={[styles.title, { color: colors.text }]}>{item.title}</Text>
           <Text style={[styles.subtitle, { color: item.color }]}>{item.subtitle}</Text>
-          <Text style={styles.description}>{item.description}</Text>
+          <Text style={[styles.description, { color: colors.mutedText || colors.text }]}>{item.description}</Text>
         </View>
       </View>
     </View>
@@ -183,10 +186,10 @@ export default function OnboardingScreen() {
   );
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
       {/* Skip Button */}
       <TouchableOpacity style={styles.skipButton} onPress={handleSkip}>
-        <Text style={styles.skipText}>{t('common.skip')}</Text>
+        <Text style={[styles.skipText, { color: colors.mutedText || colors.text }]}>{t('common.skip')}</Text>
       </TouchableOpacity>
 
       {/* Slides */}
@@ -218,7 +221,7 @@ export default function OnboardingScreen() {
           <TouchableOpacity
             style={[
               styles.nextButton,
-              { backgroundColor: slides[currentIndex]?.color || '#ff6b9d' }
+              { backgroundColor: slides[currentIndex]?.color || theme.primary }
             ]}
             onPress={handleNext}
           >
@@ -226,9 +229,9 @@ export default function OnboardingScreen() {
               {currentIndex === slides.length - 1 ? t('getStarted') : t('next')}
             </Text>
             {currentIndex === slides.length - 1 ? (
-              <ArrowRight size={20} color="#fff" strokeWidth={2} />
+              <ArrowRight size={20} color={theme.onPrimary || colors.text} strokeWidth={2} />
             ) : (
-              <ChevronRight size={20} color="#fff" strokeWidth={2} />
+              <ChevronRight size={20} color={theme.onPrimary || colors.text} strokeWidth={2} />
             )}
           </TouchableOpacity>
         </View>
@@ -240,7 +243,6 @@ export default function OnboardingScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#000',
   },
   skipButton: {
     position: 'absolute',
@@ -252,7 +254,6 @@ const styles = StyleSheet.create({
   },
   skipText: {
     fontSize: 16,
-    color: '#888',
     fontWeight: '500',
   },
   slide: {
@@ -282,7 +283,6 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 32,
     fontWeight: '700',
-    color: '#fff',
     textAlign: 'center',
     marginBottom: 8,
   },
@@ -294,7 +294,6 @@ const styles = StyleSheet.create({
   },
   description: {
     fontSize: 16,
-    color: '#888',
     textAlign: 'center',
     lineHeight: 24,
   },
@@ -329,6 +328,5 @@ const styles = StyleSheet.create({
   nextButtonText: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#fff',
   },
 });

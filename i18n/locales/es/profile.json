@@ -8,5 +8,6 @@
   "lastSession": "Última sesión",
   "totalConnectedTime": "Tiempo total conectado",
   "totalDisconnectedTime": "Tiempo total desconectado",
-  "totalSessions": "Total de sesiones"
+  "totalSessions": "Total de sesiones",
+  "historyTitle": "Historial de conexión"
 }
