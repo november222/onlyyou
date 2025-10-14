@@ -7,7 +7,6 @@
     "icon": "./assets/images/icon.png",
     "scheme": "onlyyou",
     "userInterfaceStyle": "automatic",
-    "newArchEnabled": false,
     "developer": {
       "tool": "expo-cli"
     },

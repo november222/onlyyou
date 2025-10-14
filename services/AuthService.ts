@@ -238,10 +238,11 @@ class AuthService {
       let redirectUrl = '';
       if (isWeb && typeof window !== 'undefined' && window.location) {
         redirectUrl = `${window.location.protocol}//${window.location.host}/auth/callback`;
+      } else if (Constants?.appOwnership === 'expo') {
+        // Force Expo Proxy URL on Expo Go to avoid exp:// redirects
+        redirectUrl = 'https://auth.expo.dev';
       } else {
-        redirectUrl = (Constants?.appOwnership === 'expo')
-          ? AuthSession.makeRedirectUri({ useProxy: true, path: 'auth/callback' })
-          : 'onlyyou://auth/callback';
+        redirectUrl = 'onlyyou://auth/callback';
       }
 
       console.log('Auth (Google) redirectUrl:', redirectUrl);
@@ -268,10 +269,16 @@ class AuthService {
 
       if (data?.url) {
         console.log('Opening auth session with URL:', data.url);
-        const result = await WebBrowser.openAuthSessionAsync(
-          data.url,
-          redirectUrl
-        );
+        let result: any;
+        if (Constants?.appOwnership === 'expo') {
+          // Prefer AuthSession.startAsync on Expo Go
+          result = await AuthSession.startAsync({ authUrl: data.url, returnUrl: redirectUrl as any });
+        } else {
+          result = await WebBrowser.openAuthSessionAsync(
+            data.url,
+            redirectUrl
+          );
+        }
 
         console.log('Auth session result:', result);
 
