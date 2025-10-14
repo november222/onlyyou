@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+﻿import React, { useState, useEffect, useMemo } from 'react';
 import {
   View,
   Text,
@@ -433,10 +433,10 @@ export default function CalendarScreen() {
   const [editingItem, setEditingItem] = useState<CalItem | null>(null);
 
   // Form state
-  const [title, setTitle] = useState('');
-  const [date, setDate] = useState('');
-  const [time, setTime] = useState('');
-  const [note, setNote] = useState('');
+  const [title, setTitle] = useState(');
+  const [date, setDate] = useState(');
+  const [time, setTime] = useState(');
+  const [note, setNote] = useState(');
   const [partnerName, setPartnerName] = useState<string>('My Love');
 
   // Date/Time picker state
@@ -472,10 +472,10 @@ export default function CalendarScreen() {
   };
 
   const resetForm = () => {
-    setTitle('');
-    setDate('');
-    setTime('');
-    setNote('');
+    setTitle(');
+    setDate(');
+    setTime(');
+    setNote(');
     setEditingItem(null);
     setSelectedDate(new Date());
     setSelectedTime(new Date());
@@ -569,7 +569,7 @@ export default function CalendarScreen() {
 
   const handleAddItem = async () => {
     if (!title.trim() || !date.trim()) {
-      Alert.alert('Lỗi', 'Vui lòng nhập tiêu đề và chọn ngày');
+      Alert.alert('Lá»—i', 'Vui lÃ²ng nháº­p tiÃªu Ä‘á» vÃ  chá»n ngÃ y');
       return;
     }
 
@@ -577,21 +577,21 @@ export default function CalendarScreen() {
       const result = await CalendarService.addItem(title, date, time, note);
 
       if (result.success) {
-        Alert.alert('Thành công! 📅', 'Sự kiện đã được thêm vào lịch');
+        Alert.alert('ThÃ nh cÃ´ng! ðŸ“…', 'Sá»± kiá»‡n Ä‘Ã£ Ä‘Æ°á»£c thÃªm vÃ o lá»‹ch');
         resetForm();
         setShowAddModal(false);
         loadCalendarItems();
       } else {
-        Alert.alert('Lỗi', result.error || 'Không thể thêm sự kiện');
+        Alert.alert('Lá»—i', result.error || 'KhÃ´ng thá»ƒ thÃªm sá»± kiá»‡n');
       }
     } catch (error) {
-      Alert.alert('Lỗi', 'Có lỗi xảy ra. Vui lòng thử lại.');
+      Alert.alert('Lá»—i', 'CÃ³ lá»—i xáº£y ra. Vui lÃ²ng thá»­ láº¡i.');
     }
   };
 
   const handleEditItem = async () => {
     if (!editingItem || !title.trim() || !date.trim()) {
-      Alert.alert('Lỗi', 'Vui lòng nhập tiêu đề và chọn ngày');
+      Alert.alert('Lá»—i', 'Vui lÃ²ng nháº­p tiÃªu Ä‘á» vÃ  chá»n ngÃ y');
       return;
     }
 
@@ -604,26 +604,26 @@ export default function CalendarScreen() {
       });
 
       if (result.success) {
-        Alert.alert('Thành công! ✏️', 'Sự kiện đã được cập nhật');
+        Alert.alert('ThÃ nh cÃ´ng! âœï¸', 'Sá»± kiá»‡n Ä‘Ã£ Ä‘Æ°á»£c cáº­p nháº­t');
         resetForm();
         setShowAddModal(false);
         loadCalendarItems();
       } else {
-        Alert.alert('Lỗi', result.error || 'Không thể cập nhật sự kiện');
+        Alert.alert('Lá»—i', result.error || 'KhÃ´ng thá»ƒ cáº­p nháº­t sá»± kiá»‡n');
       }
     } catch (error) {
-      Alert.alert('Lỗi', 'Có lỗi xảy ra. Vui lòng thử lại.');
+      Alert.alert('Lá»—i', 'CÃ³ lá»—i xáº£y ra. Vui lÃ²ng thá»­ láº¡i.');
     }
   };
 
   const handleDeleteItem = (item: CalItem) => {
     Alert.alert(
-      'Xóa sự kiện?',
-      `Bạn có chắc muốn xóa "${item.title}"?`,
+      'XÃ³a sá»± kiá»‡n?',
+      `Báº¡n cÃ³ cháº¯c muá»‘n xÃ³a "${item.title}"?`,
       [
-        { text: 'Hủy', style: 'cancel' },
+        { text: 'Há»§y', style: 'cancel' },
         {
-          text: 'Xóa',
+          text: 'XÃ³a',
           style: 'destructive',
           onPress: async () => {
             try {
@@ -631,10 +631,10 @@ export default function CalendarScreen() {
               if (result.success) {
                 loadCalendarItems();
               } else {
-                Alert.alert('Lỗi', result.error || 'Không thể xóa sự kiện');
+                Alert.alert('Lá»—i', result.error || 'KhÃ´ng thá»ƒ xÃ³a sá»± kiá»‡n');
               }
             } catch (error) {
-              Alert.alert('Lỗi', 'Có lỗi xảy ra. Vui lòng thử lại.');
+              Alert.alert('Lá»—i', 'CÃ³ lá»—i xáº£y ra. Vui lÃ²ng thá»­ láº¡i.');
             }
           },
         },
@@ -646,8 +646,8 @@ export default function CalendarScreen() {
     setEditingItem(item);
     setTitle(item.title);
     setDate(item.date);
-    setTime(item.time || '');
-    setNote(item.note || '');
+    setTime(item.time || ');
+    setNote(item.note || ');
 
     // Parse existing date/time for pickers
     if (item.date) {
@@ -779,7 +779,7 @@ export default function CalendarScreen() {
         </TouchableOpacity>
         <View style={styles.titleContainer}>
           <Text style={styles.title}>{t('common:calendar')}</Text>
-          <Text style={styles.partnerNameSubtitle}>Với {partnerName} 💕</Text>
+          <Text style={styles.partnerNameSubtitle}>Vá»›i {partnerName} ðŸ’•</Text>
         </View>
         <TouchableOpacity style={styles.addButton} onPress={openAddModal}>
           <Plus size={24} color={theme.primary} strokeWidth={2} />
@@ -830,9 +830,9 @@ export default function CalendarScreen() {
                 <ArrowLeft size={24} color={colors.mutedText || colors.text} strokeWidth={2} />
               </TouchableOpacity>
               <Text style={styles.modalTitle}>
-                {modalView === 'datePicker' ? 'Chọn Ngày' :
-                 modalView === 'timePicker' ? 'Chọn Thời Gian' :
-                 editingItem ? 'Edit Event' : 'Add Event'}
+                {modalView === 'datePicker' ? t('calendarModal.pickDateTitle') :
+                 modalView === 'timePicker' ? t('calendarModal.pickTimeTitle') :
+                 editingItem ? t('common:editEvent') : t('common:addEvent')}
               </Text>
               <TouchableOpacity
                 style={styles.closeButton}
@@ -848,52 +848,52 @@ export default function CalendarScreen() {
                 keyboardShouldPersistTaps="handled"
               >
               <View style={styles.formGroup}>
-                <Text style={styles.formLabel}>Title * ({title.length}/20)</Text>
+                <Text style={styles.formLabel}>{t('calendarModal.titleLabel')} ({title.length}/20)</Text>
                 <TextInput
                   style={styles.formInput}
                   value={title}
                   onChangeText={setTitle}
-                  placeholder="Event title"
+                  placeholder={t('calendarModal.titlePlaceholder')}
                   placeholderTextColor={colors.mutedText || colors.text}
                   maxLength={20}
                 />
               </View>
               
               <View style={styles.formGroup}>
-                <Text style={styles.formLabel}>Ngày *</Text>
+                <Text style={styles.formLabel}>NgÃ y *</Text>
                 <TouchableOpacity
                   style={styles.datePickerButton}
                   onPress={openDatePicker}
                 >
                   <CalendarIcon size={20} color={theme.primary} strokeWidth={2} />
                   <Text style={[styles.datePickerText, !date && styles.placeholderText]}>
-                    {date || 'Chọn ngày'}
+                    {date || t('calendarModal.datePlaceholder')}
                   </Text>
                 </TouchableOpacity>
-                <Text style={styles.formHint}>Nhấn để chọn ngày từ lịch</Text>
+                <Text style={styles.formHint}>{t('calendarModal.dateHint')}</Text>
               </View>
 
               <View style={styles.formGroup}>
-                <Text style={styles.formLabel}>Thời gian (không bắt buộc)</Text>
+                <Text style={styles.formLabel}>Thá»i gian (khÃ´ng báº¯t buá»™c)</Text>
                 <TouchableOpacity
                   style={styles.datePickerButton}
                   onPress={openTimePicker}
                 >
                   <Clock size={20} color={theme.success || '#4ade80'} strokeWidth={2} />
                   <Text style={[styles.datePickerText, !time && styles.placeholderText]}>
-                    {time || 'Chọn thời gian'}
+                    {time || t('calendarModal.timePlaceholder')}
                   </Text>
                 </TouchableOpacity>
-                <Text style={styles.formHint}>Nhấn để chọn giờ và phút</Text>
+                <Text style={styles.formHint}>{t('calendarModal.timeHint')}</Text>
               </View>
               
               <View style={styles.formGroup}>
-                <Text style={styles.formLabel}>Note (optional) ({note.length}/120)</Text>
+                <Text style={styles.formLabel}>{t('calendarModal.noteLabel')} ({note.length}/120)</Text>
                 <TextInput
                   style={[styles.formInput, styles.formTextArea]}
                   value={note}
                   onChangeText={setNote}
-                  placeholder="Additional notes"
+                  placeholder={t('calendarModal.notePlaceholder')}
                   placeholderTextColor={colors.mutedText || colors.text}
                   multiline
                   maxLength={120}
@@ -907,7 +907,7 @@ export default function CalendarScreen() {
               >
                 <CalendarIcon size={20} color={theme.onBackground || colors.text} strokeWidth={2} />
                 <Text style={styles.saveButtonText}>
-                  {editingItem ? 'Update Event' : 'Add Event'}
+                  {editingItem ? t('common:editEvent') : t('common:addEvent')}
                 </Text>
               </TouchableOpacity>
               </ScrollView>
@@ -924,7 +924,7 @@ export default function CalendarScreen() {
                       setSelectedDate(newDate);
                     }}
                   >
-                    <Text style={styles.calendarNavText}>←</Text>
+                    <Text style={styles.calendarNavText}>â†</Text>
                   </TouchableOpacity>
 
                   <Text style={styles.calendarHeaderText}>
@@ -942,7 +942,7 @@ export default function CalendarScreen() {
                       setSelectedDate(newDate);
                     }}
                   >
-                    <Text style={styles.calendarNavText}>→</Text>
+                    <Text style={styles.calendarNavText}>â†’</Text>
                   </TouchableOpacity>
                 </View>
 
@@ -1013,7 +1013,7 @@ export default function CalendarScreen() {
                   style={styles.pickerConfirmButton}
                   onPress={confirmDatePicker}
                 >
-                  <Text style={styles.pickerConfirmText}>Xác Nhận</Text>
+                  <Text style={styles.pickerConfirmText}>{t('common:confirm')}</Text>
                 </TouchableOpacity>
               </ScrollView>
             )}
@@ -1022,7 +1022,7 @@ export default function CalendarScreen() {
               <View style={styles.pickerContent}>
                 <View style={styles.wheelPickerContainer}>
                   <View style={styles.wheelColumn}>
-                    <Text style={styles.wheelLabel}>Giờ</Text>
+                    <Text style={styles.wheelLabel}>Giá»</Text>
                     <View style={styles.wheelWrapper}>
                       <View style={styles.wheelHighlight} />
                       <ScrollView
@@ -1076,7 +1076,7 @@ export default function CalendarScreen() {
                   <Text style={styles.wheelSeparator}>:</Text>
 
                   <View style={styles.wheelColumn}>
-                    <Text style={styles.wheelLabel}>Phút</Text>
+                    <Text style={styles.wheelLabel}>PhÃºt</Text>
                     <View style={styles.wheelWrapper}>
                       <View style={styles.wheelHighlight} />
                       <ScrollView
@@ -1136,7 +1136,7 @@ export default function CalendarScreen() {
                   style={styles.pickerConfirmButton}
                   onPress={confirmTimePicker}
                 >
-                  <Text style={styles.pickerConfirmText}>Xác Nhận</Text>
+                  <Text style={styles.pickerConfirmText}>{t('common:confirm')}</Text>
                 </TouchableOpacity>
               </View>
             )}
@@ -1146,5 +1146,8 @@ export default function CalendarScreen() {
     </SafeAreaView>
   );
 }
+
+
+
 
 

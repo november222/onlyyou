@@ -65,6 +65,20 @@
     "calendarEmptyHint": "Tap + to add your first event",
     "calendarModal": {
       "monthHeader": "Month {{month}}, {{year}}",
-      "weekdays": ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
+      "weekdays": ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"],
+      "pickDateTitle": "Pick Date",
+      "pickTimeTitle": "Pick Time",
+      "titleLabel": "Title *",
+      "titlePlaceholder": "Event title",
+      "dateLabel": "Date *",
+      "datePlaceholder": "Select date",
+      "timeLabel": "Time (optional)",
+      "timePlaceholder": "Select time",
+      "noteLabel": "Note (optional)",
+      "notePlaceholder": "Additional notes",
+      "dateHint": "Tap to select a date",
+      "timeHint": "Tap to select hour and minute",
+      "hour": "Hour",
+      "minute": "Minute"
     }
 }

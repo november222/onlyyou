@@ -73,6 +73,20 @@
                                            "T5",
                                            "T6",
                                            "T7"
-                                       ]
+                                       ],
+                          "pickDateTitle":  "Chọn Ngày",
+                          "pickTimeTitle":  "Chọn Thời Gian",
+                          "titleLabel":  "Tiêu đề *",
+                          "titlePlaceholder":  "Tiêu đề sự kiện",
+                          "dateLabel":  "Ngày *",
+                          "datePlaceholder":  "Chọn ngày",
+                          "timeLabel":  "Thời gian (không bắt buộc)",
+                          "timePlaceholder":  "Chọn thời gian",
+                          "noteLabel":  "Ghi chú (không bắt buộc)",
+                          "notePlaceholder":  "Ghi chú thêm",
+                          "dateHint":  "Nhấn để chọn ngày từ lịch",
+                          "timeHint":  "Nhấn để chọn giờ và phút",
+                          "hour":  "Giờ",
+                          "minute":  "Phút"
                       }
 }
