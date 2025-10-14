@@ -11,19 +11,43 @@ export default function IndexScreen() {
   const colors = useThemeColors();
 
   useEffect(() => {
-    const task = InteractionManager.runAfterInteractions(() => {
+    // Wait for auth to be ready, then route accordingly
+    const maybeRoute = (auth: AuthState) => {
+      if (auth.isLoading) return;
+      if (!auth.isAuthenticated) {
+        router.replace('/auth/login');
+        return;
+      }
       try {
         const state = WebRTCService.getConnectionState?.();
         if (state?.isConnected) {
-          router.replace('/(tabs)'); // Touch screen (tabs index)
+          router.replace('/(tabs)');
         } else {
           router.replace('/(tabs)/connection');
         }
       } catch (e) {
         router.replace('/(tabs)/connection');
       }
-    });
-    return () => task.cancel?.();
+    };
+
+    // First check current state
+    const current = AuthService.getAuthState();
+    if (!current.isLoading) {
+      maybeRoute(current);
+      return;
+    }
+
+    // Subscribe to auth changes
+    AuthService.onAuthStateChange = (state) => {
+      maybeRoute(state);
+    };
+
+    // Cleanup listener on unmount
+    return () => {
+      if (AuthService.onAuthStateChange) {
+        AuthService.onAuthStateChange = null;
+      }
+    };
   }, []);
 
   return (

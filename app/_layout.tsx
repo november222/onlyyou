@@ -24,14 +24,6 @@ function AppContent() {
   const { isLocked, isLoading } = usePrivacy();
   const { theme, isDark } = useTheme();
 
-  if (isLoading) {
-    return null; // Or loading screen
-  }
-
-  if (isLocked && isFeatureEnabled('privacyLock')) {
-    return <LockScreen />;
-  }
-
   return (
     <>
       <Stack screenOptions={{ headerShown: false, header: () => null, contentStyle: { backgroundColor: theme.background } }}>
@@ -49,6 +41,8 @@ function AppContent() {
         hidden={false}
         translucent={false}
       />
+      {/* Render lock screen after navigator mounts to avoid early navigation errors */}
+      {(!isLoading && isLocked && isFeatureEnabled('privacyLock')) ? <LockScreen /> : null}
     </>
   );
 }
@@ -95,7 +89,7 @@ export default function RootLayout() {
             // Try to join the room
             try {
               // Require authentication before joining via deep link
-              if (false && !AuthService.isAuthenticated()) {
+              if (!AuthService.isAuthenticated()) {
                 Alert.alert(
                   'Yêu cầu đăng nhập',
                   'Vui lòng đăng nhập trước khi kết nối phòng.',

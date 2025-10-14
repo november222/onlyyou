@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import { View, Text, StyleSheet, ActivityIndicator } from 'react-native';
-import { useThemeColors } from '@/providers/ThemeProvider';
+import { useTheme, useThemeColors } from '@/providers/ThemeProvider';
 import { router } from 'expo-router';
 import AuthService from '@/services/AuthService';
 

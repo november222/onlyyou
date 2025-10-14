@@ -42,11 +42,8 @@
           "action": "VIEW",
           "autoVerify": true,
           "data": [
-            {
-              "scheme": "https",
-              "host": "onlyyou.app",
-              "pathPrefix": "/connect"
-            }
+            { "scheme": "https", "host": "onlyyou.app", "pathPrefix": "/connect" },
+            { "scheme": "https", "host": "onlyyou.app", "pathPrefix": "/auth/callback" }
           ],
           "category": ["BROWSABLE", "DEFAULT"]
         }

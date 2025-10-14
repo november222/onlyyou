@@ -22,11 +22,32 @@ export default function TabLayout() {
   const { theme, isDark } = useTheme();
   const colors = useThemeColors();
   const [activeTab, setActiveTab] = useState('profile');
-  const [isCheckingAuth, setIsCheckingAuth] = useState(false);
+  const [isCheckingAuth, setIsCheckingAuth] = useState(true);
 
   useEffect(() => {
-    // Bypass auth: initialize services without gating
-    WebRTCService.init().catch(() => {});
+    // Require authentication for tabs; redirect to login if not authenticated
+    const state = AuthService.getAuthState();
+    if (!state.isLoading) {
+      if (!state.isAuthenticated) {
+        router.replace('/auth/login');
+      }
+      setIsCheckingAuth(false);
+    } else {
+      AuthService.onAuthStateChange = (s) => {
+        if (!s.isLoading) {
+          if (!s.isAuthenticated) {
+            router.replace('/auth/login');
+          }
+          setIsCheckingAuth(false);
+        }
+      };
+    }
+
+    return () => {
+      if (AuthService.onAuthStateChange) {
+        AuthService.onAuthStateChange = null;
+      }
+    };
   }, []);
 
   if (isCheckingAuth) {

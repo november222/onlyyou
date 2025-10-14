@@ -4,6 +4,7 @@ import features from '@/config/features';
 import type { Session } from '@supabase/supabase-js';
 import * as WebBrowser from 'expo-web-browser';
 import * as AuthSession from 'expo-auth-session';
+import Constants from 'expo-constants';
 import { Platform } from 'react-native';
 
 WebBrowser.maybeCompleteAuthSession();
@@ -38,22 +39,6 @@ class AuthService {
     if (this.initialized) return;
     this.initialized = true;
 
-    if (features && (features as any).mockAuth) {
-      // Mock authenticated user for UI work
-      this.updateAuthState({
-        isAuthenticated: true,
-        user: {
-          id: 'mock-user-1',
-          email: 'mock@onlyyou.app',
-          name: 'OnlyYou',
-          avatar: undefined,
-          premiumTier: 'yearly',
-          premiumExpiresAt: null,
-        },
-        isLoading: false,
-      });
-      return;
-    }
 
     supabase.auth.onAuthStateChange((event, session) => {
       console.log('Auth event:', event);
@@ -338,12 +323,14 @@ class AuthService {
     try {
       this.updateAuthState({ isLoading: true });
 
-      const useProxy = Platform.OS !== 'web' && (AuthSession as any)?.makeRedirectUri ? true : false;
+      // Compute redirect URL per environment
       const redirectUrl = Platform.OS === 'web'
         ? (typeof window !== 'undefined' && window.location
             ? `${window.location.protocol}//${window.location.host}/auth/callback`
             : '/auth/callback')
-        : AuthSession.makeRedirectUri({ scheme: 'onlyyou', useProxy });
+        : (Constants?.appOwnership === 'expo'
+            ? AuthSession.makeRedirectUri({ useProxy: true })
+            : 'onlyyou://auth/callback');
 
       console.log('Auth (Google) redirectUrl:', redirectUrl);
       const { data, error } = await supabase.auth.signInWithOAuth({
@@ -431,12 +418,13 @@ class AuthService {
     try {
       this.updateAuthState({ isLoading: true });
 
-      const useProxy = Platform.OS !== 'web' && (AuthSession as any)?.makeRedirectUri ? true : false;
       const redirectUrl = Platform.OS === 'web'
         ? (typeof window !== 'undefined' && window.location
             ? `${window.location.protocol}//${window.location.host}/auth/callback`
             : '/auth/callback')
-        : AuthSession.makeRedirectUri({ scheme: 'onlyyou', useProxy });
+        : (Constants?.appOwnership === 'expo'
+            ? AuthSession.makeRedirectUri({ useProxy: true })
+            : 'onlyyou://auth/callback');
 
       console.log('Auth (Apple) redirectUrl:', redirectUrl);
       const { data, error } = await supabase.auth.signInWithOAuth({

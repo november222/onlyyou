@@ -137,6 +137,23 @@ NODE_ENV=production
 # Update SIGNALING_SERVER URL in WebRTCService.ts for production
 ```
 
+## Policy URLs (GitHub Pages)
+
+This repo includes static legal pages under `docs/` so you can publish to the App Store and Google Play without buying a domain.
+
+Pages
+- Privacy Policy: `https://november222.github.io/onlyyou/privacy-policy.html`
+- Terms of Service: `https://november222.github.io/onlyyou/terms.html`
+
+Enable GitHub Pages
+- On GitHub: Settings → Pages → Build and deployment → Source: "Deploy from a branch"; Branch: your default (e.g., `main`), Folder: `/docs`.
+- After Pages is active, use the URLs above in store listings.
+
+Auth callback recap
+- Native (production): custom scheme `onlyyou://auth/callback` (no domain required).
+- Expo Go (dev): add `https://auth.expo.dev/*` to Supabase Redirect URLs.
+- Web/prod (optional): add `https://yourdomain.com/auth/callback` if you later use a real domain.
+
 ## Security Considerations
 
 1. **Server Security**: The signaling server only handles connection setup, no user data

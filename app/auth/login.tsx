@@ -11,7 +11,7 @@ import { router, Stack } from 'expo-router';
 import { Heart } from 'lucide-react-native';
 import AuthService from '@/services/AuthService';
 import { useTranslation } from 'react-i18next';
-import { useThemeMode, useThemeColors } from '@/providers/ThemeProvider';
+import { useTheme, useThemeMode, useThemeColors } from '@/providers/ThemeProvider';
 
 export default function LoginScreen() {
   const [isLoadingGoogle, setIsLoadingGoogle] = useState(false);
