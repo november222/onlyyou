@@ -87,6 +87,8 @@
                           "dateHint":  "Nhấn để chọn ngày từ lịch",
                           "timeHint":  "Nhấn để chọn giờ và phút",
                           "hour":  "Giờ",
-                          "minute":  "Phút"
+                          "minute":  "Phút",
+                          "prevArrow":  "←",
+                          "nextArrow":  "→"
                       }
 }

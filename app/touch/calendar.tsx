@@ -12,11 +12,22 @@ import {
   Modal,
   ScrollView,
 } from 'react-native';
-import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import {
+  SafeAreaView,
+  useSafeAreaInsets,
+} from 'react-native-safe-area-context';
 import { useTheme, useThemeColors } from '@/providers/ThemeProvider';
 import { router } from 'expo-router';
 import { useTranslation } from 'react-i18next';
-import { ArrowLeft, Plus, Calendar as CalendarIcon, Clock, Edit, Trash2, X } from 'lucide-react-native';
+import {
+  ArrowLeft,
+  Plus,
+  Calendar as CalendarIcon,
+  Clock,
+  Edit,
+  Trash2,
+  X,
+} from 'lucide-react-native';
 import CalendarService, { CalItem } from '@/services/CalendarService';
 import { isFeatureEnabled } from '@/config/features';
 import WebRTCService from '@/services/WebRTCService';
@@ -27,416 +38,424 @@ export default function CalendarScreen() {
   const { t } = useTranslation('touch');
   const colors = useThemeColors();
   // Localized weekday labels for calendar header
-  const weekdayLabels = t('calendarModal.weekdays', { returnObjects: true }) as string[];
+  const weekdayLabels = t('calendarModal.weekdays', {
+    returnObjects: true,
+  }) as string[];
   // Theme-aware styles for light/dark modes
-  const styles = useMemo(() => StyleSheet.create({
-    container: {
-      flex: 1,
-      backgroundColor: theme.background,
-    },
-    header: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      padding: 20,
-      paddingBottom: 10,
-    },
-    backButton: {
-      padding: 8,
-      marginLeft: -8,
-    },
-    titleContainer: {
-      flex: 1,
-      alignItems: 'center',
-    },
-    title: {
-      fontSize: 20,
-      fontWeight: '700',
-      color: theme.text,
-    },
-    partnerNameSubtitle: {
-      fontSize: 12,
-      color: theme.primary,
-      marginTop: 2,
-    },
-    addButton: {
-      padding: 8,
-      marginRight: -8,
-    },
-    calendarList: {
-      flex: 1,
-    },
-    calendarContent: {
-      padding: 20,
-      paddingTop: 10,
-    },
-    dateGroup: {
-      marginBottom: 24,
-    },
-    dateGroupTitle: {
-      fontSize: 16,
-      fontWeight: '600',
-      color: theme.primary,
-      marginBottom: 12,
-    },
-    calendarItem: {
-      backgroundColor: theme.card,
-      borderRadius: 12,
-      padding: 16,
-      marginBottom: 12,
-      borderWidth: 1,
-      borderColor: theme.border,
-    },
-    calendarItemPast: {
-      opacity: 0.6,
-    },
-    itemHeader: {
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      alignItems: 'center',
-      marginBottom: 8,
-    },
-    itemTitle: {
-      fontSize: 16,
-      fontWeight: '600',
-      color: theme.onCard || theme.text,
-      flex: 1,
-    },
-    itemTitlePast: {
-      color: colors.mutedText || theme.mutedText || theme.text,
-      textDecorationLine: 'line-through',
-    },
-    itemActions: {
-      flexDirection: 'row',
-      gap: 8,
-    },
-    itemDetails: {
-      flexDirection: 'row',
-      gap: 16,
-      marginBottom: 8,
-    },
-    itemDetail: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 4,
-    },
-    itemDetailText: {
-      fontSize: 14,
-      color: colors.mutedText || theme.mutedText || theme.text,
-    },
-    itemDetailTextPast: {
-      color: colors.mutedText || theme.mutedText || theme.text,
-    },
-    itemNote: {
-      fontSize: 14,
-      color: theme.onCard || theme.text,
-      fontStyle: 'italic',
-    },
-    itemNotePast: {
-      color: colors.mutedText || theme.mutedText || theme.text,
-    },
-    emptyContainer: {
-      flex: 1,
-      justifyContent: 'center',
-      alignItems: 'center',
-      paddingTop: 100,
-    },
-    emptyText: {
-      fontSize: 18,
-      fontWeight: '600',
-      color: colors.mutedText || theme.mutedText || theme.text,
-      marginTop: 16,
-      marginBottom: 8,
-    },
-    emptySubtext: {
-      fontSize: 14,
-      color: colors.mutedText || theme.mutedText || theme.text,
-    },
-    addModal: {
-      flex: 1,
-      backgroundColor: theme.background,
-    },
-    modalHeader: {
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      alignItems: 'center',
-      padding: 20,
-      borderBottomWidth: 1,
-      borderBottomColor: theme.border,
-    },
-    modalTitle: {
-      fontSize: 20,
-      fontWeight: '700',
-      color: theme.text,
-    },
-    closeButton: {
-      padding: 8,
-    },
-    modalContent: {
-      flex: 1,
-      padding: 20,
-    },
-    formGroup: {
-      marginBottom: 20,
-    },
-    formLabel: {
-      fontSize: 16,
-      fontWeight: '600',
-      color: theme.text,
-      marginBottom: 8,
-    },
-    formInput: {
-      backgroundColor: theme.card,
-      borderRadius: 12,
-      padding: 16,
-      color: theme.onCard || theme.text,
-      fontSize: 16,
-      borderWidth: 1,
-      borderColor: theme.border,
-    },
-    formHint: {
-      fontSize: 12,
-      color: colors.mutedText || theme.mutedText || theme.text,
-      marginTop: 6,
-      fontStyle: 'italic',
-    },
-    datePickerButton: {
-      backgroundColor: theme.card,
-      borderRadius: 12,
-      padding: 16,
-      borderWidth: 1,
-      borderColor: theme.border,
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 12,
-    },
-    datePickerText: {
-      fontSize: 16,
-      color: theme.text,
-      flex: 1,
-    },
-    placeholderText: {
-      color: colors.mutedText || theme.mutedText || theme.text,
-    },
-    formTextArea: {
-      minHeight: 100,
-      textAlignVertical: 'top',
-    },
-    saveButton: {
-      backgroundColor: theme.primary,
-      borderRadius: 12,
-      padding: 16,
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'center',
-      gap: 8,
-      marginTop: 20,
-    },
-    saveButtonText: {
-      fontSize: 16,
-      fontWeight: '600',
-      color: theme.onPrimary || '#fff',
-    },
-    pickerContent: {
-      padding: 20,
-    },
-    calendarHeader: {
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      alignItems: 'center',
-      marginBottom: 20,
-      paddingHorizontal: 10,
-    },
-    calendarNavButton: {
-      width: 40,
-      height: 40,
-      justifyContent: 'center',
-      alignItems: 'center',
-      backgroundColor: theme.card,
-      borderRadius: 8,
-      borderWidth: 1,
-      borderColor: theme.border,
-    },
-    calendarNavText: {
-      fontSize: 24,
-      color: theme.text,
-      fontWeight: '600',
-    },
-    calendarHeaderText: {
-      fontSize: 18,
-      fontWeight: '600',
-      color: theme.text,
-    },
-    calendarWeekdays: {
-      flexDirection: 'row',
-      marginBottom: 10,
-    },
-    calendarWeekdayCell: {
-      flex: 1,
-      alignItems: 'center',
-      paddingVertical: 8,
-    },
-    calendarWeekdayText: {
-      fontSize: 12,
-      fontWeight: '600',
-      color: colors.mutedText || theme.mutedText || theme.text,
-    },
-    calendarGrid: {
-      flexDirection: 'row',
-      flexWrap: 'wrap',
-      gap: 8,
-    },
-    calendarDayCell: {
-      width: '13%',
-      aspectRatio: 1,
-      justifyContent: 'center',
-      alignItems: 'center',
-      borderRadius: 8,
-      backgroundColor: theme.card,
-    },
-    calendarDaySelected: {
-      backgroundColor: theme.primary,
-    },
-    calendarDayToday: {
-      borderWidth: 2,
-      borderColor: theme.success || '#4ade80',
-    },
-    calendarDayText: {
-      fontSize: 16,
-      color: theme.onCard || theme.text,
-    },
-    calendarDayTextSelected: {
-      fontWeight: '700',
-      color: theme.onPrimary || '#fff',
-    },
-    calendarDayTextToday: {
-      color: theme.success || '#4ade80',
-      fontWeight: '600',
-    },
-    datePickerGrid: {
-      gap: 16,
-      marginBottom: 20,
-    },
-    datePickerRow: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 12,
-    },
-    datePickerLabel: {
-      fontSize: 16,
-      fontWeight: '600',
-      color: theme.text,
-      width: 60,
-    },
-    datePickerInput: {
-      flex: 1,
-      backgroundColor: theme.card,
-      borderRadius: 8,
-      padding: 12,
-      color: theme.onCard || theme.text,
-      fontSize: 18,
-      fontWeight: '600',
-      textAlign: 'center',
-      borderWidth: 1,
-      borderColor: theme.border,
-    },
-    wheelPickerContainer: {
-      flexDirection: 'row',
-      justifyContent: 'center',
-      alignItems: 'center',
-      gap: 20,
-      marginBottom: 30,
-    },
-    wheelColumn: {
-      alignItems: 'center',
-      gap: 10,
-    },
-    wheelLabel: {
-      fontSize: 16,
-      fontWeight: '600',
-      color: colors.mutedText || theme.mutedText || theme.text,
-      textTransform: 'uppercase',
-    },
-    wheelWrapper: {
-      height: 200,
-      width: 100,
-      position: 'relative',
-    },
-    wheelHighlight: {
-      position: 'absolute',
-      top: '50%',
-      left: 0,
-      right: 0,
-      height: 50,
-      marginTop: -25,
-      backgroundColor: 'rgba(74, 222, 128, 0.1)',
-      borderTopWidth: 2,
-      borderBottomWidth: 2,
-      borderColor: theme.success || '#4ade80',
-      zIndex: 1,
-      pointerEvents: 'none',
-    },
-    wheelScroll: {
-      flex: 1,
-    },
-    wheelScrollContent: {
-      paddingVertical: 75,
-    },
-    wheelItem: {
-      height: 50,
-      justifyContent: 'center',
-      alignItems: 'center',
-    },
-    wheelItemText: {
-      fontSize: 28,
-      fontWeight: '400',
-      color: colors.mutedText || theme.mutedText || theme.text,
-    },
-    wheelItemTextSelected: {
-      fontSize: 32,
-      fontWeight: '700',
-      color: theme.success || '#4ade80',
-    },
-    wheelSeparator: {
-      fontSize: 32,
-      fontWeight: '700',
-      color: theme.success || '#4ade80',
-      marginTop: 35,
-    },
-    datePreview: {
-      fontSize: 24,
-      fontWeight: '700',
-      color: theme.success || '#4ade80',
-      textAlign: 'center',
-      marginBottom: 20,
-      padding: 16,
-      backgroundColor: theme.card,
-      borderRadius: 12,
-      borderWidth: 1,
-      borderColor: theme.border,
-    },
-    pickerConfirmButton: {
-      backgroundColor: theme.primary,
-      borderRadius: 12,
-      padding: 16,
-      alignItems: 'center',
-    },
-    pickerConfirmText: {
-      fontSize: 16,
-      fontWeight: '700',
-      color: theme.onPrimary || '#fff',
-    },
-  }), [theme, colors]);
+  const styles = useMemo(
+    () =>
+      StyleSheet.create({
+        container: {
+          flex: 1,
+          backgroundColor: theme.background,
+        },
+        header: {
+          flexDirection: 'row',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          padding: 20,
+          paddingBottom: 10,
+        },
+        backButton: {
+          padding: 8,
+          marginLeft: -8,
+        },
+        titleContainer: {
+          flex: 1,
+          alignItems: 'center',
+        },
+        title: {
+          fontSize: 20,
+          fontWeight: '700',
+          color: theme.text,
+        },
+        partnerNameSubtitle: {
+          fontSize: 12,
+          color: theme.primary,
+          marginTop: 2,
+        },
+        addButton: {
+          padding: 8,
+          marginRight: -8,
+        },
+        calendarList: {
+          flex: 1,
+        },
+        calendarContent: {
+          padding: 20,
+          paddingTop: 10,
+        },
+        dateGroup: {
+          marginBottom: 24,
+        },
+        dateGroupTitle: {
+          fontSize: 16,
+          fontWeight: '600',
+          color: theme.primary,
+          marginBottom: 12,
+        },
+        calendarItem: {
+          backgroundColor: theme.card,
+          borderRadius: 12,
+          padding: 16,
+          marginBottom: 12,
+          borderWidth: 1,
+          borderColor: theme.border,
+        },
+        calendarItemPast: {
+          opacity: 0.6,
+        },
+        itemHeader: {
+          flexDirection: 'row',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          marginBottom: 8,
+        },
+        itemTitle: {
+          fontSize: 16,
+          fontWeight: '600',
+          color: theme.onCard || theme.text,
+          flex: 1,
+        },
+        itemTitlePast: {
+          color: colors.mutedText || theme.mutedText || theme.text,
+          textDecorationLine: 'line-through',
+        },
+        itemActions: {
+          flexDirection: 'row',
+          gap: 8,
+        },
+        itemDetails: {
+          flexDirection: 'row',
+          gap: 16,
+          marginBottom: 8,
+        },
+        itemDetail: {
+          flexDirection: 'row',
+          alignItems: 'center',
+          gap: 4,
+        },
+        itemDetailText: {
+          fontSize: 14,
+          color: colors.mutedText || theme.mutedText || theme.text,
+        },
+        itemDetailTextPast: {
+          color: colors.mutedText || theme.mutedText || theme.text,
+        },
+        itemNote: {
+          fontSize: 14,
+          color: theme.onCard || theme.text,
+          fontStyle: 'italic',
+        },
+        itemNotePast: {
+          color: colors.mutedText || theme.mutedText || theme.text,
+        },
+        emptyContainer: {
+          flex: 1,
+          justifyContent: 'center',
+          alignItems: 'center',
+          paddingTop: 100,
+        },
+        emptyText: {
+          fontSize: 18,
+          fontWeight: '600',
+          color: colors.mutedText || theme.mutedText || theme.text,
+          marginTop: 16,
+          marginBottom: 8,
+        },
+        emptySubtext: {
+          fontSize: 14,
+          color: colors.mutedText || theme.mutedText || theme.text,
+        },
+        addModal: {
+          flex: 1,
+          backgroundColor: theme.background,
+        },
+        modalHeader: {
+          flexDirection: 'row',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          padding: 20,
+          borderBottomWidth: 1,
+          borderBottomColor: theme.border,
+        },
+        modalTitle: {
+          fontSize: 20,
+          fontWeight: '700',
+          color: theme.text,
+        },
+        closeButton: {
+          padding: 8,
+        },
+        modalContent: {
+          flex: 1,
+          padding: 20,
+        },
+        formGroup: {
+          marginBottom: 20,
+        },
+        formLabel: {
+          fontSize: 16,
+          fontWeight: '600',
+          color: theme.text,
+          marginBottom: 8,
+        },
+        formInput: {
+          backgroundColor: theme.card,
+          borderRadius: 12,
+          padding: 16,
+          color: theme.onCard || theme.text,
+          fontSize: 16,
+          borderWidth: 1,
+          borderColor: theme.border,
+        },
+        formHint: {
+          fontSize: 12,
+          color: colors.mutedText || theme.mutedText || theme.text,
+          marginTop: 6,
+          fontStyle: 'italic',
+        },
+        datePickerButton: {
+          backgroundColor: theme.card,
+          borderRadius: 12,
+          padding: 16,
+          borderWidth: 1,
+          borderColor: theme.border,
+          flexDirection: 'row',
+          alignItems: 'center',
+          gap: 12,
+        },
+        datePickerText: {
+          fontSize: 16,
+          color: theme.text,
+          flex: 1,
+        },
+        placeholderText: {
+          color: colors.mutedText || theme.mutedText || theme.text,
+        },
+        formTextArea: {
+          minHeight: 100,
+          textAlignVertical: 'top',
+        },
+        saveButton: {
+          backgroundColor: theme.primary,
+          borderRadius: 12,
+          padding: 16,
+          flexDirection: 'row',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: 8,
+          marginTop: 20,
+        },
+        saveButtonText: {
+          fontSize: 16,
+          fontWeight: '600',
+          color: theme.onPrimary || '#fff',
+        },
+        pickerContent: {
+          padding: 20,
+        },
+        calendarHeader: {
+          flexDirection: 'row',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          marginBottom: 20,
+          paddingHorizontal: 10,
+        },
+        calendarNavButton: {
+          width: 40,
+          height: 40,
+          justifyContent: 'center',
+          alignItems: 'center',
+          backgroundColor: theme.card,
+          borderRadius: 8,
+          borderWidth: 1,
+          borderColor: theme.border,
+        },
+        calendarNavText: {
+          fontSize: 24,
+          color: theme.text,
+          fontWeight: '600',
+        },
+        calendarHeaderText: {
+          fontSize: 18,
+          fontWeight: '600',
+          color: theme.text,
+        },
+        calendarWeekdays: {
+          flexDirection: 'row',
+          marginBottom: 10,
+        },
+        calendarWeekdayCell: {
+          flex: 1,
+          alignItems: 'center',
+          paddingVertical: 8,
+        },
+        calendarWeekdayText: {
+          fontSize: 12,
+          fontWeight: '600',
+          color: colors.mutedText || theme.mutedText || theme.text,
+        },
+        calendarGrid: {
+          flexDirection: 'row',
+          flexWrap: 'wrap',
+          gap: 8,
+        },
+        calendarDayCell: {
+          width: '13%',
+          aspectRatio: 1,
+          justifyContent: 'center',
+          alignItems: 'center',
+          borderRadius: 8,
+          backgroundColor: theme.card,
+        },
+        calendarDaySelected: {
+          backgroundColor: theme.primary,
+        },
+        calendarDayToday: {
+          borderWidth: 2,
+          borderColor: theme.success || '#4ade80',
+        },
+        calendarDayText: {
+          fontSize: 16,
+          color: theme.onCard || theme.text,
+        },
+        calendarDayTextSelected: {
+          fontWeight: '700',
+          color: theme.onPrimary || '#fff',
+        },
+        calendarDayTextToday: {
+          color: theme.success || '#4ade80',
+          fontWeight: '600',
+        },
+        datePickerGrid: {
+          gap: 16,
+          marginBottom: 20,
+        },
+        datePickerRow: {
+          flexDirection: 'row',
+          alignItems: 'center',
+          gap: 12,
+        },
+        datePickerLabel: {
+          fontSize: 16,
+          fontWeight: '600',
+          color: theme.text,
+          width: 60,
+        },
+        datePickerInput: {
+          flex: 1,
+          backgroundColor: theme.card,
+          borderRadius: 8,
+          padding: 12,
+          color: theme.onCard || theme.text,
+          fontSize: 18,
+          fontWeight: '600',
+          textAlign: 'center',
+          borderWidth: 1,
+          borderColor: theme.border,
+        },
+        wheelPickerContainer: {
+          flexDirection: 'row',
+          justifyContent: 'center',
+          alignItems: 'center',
+          gap: 20,
+          marginBottom: 30,
+        },
+        wheelColumn: {
+          alignItems: 'center',
+          gap: 10,
+        },
+        wheelLabel: {
+          fontSize: 16,
+          fontWeight: '600',
+          color: colors.mutedText || theme.mutedText || theme.text,
+          textTransform: 'uppercase',
+        },
+        wheelWrapper: {
+          height: 200,
+          width: 100,
+          position: 'relative',
+        },
+        wheelHighlight: {
+          position: 'absolute',
+          top: '50%',
+          left: 0,
+          right: 0,
+          height: 50,
+          marginTop: -25,
+          backgroundColor: 'rgba(74, 222, 128, 0.1)',
+          borderTopWidth: 2,
+          borderBottomWidth: 2,
+          borderColor: theme.success || '#4ade80',
+          zIndex: 1,
+          pointerEvents: 'none',
+        },
+        wheelScroll: {
+          flex: 1,
+        },
+        wheelScrollContent: {
+          paddingVertical: 75,
+        },
+        wheelItem: {
+          height: 50,
+          justifyContent: 'center',
+          alignItems: 'center',
+        },
+        wheelItemText: {
+          fontSize: 28,
+          fontWeight: '400',
+          color: colors.mutedText || theme.mutedText || theme.text,
+        },
+        wheelItemTextSelected: {
+          fontSize: 32,
+          fontWeight: '700',
+          color: theme.success || '#4ade80',
+        },
+        wheelSeparator: {
+          fontSize: 32,
+          fontWeight: '700',
+          color: theme.success || '#4ade80',
+          marginTop: 35,
+        },
+        datePreview: {
+          fontSize: 24,
+          fontWeight: '700',
+          color: theme.success || '#4ade80',
+          textAlign: 'center',
+          marginBottom: 20,
+          padding: 16,
+          backgroundColor: theme.card,
+          borderRadius: 12,
+          borderWidth: 1,
+          borderColor: theme.border,
+        },
+        pickerConfirmButton: {
+          backgroundColor: theme.primary,
+          borderRadius: 12,
+          padding: 16,
+          alignItems: 'center',
+        },
+        pickerConfirmText: {
+          fontSize: 16,
+          fontWeight: '700',
+          color: theme.onPrimary || '#fff',
+        },
+      }),
+    [theme, colors]
+  );
   const [items, setItems] = useState<CalItem[]>([]);
-  const [groupedItems, setGroupedItems] = useState<Record<string, CalItem[]>>({});
+  const [groupedItems, setGroupedItems] = useState<Record<string, CalItem[]>>(
+    {}
+  );
   const [showAddModal, setShowAddModal] = useState(false);
   const [editingItem, setEditingItem] = useState<CalItem | null>(null);
 
   // Form state
-  const [title, setTitle] = useState(');
-  const [date, setDate] = useState(');
-  const [time, setTime] = useState(');
-  const [note, setNote] = useState(');
+  const [title, setTitle] = useState('');
+  const [date, setDate] = useState('');
+  const [time, setTime] = useState('');
+  const [note, setNote] = useState('');
   const [partnerName, setPartnerName] = useState<string>('My Love');
 
   // Date/Time picker state
@@ -444,7 +463,9 @@ export default function CalendarScreen() {
   const [selectedTime, setSelectedTime] = useState<Date>(new Date());
 
   // Modal view state: 'form' | 'datePicker' | 'timePicker'
-  const [modalView, setModalView] = useState<'form' | 'datePicker' | 'timePicker'>('form');
+  const [modalView, setModalView] = useState<
+    'form' | 'datePicker' | 'timePicker'
+  >('form');
 
   useEffect(() => {
     loadCalendarItems();
@@ -460,7 +481,7 @@ export default function CalendarScreen() {
 
   const loadCalendarItems = async () => {
     if (!isFeatureEnabled('calendar')) return;
-    
+
     try {
       const allItems = await CalendarService.listItems();
       const grouped = await CalendarService.getItemsByDate();
@@ -472,10 +493,10 @@ export default function CalendarScreen() {
   };
 
   const resetForm = () => {
-    setTitle(');
-    setDate(');
-    setTime(');
-    setNote(');
+    setTitle('');
+    setDate('');
+    setTime('');
+    setNote('');
     setEditingItem(null);
     setSelectedDate(new Date());
     setSelectedTime(new Date());
@@ -577,7 +598,10 @@ export default function CalendarScreen() {
       const result = await CalendarService.addItem(title, date, time, note);
 
       if (result.success) {
-        Alert.alert('ThÃ nh cÃ´ng! ðŸ“…', 'Sá»± kiá»‡n Ä‘Ã£ Ä‘Æ°á»£c thÃªm vÃ o lá»‹ch');
+        Alert.alert(
+          'ThÃ nh cÃ´ng! ðŸ“…',
+          'Sá»± kiá»‡n Ä‘Ã£ Ä‘Æ°á»£c thÃªm vÃ o lá»‹ch'
+        );
         resetForm();
         setShowAddModal(false);
         loadCalendarItems();
@@ -604,12 +628,18 @@ export default function CalendarScreen() {
       });
 
       if (result.success) {
-        Alert.alert('ThÃ nh cÃ´ng! âœï¸', 'Sá»± kiá»‡n Ä‘Ã£ Ä‘Æ°á»£c cáº­p nháº­t');
+        Alert.alert(
+          'ThÃ nh cÃ´ng! âœï¸',
+          'Sá»± kiá»‡n Ä‘Ã£ Ä‘Æ°á»£c cáº­p nháº­t'
+        );
         resetForm();
         setShowAddModal(false);
         loadCalendarItems();
       } else {
-        Alert.alert('Lá»—i', result.error || 'KhÃ´ng thá»ƒ cáº­p nháº­t sá»± kiá»‡n');
+        Alert.alert(
+          'Lá»—i',
+          result.error || 'KhÃ´ng thá»ƒ cáº­p nháº­t sá»± kiá»‡n'
+        );
       }
     } catch (error) {
       Alert.alert('Lá»—i', 'CÃ³ lá»—i xáº£y ra. Vui lÃ²ng thá»­ láº¡i.');
@@ -631,10 +661,16 @@ export default function CalendarScreen() {
               if (result.success) {
                 loadCalendarItems();
               } else {
-                Alert.alert('Lá»—i', result.error || 'KhÃ´ng thá»ƒ xÃ³a sá»± kiá»‡n');
+                Alert.alert(
+                  'Lá»—i',
+                  result.error || 'KhÃ´ng thá»ƒ xÃ³a sá»± kiá»‡n'
+                );
               }
             } catch (error) {
-              Alert.alert('Lá»—i', 'CÃ³ lá»—i xáº£y ra. Vui lÃ²ng thá»­ láº¡i.');
+              Alert.alert(
+                'Lá»—i',
+                'CÃ³ lá»—i xáº£y ra. Vui lÃ²ng thá»­ láº¡i.'
+              );
             }
           },
         },
@@ -646,8 +682,8 @@ export default function CalendarScreen() {
     setEditingItem(item);
     setTitle(item.title);
     setDate(item.date);
-    setTime(item.time || ');
-    setNote(item.note || ');
+    setTime(item.time || '');
+    setNote(item.note || '');
 
     // Parse existing date/time for pickers
     if (item.date) {
@@ -712,13 +748,19 @@ export default function CalendarScreen() {
     return (
       <View style={[styles.calendarItem, isPast && styles.calendarItemPast]}>
         <View style={styles.itemHeader}>
-          <Text style={[styles.itemTitle, isPast && styles.itemTitlePast]}>{item.title}</Text>
+          <Text style={[styles.itemTitle, isPast && styles.itemTitlePast]}>
+            {item.title}
+          </Text>
           <View style={styles.itemActions}>
             <TouchableOpacity
               style={styles.actionButton}
               onPress={() => openEditModal(item)}
             >
-              <Edit size={16} color={isPast ? "#555" : "#888"} strokeWidth={2} />
+              <Edit
+                size={16}
+                color={isPast ? '#555' : '#888'}
+                strokeWidth={2}
+              />
             </TouchableOpacity>
             <TouchableOpacity
               style={styles.actionButton}
@@ -732,18 +774,42 @@ export default function CalendarScreen() {
         <View style={styles.itemDetails}>
           {item.time && (
             <View style={styles.itemDetail}>
-              <Clock size={14} color={isPast ? "#555" : "#888"} strokeWidth={2} />
-              <Text style={[styles.itemDetailText, isPast && styles.itemDetailTextPast]}>{item.time}</Text>
+              <Clock
+                size={14}
+                color={isPast ? '#555' : '#888'}
+                strokeWidth={2}
+              />
+              <Text
+                style={[
+                  styles.itemDetailText,
+                  isPast && styles.itemDetailTextPast,
+                ]}
+              >
+                {item.time}
+              </Text>
             </View>
           )}
           <View style={styles.itemDetail}>
-            <CalendarIcon size={14} color={isPast ? "#555" : "#888"} strokeWidth={2} />
-            <Text style={[styles.itemDetailText, isPast && styles.itemDetailTextPast]}>{formatDateDisplay(item.date)}</Text>
+            <CalendarIcon
+              size={14}
+              color={isPast ? '#555' : '#888'}
+              strokeWidth={2}
+            />
+            <Text
+              style={[
+                styles.itemDetailText,
+                isPast && styles.itemDetailTextPast,
+              ]}
+            >
+              {formatDateDisplay(item.date)}
+            </Text>
           </View>
         </View>
 
         {item.note && (
-          <Text style={[styles.itemNote, isPast && styles.itemNotePast]}>"{item.note}"</Text>
+          <Text style={[styles.itemNote, isPast && styles.itemNotePast]}>
+            "{item.note}"
+          </Text>
         )}
       </View>
     );
@@ -751,35 +817,44 @@ export default function CalendarScreen() {
 
   const renderDateGroup = ({ item }: { item: [string, CalItem[]] }) => {
     const [date, dateItems] = item;
-    
+
     return (
       <View style={styles.dateGroup}>
         <Text style={styles.dateGroupTitle}>{formatDateDisplay(date)}</Text>
-        {dateItems.map(calItem => (
-          <View key={calItem.id}>
-            {renderCalendarItem({ item: calItem })}
-          </View>
+        {dateItems.map((calItem) => (
+          <View key={calItem.id}>{renderCalendarItem({ item: calItem })}</View>
         ))}
       </View>
     );
   };
 
-  const groupedItemsArray = Object.entries(groupedItems).sort(([dateA], [dateB]) => {
-    const a = parseDate(dateA);
-    const b = parseDate(dateB);
-    return a.getTime() - b.getTime();
-  });
+  const groupedItemsArray = Object.entries(groupedItems).sort(
+    ([dateA], [dateB]) => {
+      const a = parseDate(dateA);
+      const b = parseDate(dateB);
+      return a.getTime() - b.getTime();
+    }
+  );
 
   return (
     <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
-          <ArrowLeft size={24} color={theme.onBackground || colors.text} strokeWidth={2} />
+        <TouchableOpacity
+          style={styles.backButton}
+          onPress={() => router.back()}
+        >
+          <ArrowLeft
+            size={24}
+            color={theme.onBackground || colors.text}
+            strokeWidth={2}
+          />
         </TouchableOpacity>
         <View style={styles.titleContainer}>
           <Text style={styles.title}>{t('common:calendar')}</Text>
-          <Text style={styles.partnerNameSubtitle}>Vá»›i {partnerName} ðŸ’•</Text>
+          <Text style={styles.partnerNameSubtitle}>
+            {t('touch:forPartner', { name: partnerName })} 💕
+          </Text>
         </View>
         <TouchableOpacity style={styles.addButton} onPress={openAddModal}>
           <Plus size={24} color={theme.primary} strokeWidth={2} />
@@ -796,9 +871,17 @@ export default function CalendarScreen() {
         showsVerticalScrollIndicator={false}
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
-            <CalendarIcon size={64} color={colors.border || colors.mutedText || colors.text} strokeWidth={1} />
-            <Text style={styles.emptyText}>{t('touch:calendarEmptyTitle')}</Text>
-            <Text style={styles.emptySubtext}>{t('touch:calendarEmptyHint')}</Text>
+            <CalendarIcon
+              size={64}
+              color={colors.border || colors.mutedText || colors.text}
+              strokeWidth={1}
+            />
+            <Text style={styles.emptyText}>
+              {t('touch:calendarEmptyTitle')}
+            </Text>
+            <Text style={styles.emptySubtext}>
+              {t('touch:calendarEmptyHint')}
+            </Text>
           </View>
         }
       />
@@ -827,18 +910,30 @@ export default function CalendarScreen() {
                   }
                 }}
               >
-                <ArrowLeft size={24} color={colors.mutedText || colors.text} strokeWidth={2} />
+                <ArrowLeft
+                  size={24}
+                  color={colors.mutedText || colors.text}
+                  strokeWidth={2}
+                />
               </TouchableOpacity>
               <Text style={styles.modalTitle}>
-                {modalView === 'datePicker' ? t('calendarModal.pickDateTitle') :
-                 modalView === 'timePicker' ? t('calendarModal.pickTimeTitle') :
-                 editingItem ? t('common:editEvent') : t('common:addEvent')}
+                {modalView === 'datePicker'
+                  ? t('calendarModal.pickDateTitle')
+                  : modalView === 'timePicker'
+                  ? t('calendarModal.pickTimeTitle')
+                  : editingItem
+                  ? t('common:editEvent')
+                  : t('common:addEvent')}
               </Text>
               <TouchableOpacity
                 style={styles.closeButton}
                 onPress={() => setShowAddModal(false)}
               >
-                <X size={24} color={colors.mutedText || colors.text} strokeWidth={2} />
+                <X
+                  size={24}
+                  color={colors.mutedText || colors.text}
+                  strokeWidth={2}
+                />
               </TouchableOpacity>
             </View>
 
@@ -847,69 +942,101 @@ export default function CalendarScreen() {
                 style={styles.modalContent}
                 keyboardShouldPersistTaps="handled"
               >
-              <View style={styles.formGroup}>
-                <Text style={styles.formLabel}>{t('calendarModal.titleLabel')} ({title.length}/20)</Text>
-                <TextInput
-                  style={styles.formInput}
-                  value={title}
-                  onChangeText={setTitle}
-                  placeholder={t('calendarModal.titlePlaceholder')}
-                  placeholderTextColor={colors.mutedText || colors.text}
-                  maxLength={20}
-                />
-              </View>
-              
-              <View style={styles.formGroup}>
-                <Text style={styles.formLabel}>NgÃ y *</Text>
-                <TouchableOpacity
-                  style={styles.datePickerButton}
-                  onPress={openDatePicker}
-                >
-                  <CalendarIcon size={20} color={theme.primary} strokeWidth={2} />
-                  <Text style={[styles.datePickerText, !date && styles.placeholderText]}>
-                    {date || t('calendarModal.datePlaceholder')}
+                <View style={styles.formGroup}>
+                  <Text style={styles.formLabel}>
+                    {t('calendarModal.titleLabel')} ({title.length}/20)
                   </Text>
-                </TouchableOpacity>
-                <Text style={styles.formHint}>{t('calendarModal.dateHint')}</Text>
-              </View>
+                  <TextInput
+                    style={styles.formInput}
+                    value={title}
+                    onChangeText={setTitle}
+                    placeholder={t('calendarModal.titlePlaceholder')}
+                    placeholderTextColor={colors.mutedText || colors.text}
+                    maxLength={20}
+                  />
+                </View>
 
-              <View style={styles.formGroup}>
-                <Text style={styles.formLabel}>Thá»i gian (khÃ´ng báº¯t buá»™c)</Text>
+                <View style={styles.formGroup}>
+                  <Text style={styles.formLabel}>{t('calendarModal.dateLabel')}</Text>
+                  <TouchableOpacity
+                    style={styles.datePickerButton}
+                    onPress={openDatePicker}
+                  >
+                    <CalendarIcon
+                      size={20}
+                      color={theme.primary}
+                      strokeWidth={2}
+                    />
+                    <Text
+                      style={[
+                        styles.datePickerText,
+                        !date && styles.placeholderText,
+                      ]}
+                    >
+                      {date || t('calendarModal.datePlaceholder')}
+                    </Text>
+                  </TouchableOpacity>
+                  <Text style={styles.formHint}>
+                    {t('calendarModal.dateHint')}
+                  </Text>
+                </View>
+
+                <View style={styles.formGroup}>
+                  <Text style={styles.formLabel}>
+                    {t('calendarModal.timeLabel')}
+                  </Text>
+                  <TouchableOpacity
+                    style={styles.datePickerButton}
+                    onPress={openTimePicker}
+                  >
+                    <Clock
+                      size={20}
+                      color={theme.success || '#4ade80'}
+                      strokeWidth={2}
+                    />
+                    <Text
+                      style={[
+                        styles.datePickerText,
+                        !time && styles.placeholderText,
+                      ]}
+                    >
+                      {time || t('calendarModal.timePlaceholder')}
+                    </Text>
+                  </TouchableOpacity>
+                  <Text style={styles.formHint}>
+                    {t('calendarModal.timeHint')}
+                  </Text>
+                </View>
+
+                <View style={styles.formGroup}>
+                  <Text style={styles.formLabel}>
+                    {t('calendarModal.noteLabel')} ({note.length}/120)
+                  </Text>
+                  <TextInput
+                    style={[styles.formInput, styles.formTextArea]}
+                    value={note}
+                    onChangeText={setNote}
+                    placeholder={t('calendarModal.notePlaceholder')}
+                    placeholderTextColor={colors.mutedText || colors.text}
+                    multiline
+                    maxLength={120}
+                    textAlignVertical="top"
+                  />
+                </View>
+
                 <TouchableOpacity
-                  style={styles.datePickerButton}
-                  onPress={openTimePicker}
+                  style={styles.saveButton}
+                  onPress={editingItem ? handleEditItem : handleAddItem}
                 >
-                  <Clock size={20} color={theme.success || '#4ade80'} strokeWidth={2} />
-                  <Text style={[styles.datePickerText, !time && styles.placeholderText]}>
-                    {time || t('calendarModal.timePlaceholder')}
+                  <CalendarIcon
+                    size={20}
+                    color={theme.onBackground || colors.text}
+                    strokeWidth={2}
+                  />
+                  <Text style={styles.saveButtonText}>
+                    {editingItem ? t('common:editEvent') : t('common:addEvent')}
                   </Text>
                 </TouchableOpacity>
-                <Text style={styles.formHint}>{t('calendarModal.timeHint')}</Text>
-              </View>
-              
-              <View style={styles.formGroup}>
-                <Text style={styles.formLabel}>{t('calendarModal.noteLabel')} ({note.length}/120)</Text>
-                <TextInput
-                  style={[styles.formInput, styles.formTextArea]}
-                  value={note}
-                  onChangeText={setNote}
-                  placeholder={t('calendarModal.notePlaceholder')}
-                  placeholderTextColor={colors.mutedText || colors.text}
-                  multiline
-                  maxLength={120}
-                  textAlignVertical="top"
-                />
-              </View>
-              
-              <TouchableOpacity
-                style={styles.saveButton}
-                onPress={editingItem ? handleEditItem : handleAddItem}
-              >
-                <CalendarIcon size={20} color={theme.onBackground || colors.text} strokeWidth={2} />
-                <Text style={styles.saveButtonText}>
-                  {editingItem ? t('common:editEvent') : t('common:addEvent')}
-                </Text>
-              </TouchableOpacity>
               </ScrollView>
             )}
 
@@ -924,7 +1051,7 @@ export default function CalendarScreen() {
                       setSelectedDate(newDate);
                     }}
                   >
-                    <Text style={styles.calendarNavText}>â†</Text>
+                    <Text style={styles.calendarNavText}>{t('calendarModal.prevArrow')}</Text>
                   </TouchableOpacity>
 
                   <Text style={styles.calendarHeaderText}>
@@ -942,7 +1069,7 @@ export default function CalendarScreen() {
                       setSelectedDate(newDate);
                     }}
                   >
-                    <Text style={styles.calendarNavText}>â†’</Text>
+                    <Text style={styles.calendarNavText}>{t('calendarModal.nextArrow')}</Text>
                   </TouchableOpacity>
                 </View>
 
@@ -964,15 +1091,19 @@ export default function CalendarScreen() {
 
                     for (let i = 0; i < firstDay; i++) {
                       days.push(
-                        <View key={`empty-${i}`} style={styles.calendarDayCell} />
+                        <View
+                          key={`empty-${i}`}
+                          style={styles.calendarDayCell}
+                        />
                       );
                     }
 
                     for (let day = 1; day <= daysInMonth; day++) {
                       const isSelected = day === selectedDate.getDate();
-                      const isToday = day === new Date().getDate() &&
-                                      month === new Date().getMonth() &&
-                                      year === new Date().getFullYear();
+                      const isToday =
+                        day === new Date().getDate() &&
+                        month === new Date().getMonth() &&
+                        year === new Date().getFullYear();
 
                       days.push(
                         <TouchableOpacity
@@ -992,7 +1123,9 @@ export default function CalendarScreen() {
                             style={[
                               styles.calendarDayText,
                               isSelected && styles.calendarDayTextSelected,
-                              isToday && !isSelected && styles.calendarDayTextToday,
+                              isToday &&
+                                !isSelected &&
+                                styles.calendarDayTextToday,
                             ]}
                           >
                             {day}
@@ -1013,7 +1146,9 @@ export default function CalendarScreen() {
                   style={styles.pickerConfirmButton}
                   onPress={confirmDatePicker}
                 >
-                  <Text style={styles.pickerConfirmText}>{t('common:confirm')}</Text>
+                  <Text style={styles.pickerConfirmText}>
+                    {t('common:confirm')}
+                  </Text>
                 </TouchableOpacity>
               </ScrollView>
             )}
@@ -1041,7 +1176,10 @@ export default function CalendarScreen() {
                         ref={(ref) => {
                           if (ref && modalView === 'timePicker') {
                             setTimeout(() => {
-                              ref.scrollTo({ y: selectedTime.getHours() * 50, animated: false });
+                              ref.scrollTo({
+                                y: selectedTime.getHours() * 50,
+                                animated: false,
+                              });
                             }, 100);
                           }
                         }}
@@ -1095,34 +1233,40 @@ export default function CalendarScreen() {
                         ref={(ref) => {
                           if (ref && modalView === 'timePicker') {
                             setTimeout(() => {
-                              ref.scrollTo({ y: selectedTime.getMinutes() * 50, animated: false });
+                              ref.scrollTo({
+                                y: selectedTime.getMinutes() * 50,
+                                animated: false,
+                              });
                             }, 100);
                           }
                         }}
                       >
-                        {Array.from({ length: 60 }, (_, i) => i).map((minute) => {
-                          const isSelected = minute === selectedTime.getMinutes();
-                          return (
-                            <TouchableOpacity
-                              key={minute}
-                              style={styles.wheelItem}
-                              onPress={() => {
-                                const newTime = new Date(selectedTime);
-                                newTime.setMinutes(minute);
-                                setSelectedTime(newTime);
-                              }}
-                            >
-                              <Text
-                                style={[
-                                  styles.wheelItemText,
-                                  isSelected && styles.wheelItemTextSelected,
-                                ]}
+                        {Array.from({ length: 60 }, (_, i) => i).map(
+                          (minute) => {
+                            const isSelected =
+                              minute === selectedTime.getMinutes();
+                            return (
+                              <TouchableOpacity
+                                key={minute}
+                                style={styles.wheelItem}
+                                onPress={() => {
+                                  const newTime = new Date(selectedTime);
+                                  newTime.setMinutes(minute);
+                                  setSelectedTime(newTime);
+                                }}
                               >
-                                {minute.toString().padStart(2, '0')}
-                              </Text>
-                            </TouchableOpacity>
-                          );
-                        })}
+                                <Text
+                                  style={[
+                                    styles.wheelItemText,
+                                    isSelected && styles.wheelItemTextSelected,
+                                  ]}
+                                >
+                                  {minute.toString().padStart(2, '0')}
+                                </Text>
+                              </TouchableOpacity>
+                            );
+                          }
+                        )}
                       </ScrollView>
                     </View>
                   </View>
@@ -1136,7 +1280,9 @@ export default function CalendarScreen() {
                   style={styles.pickerConfirmButton}
                   onPress={confirmTimePicker}
                 >
-                  <Text style={styles.pickerConfirmText}>{t('common:confirm')}</Text>
+                  <Text style={styles.pickerConfirmText}>
+                    {t('common:confirm')}
+                  </Text>
                 </TouchableOpacity>
               </View>
             )}
@@ -1146,8 +1292,4 @@ export default function CalendarScreen() {
     </SafeAreaView>
   );
 }
-
-
-
-
 

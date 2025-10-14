@@ -87,6 +87,8 @@
                           "dateHint":  "달력에서 날짜를 선택하세요",
                           "timeHint":  "시와 분을 선택하세요",
                           "hour":  "시",
-                          "minute":  "분"
+                          "minute":  "분",
+                          "prevArrow":  "←",
+                          "nextArrow":  "→"
                       }
 }

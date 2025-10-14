@@ -87,6 +87,8 @@
                           "dateHint":  "Toca para seleccionar una fecha",
                           "timeHint":  "Toca para seleccionar hora y minutos",
                           "hour":  "Hora",
-                          "minute":  "Min"
+                          "minute":  "Min",
+                          "prevArrow":  "←",
+                          "nextArrow":  "→"
                       }
 }
