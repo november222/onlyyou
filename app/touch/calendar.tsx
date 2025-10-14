@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
   View,
   Text,
@@ -25,7 +25,406 @@ export default function CalendarScreen() {
   const insets = useSafeAreaInsets();
   const { theme } = useTheme();
   const { t } = useTranslation('touch');
-  const colors = useThemeColors();
+  const colors = useThemeColors();  
+  // Theme-aware styles for light/dark modes
+  const styles = useMemo(() => StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: theme.background,
+    },
+    header: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      padding: 20,
+      paddingBottom: 10,
+    },
+    backButton: {
+      padding: 8,
+      marginLeft: -8,
+    },
+    titleContainer: {
+      flex: 1,
+      alignItems: 'center',
+    },
+    title: {
+      fontSize: 20,
+      fontWeight: '700',
+      color: theme.text,
+    },
+    partnerNameSubtitle: {
+      fontSize: 12,
+      color: theme.primary,
+      marginTop: 2,
+    },
+    addButton: {
+      padding: 8,
+      marginRight: -8,
+    },
+    calendarList: {
+      flex: 1,
+    },
+    calendarContent: {
+      padding: 20,
+      paddingTop: 10,
+    },
+    dateGroup: {
+      marginBottom: 24,
+    },
+    dateGroupTitle: {
+      fontSize: 16,
+      fontWeight: '600',
+      color: theme.primary,
+      marginBottom: 12,
+    },
+    calendarItem: {
+      backgroundColor: theme.card,
+      borderRadius: 12,
+      padding: 16,
+      marginBottom: 12,
+      borderWidth: 1,
+      borderColor: theme.border,
+    },
+    calendarItemPast: {
+      opacity: 0.6,
+    },
+    itemHeader: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      marginBottom: 8,
+    },
+    itemTitle: {
+      fontSize: 16,
+      fontWeight: '600',
+      color: theme.onCard || theme.text,
+      flex: 1,
+    },
+    itemTitlePast: {
+      color: colors.mutedText || theme.mutedText || theme.text,
+      textDecorationLine: 'line-through',
+    },
+    itemActions: {
+      flexDirection: 'row',
+      gap: 8,
+    },
+    itemDetails: {
+      flexDirection: 'row',
+      gap: 16,
+      marginBottom: 8,
+    },
+    itemDetail: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 4,
+    },
+    itemDetailText: {
+      fontSize: 14,
+      color: colors.mutedText || theme.mutedText || theme.text,
+    },
+    itemDetailTextPast: {
+      color: colors.mutedText || theme.mutedText || theme.text,
+    },
+    itemNote: {
+      fontSize: 14,
+      color: theme.onCard || theme.text,
+      fontStyle: 'italic',
+    },
+    itemNotePast: {
+      color: colors.mutedText || theme.mutedText || theme.text,
+    },
+    emptyContainer: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+      paddingTop: 100,
+    },
+    emptyText: {
+      fontSize: 18,
+      fontWeight: '600',
+      color: colors.mutedText || theme.mutedText || theme.text,
+      marginTop: 16,
+      marginBottom: 8,
+    },
+    emptySubtext: {
+      fontSize: 14,
+      color: colors.mutedText || theme.mutedText || theme.text,
+    },
+    addModal: {
+      flex: 1,
+      backgroundColor: theme.background,
+    },
+    modalHeader: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      padding: 20,
+      borderBottomWidth: 1,
+      borderBottomColor: theme.border,
+    },
+    modalTitle: {
+      fontSize: 20,
+      fontWeight: '700',
+      color: theme.text,
+    },
+    closeButton: {
+      padding: 8,
+    },
+    modalContent: {
+      flex: 1,
+      padding: 20,
+    },
+    formGroup: {
+      marginBottom: 20,
+    },
+    formLabel: {
+      fontSize: 16,
+      fontWeight: '600',
+      color: theme.text,
+      marginBottom: 8,
+    },
+    formInput: {
+      backgroundColor: theme.card,
+      borderRadius: 12,
+      padding: 16,
+      color: theme.onCard || theme.text,
+      fontSize: 16,
+      borderWidth: 1,
+      borderColor: theme.border,
+    },
+    formHint: {
+      fontSize: 12,
+      color: colors.mutedText || theme.mutedText || theme.text,
+      marginTop: 6,
+      fontStyle: 'italic',
+    },
+    datePickerButton: {
+      backgroundColor: theme.card,
+      borderRadius: 12,
+      padding: 16,
+      borderWidth: 1,
+      borderColor: theme.border,
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 12,
+    },
+    datePickerText: {
+      fontSize: 16,
+      color: theme.text,
+      flex: 1,
+    },
+    placeholderText: {
+      color: colors.mutedText || theme.mutedText || theme.text,
+    },
+    formTextArea: {
+      minHeight: 100,
+      textAlignVertical: 'top',
+    },
+    saveButton: {
+      backgroundColor: theme.primary,
+      borderRadius: 12,
+      padding: 16,
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: 8,
+      marginTop: 20,
+    },
+    saveButtonText: {
+      fontSize: 16,
+      fontWeight: '600',
+      color: theme.onPrimary || '#fff',
+    },
+    pickerContent: {
+      padding: 20,
+    },
+    calendarHeader: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      marginBottom: 20,
+      paddingHorizontal: 10,
+    },
+    calendarNavButton: {
+      width: 40,
+      height: 40,
+      justifyContent: 'center',
+      alignItems: 'center',
+      backgroundColor: theme.card,
+      borderRadius: 8,
+      borderWidth: 1,
+      borderColor: theme.border,
+    },
+    calendarNavText: {
+      fontSize: 24,
+      color: theme.text,
+      fontWeight: '600',
+    },
+    calendarHeaderText: {
+      fontSize: 18,
+      fontWeight: '600',
+      color: theme.text,
+    },
+    calendarWeekdays: {
+      flexDirection: 'row',
+      marginBottom: 10,
+    },
+    calendarWeekdayCell: {
+      flex: 1,
+      alignItems: 'center',
+      paddingVertical: 8,
+    },
+    calendarWeekdayText: {
+      fontSize: 12,
+      fontWeight: '600',
+      color: colors.mutedText || theme.mutedText || theme.text,
+    },
+    calendarGrid: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: 8,
+    },
+    calendarDayCell: {
+      width: '13%',
+      aspectRatio: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+      borderRadius: 8,
+      backgroundColor: theme.card,
+    },
+    calendarDaySelected: {
+      backgroundColor: theme.primary,
+    },
+    calendarDayToday: {
+      borderWidth: 2,
+      borderColor: theme.success || '#4ade80',
+    },
+    calendarDayText: {
+      fontSize: 16,
+      color: theme.onCard || theme.text,
+    },
+    calendarDayTextSelected: {
+      fontWeight: '700',
+      color: theme.onPrimary || '#fff',
+    },
+    calendarDayTextToday: {
+      color: theme.success || '#4ade80',
+      fontWeight: '600',
+    },
+    datePickerGrid: {
+      gap: 16,
+      marginBottom: 20,
+    },
+    datePickerRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 12,
+    },
+    datePickerLabel: {
+      fontSize: 16,
+      fontWeight: '600',
+      color: theme.text,
+      width: 60,
+    },
+    datePickerInput: {
+      flex: 1,
+      backgroundColor: theme.card,
+      borderRadius: 8,
+      padding: 12,
+      color: theme.onCard || theme.text,
+      fontSize: 18,
+      fontWeight: '600',
+      textAlign: 'center',
+      borderWidth: 1,
+      borderColor: theme.border,
+    },
+    wheelPickerContainer: {
+      flexDirection: 'row',
+      justifyContent: 'center',
+      alignItems: 'center',
+      gap: 20,
+      marginBottom: 30,
+    },
+    wheelColumn: {
+      alignItems: 'center',
+      gap: 10,
+    },
+    wheelLabel: {
+      fontSize: 16,
+      fontWeight: '600',
+      color: colors.mutedText || theme.mutedText || theme.text,
+      textTransform: 'uppercase',
+    },
+    wheelWrapper: {
+      height: 200,
+      width: 100,
+      position: 'relative',
+    },
+    wheelHighlight: {
+      position: 'absolute',
+      top: '50%',
+      left: 0,
+      right: 0,
+      height: 50,
+      marginTop: -25,
+      backgroundColor: 'rgba(74, 222, 128, 0.1)',
+      borderTopWidth: 2,
+      borderBottomWidth: 2,
+      borderColor: theme.success || '#4ade80',
+      zIndex: 1,
+      pointerEvents: 'none',
+    },
+    wheelScroll: {
+      flex: 1,
+    },
+    wheelScrollContent: {
+      paddingVertical: 75,
+    },
+    wheelItem: {
+      height: 50,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    wheelItemText: {
+      fontSize: 28,
+      fontWeight: '400',
+      color: colors.mutedText || theme.mutedText || theme.text,
+    },
+    wheelItemTextSelected: {
+      fontSize: 32,
+      fontWeight: '700',
+      color: theme.success || '#4ade80',
+    },
+    wheelSeparator: {
+      fontSize: 32,
+      fontWeight: '700',
+      color: theme.success || '#4ade80',
+      marginTop: 35,
+    },
+    datePreview: {
+      fontSize: 24,
+      fontWeight: '700',
+      color: theme.success || '#4ade80',
+      textAlign: 'center',
+      marginBottom: 20,
+      padding: 16,
+      backgroundColor: theme.card,
+      borderRadius: 12,
+      borderWidth: 1,
+      borderColor: theme.border,
+    },
+    pickerConfirmButton: {
+      backgroundColor: theme.primary,
+      borderRadius: 12,
+      padding: 16,
+      alignItems: 'center',
+    },
+    pickerConfirmText: {
+      fontSize: 16,
+      fontWeight: '700',
+      color: theme.onPrimary || '#fff',
+    },
+  }), [theme, colors]);
   const [items, setItems] = useState<CalItem[]>([]);
   const [groupedItems, setGroupedItems] = useState<Record<string, CalItem[]>>({});
   const [showAddModal, setShowAddModal] = useState(false);
@@ -168,7 +567,7 @@ export default function CalendarScreen() {
 
   const handleAddItem = async () => {
     if (!title.trim() || !date.trim()) {
-      Alert.alert('Lá»—i', 'Vui lÃ²ng nháº­p tiÃªu Ä‘á» vÃ  chá»n ngÃ y');
+      Alert.alert('Lỗi', 'Vui lòng nhập tiêu đề và chọn ngày');
       return;
     }
 
@@ -176,21 +575,21 @@ export default function CalendarScreen() {
       const result = await CalendarService.addItem(title, date, time, note);
 
       if (result.success) {
-        Alert.alert('ThÃ nh cÃ´ng! ðŸ“…', 'Sá»± kiá»‡n Ä‘Ã£ Ä‘Æ°á»£c thÃªm vÃ o lá»‹ch');
+        Alert.alert('Thành công! 📅', 'Sự kiện đã được thêm vào lịch');
         resetForm();
         setShowAddModal(false);
         loadCalendarItems();
       } else {
-        Alert.alert('Lá»—i', result.error || 'KhÃ´ng thá»ƒ thÃªm sá»± kiá»‡n');
+        Alert.alert('Lỗi', result.error || 'Không thể thêm sự kiện');
       }
     } catch (error) {
-      Alert.alert('Lá»—i', 'CÃ³ lá»—i xáº£y ra. Vui lÃ²ng thá»­ láº¡i.');
+      Alert.alert('Lỗi', 'Có lỗi xảy ra. Vui lòng thử lại.');
     }
   };
 
   const handleEditItem = async () => {
     if (!editingItem || !title.trim() || !date.trim()) {
-      Alert.alert('Lá»—i', 'Vui lÃ²ng nháº­p tiÃªu Ä‘á» vÃ  chá»n ngÃ y');
+      Alert.alert('Lỗi', 'Vui lòng nhập tiêu đề và chọn ngày');
       return;
     }
 
@@ -203,26 +602,26 @@ export default function CalendarScreen() {
       });
 
       if (result.success) {
-        Alert.alert('ThÃ nh cÃ´ng! âœï¸', 'Sá»± kiá»‡n Ä‘Ã£ Ä‘Æ°á»£c cáº­p nháº­t');
+        Alert.alert('Thành công! ✏️', 'Sự kiện đã được cập nhật');
         resetForm();
         setShowAddModal(false);
         loadCalendarItems();
       } else {
-        Alert.alert('Lá»—i', result.error || 'KhÃ´ng thá»ƒ cáº­p nháº­t sá»± kiá»‡n');
+        Alert.alert('Lỗi', result.error || 'Không thể cập nhật sự kiện');
       }
     } catch (error) {
-      Alert.alert('Lá»—i', 'CÃ³ lá»—i xáº£y ra. Vui lÃ²ng thá»­ láº¡i.');
+      Alert.alert('Lỗi', 'Có lỗi xảy ra. Vui lòng thử lại.');
     }
   };
 
   const handleDeleteItem = (item: CalItem) => {
     Alert.alert(
-      'XÃ³a sá»± kiá»‡n?',
-      `Báº¡n cÃ³ cháº¯c muá»‘n xÃ³a "${item.title}"?`,
+      'Xóa sự kiện?',
+      `Bạn có chắc muốn xóa "${item.title}"?`,
       [
-        { text: 'Há»§y', style: 'cancel' },
+        { text: 'Hủy', style: 'cancel' },
         {
-          text: 'XÃ³a',
+          text: 'Xóa',
           style: 'destructive',
           onPress: async () => {
             try {
@@ -230,10 +629,10 @@ export default function CalendarScreen() {
               if (result.success) {
                 loadCalendarItems();
               } else {
-                Alert.alert('Lá»—i', result.error || 'KhÃ´ng thá»ƒ xÃ³a sá»± kiá»‡n');
+                Alert.alert('Lỗi', result.error || 'Không thể xóa sự kiện');
               }
             } catch (error) {
-              Alert.alert('Lá»—i', 'CÃ³ lá»—i xáº£y ra. Vui lÃ²ng thá»­ láº¡i.');
+              Alert.alert('Lỗi', 'Có lỗi xảy ra. Vui lòng thử lại.');
             }
           },
         },
@@ -370,7 +769,7 @@ export default function CalendarScreen() {
   });
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]} edges={['top', 'bottom']}>
+    <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
@@ -378,10 +777,10 @@ export default function CalendarScreen() {
         </TouchableOpacity>
         <View style={styles.titleContainer}>
           <Text style={styles.title}>{t('common:calendar')}</Text>
-          <Text style={styles.partnerNameSubtitle}>Vá»›i {partnerName} ðŸ’•</Text>
+          <Text style={styles.partnerNameSubtitle}>Với {partnerName} 💕</Text>
         </View>
         <TouchableOpacity style={styles.addButton} onPress={openAddModal}>
-          <Plus size={24} color="#ff6b9d" strokeWidth={2} />
+          <Plus size={24} color={theme.primary} strokeWidth={2} />
         </TouchableOpacity>
       </View>
 
@@ -429,8 +828,8 @@ export default function CalendarScreen() {
                 <ArrowLeft size={24} color={colors.mutedText || colors.text} strokeWidth={2} />
               </TouchableOpacity>
               <Text style={styles.modalTitle}>
-                {modalView === 'datePicker' ? 'Chá»n NgÃ y' :
-                 modalView === 'timePicker' ? 'Chá»n Thá»i Gian' :
+                {modalView === 'datePicker' ? 'Chọn Ngày' :
+                 modalView === 'timePicker' ? 'Chọn Thời Gian' :
                  editingItem ? 'Edit Event' : 'Add Event'}
               </Text>
               <TouchableOpacity
@@ -459,31 +858,31 @@ export default function CalendarScreen() {
               </View>
               
               <View style={styles.formGroup}>
-                <Text style={styles.formLabel}>NgÃ y *</Text>
+                <Text style={styles.formLabel}>Ngày *</Text>
                 <TouchableOpacity
                   style={styles.datePickerButton}
                   onPress={openDatePicker}
                 >
-                  <CalendarIcon size={20} color="#ff6b9d" strokeWidth={2} />
+                  <CalendarIcon size={20} color={theme.primary} strokeWidth={2} />
                   <Text style={[styles.datePickerText, !date && styles.placeholderText]}>
-                    {date || 'Chá»n ngÃ y'}
+                    {date || 'Chọn ngày'}
                   </Text>
                 </TouchableOpacity>
-                <Text style={styles.formHint}>Nháº¥n Ä‘á»ƒ chá»n ngÃ y tá»« lá»‹ch</Text>
+                <Text style={styles.formHint}>Nhấn để chọn ngày từ lịch</Text>
               </View>
 
               <View style={styles.formGroup}>
-                <Text style={styles.formLabel}>Thá»i gian (khÃ´ng báº¯t buá»™c)</Text>
+                <Text style={styles.formLabel}>Thời gian (không bắt buộc)</Text>
                 <TouchableOpacity
                   style={styles.datePickerButton}
                   onPress={openTimePicker}
                 >
-                  <Clock size={20} color="#4ade80" strokeWidth={2} />
+                  <Clock size={20} color={theme.success || '#4ade80'} strokeWidth={2} />
                   <Text style={[styles.datePickerText, !time && styles.placeholderText]}>
-                    {time || 'Chá»n thá»i gian'}
+                    {time || 'Chọn thời gian'}
                   </Text>
                 </TouchableOpacity>
-                <Text style={styles.formHint}>Nháº¥n Ä‘á»ƒ chá»n giá» vÃ  phÃºt</Text>
+                <Text style={styles.formHint}>Nhấn để chọn giờ và phút</Text>
               </View>
               
               <View style={styles.formGroup}>
@@ -523,11 +922,11 @@ export default function CalendarScreen() {
                       setSelectedDate(newDate);
                     }}
                   >
-                    <Text style={styles.calendarNavText}>â†</Text>
+                    <Text style={styles.calendarNavText}>←</Text>
                   </TouchableOpacity>
 
                   <Text style={styles.calendarHeaderText}>
-                    ThÃ¡ng {selectedDate.getMonth() + 1}, {selectedDate.getFullYear()}
+                    Tháng {selectedDate.getMonth() + 1}, {selectedDate.getFullYear()}
                   </Text>
 
                   <TouchableOpacity
@@ -538,7 +937,7 @@ export default function CalendarScreen() {
                       setSelectedDate(newDate);
                     }}
                   >
-                    <Text style={styles.calendarNavText}>â†’</Text>
+                    <Text style={styles.calendarNavText}>→</Text>
                   </TouchableOpacity>
                 </View>
 
@@ -609,7 +1008,7 @@ export default function CalendarScreen() {
                   style={styles.pickerConfirmButton}
                   onPress={confirmDatePicker}
                 >
-                  <Text style={styles.pickerConfirmText}>XÃ¡c Nháº­n</Text>
+                  <Text style={styles.pickerConfirmText}>Xác Nhận</Text>
                 </TouchableOpacity>
               </ScrollView>
             )}
@@ -618,7 +1017,7 @@ export default function CalendarScreen() {
               <View style={styles.pickerContent}>
                 <View style={styles.wheelPickerContainer}>
                   <View style={styles.wheelColumn}>
-                    <Text style={styles.wheelLabel}>Giá»</Text>
+                    <Text style={styles.wheelLabel}>Giờ</Text>
                     <View style={styles.wheelWrapper}>
                       <View style={styles.wheelHighlight} />
                       <ScrollView
@@ -672,7 +1071,7 @@ export default function CalendarScreen() {
                   <Text style={styles.wheelSeparator}>:</Text>
 
                   <View style={styles.wheelColumn}>
-                    <Text style={styles.wheelLabel}>PhÃºt</Text>
+                    <Text style={styles.wheelLabel}>Phút</Text>
                     <View style={styles.wheelWrapper}>
                       <View style={styles.wheelHighlight} />
                       <ScrollView
@@ -732,7 +1131,7 @@ export default function CalendarScreen() {
                   style={styles.pickerConfirmButton}
                   onPress={confirmTimePicker}
                 >
-                  <Text style={styles.pickerConfirmText}>XÃ¡c Nháº­n</Text>
+                  <Text style={styles.pickerConfirmText}>Xác Nhận</Text>
                 </TouchableOpacity>
               </View>
             )}
@@ -742,415 +1141,5 @@ export default function CalendarScreen() {
     </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#000',
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    padding: 20,
-    paddingBottom: 10,
-  },
-  backButton: {
-    padding: 8,
-    marginLeft: -8,
-  },
-  titleContainer: {
-    flex: 1,
-    alignItems: 'center',
-  },
-  title: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: '#fff',
-  },
-  partnerNameSubtitle: {
-    fontSize: 12,
-    color: '#ff6b9d',
-    marginTop: 2,
-  },
-  addButton: {
-    padding: 8,
-    marginRight: -8,
-  },
-  calendarList: {
-    flex: 1,
-  },
-  calendarContent: {
-    padding: 20,
-    paddingTop: 10,
-  },
-  dateGroup: {
-    marginBottom: 24,
-  },
-  dateGroupTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#ff6b9d',
-    marginBottom: 12,
-  },
-  calendarItem: {
-    backgroundColor: '#111',
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 12,
-    borderWidth: 1,
-    borderColor: '#333',
-  },
-  calendarItemPast: {
-    backgroundColor: '#0a0a0a',
-    borderColor: '#222',
-    opacity: 0.6,
-  },
-  itemHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 8,
-  },
-  itemTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#fff',
-    flex: 1,
-  },
-  itemTitlePast: {
-    color: '#666',
-    textDecorationLine: 'line-through',
-  },
-  itemActions: {
-    flexDirection: 'row',
-    gap: 8,
-  },
-  actionButton: {
-    padding: 4,
-  },
-  itemDetails: {
-    flexDirection: 'row',
-    gap: 16,
-    marginBottom: 8,
-  },
-  itemDetail: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-  },
-  itemDetailText: {
-    fontSize: 14,
-    color: '#888',
-  },
-  itemDetailTextPast: {
-    color: '#555',
-  },
-  itemNote: {
-    fontSize: 14,
-    color: '#ccc',
-    fontStyle: 'italic',
-  },
-  itemNotePast: {
-    color: '#555',
-  },
-  emptyContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingTop: 100,
-  },
-  emptyText: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#666',
-    marginTop: 16,
-    marginBottom: 8,
-  },
-  emptySubtext: {
-    fontSize: 14,
-    color: '#888',
-  },
-  addModal: {
-    flex: 1,
-    backgroundColor: '#000',
-  },
-  modalHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: 20,
-    borderBottomWidth: 1,
-    borderBottomColor: '#333',
-  },
-  backButton: {
-    width: 40,
-    height: 40,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  modalTitle: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: '#fff',
-  },
-  closeButton: {
-    padding: 8,
-  },
-  modalContent: {
-    flex: 1,
-    padding: 20,
-  },
-  formGroup: {
-    marginBottom: 20,
-  },
-  formLabel: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#fff',
-    marginBottom: 8,
-  },
-  formInput: {
-    backgroundColor: '#111',
-    borderRadius: 12,
-    padding: 16,
-    color: '#fff',
-    fontSize: 16,
-    borderWidth: 1,
-    borderColor: '#333',
-  },
-  formHint: {
-    fontSize: 12,
-    color: '#888',
-    marginTop: 6,
-    fontStyle: 'italic',
-  },
-  datePickerButton: {
-    backgroundColor: '#111',
-    borderRadius: 12,
-    padding: 16,
-    borderWidth: 1,
-    borderColor: '#333',
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-  },
-  datePickerText: {
-    fontSize: 16,
-    color: '#fff',
-    flex: 1,
-  },
-  placeholderText: {
-    color: '#666',
-  },
-  formTextArea: {
-    minHeight: 100,
-    textAlignVertical: 'top',
-  },
-  saveButton: {
-    backgroundColor: '#ff6b9d',
-    borderRadius: 12,
-    padding: 16,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-    marginTop: 20,
-  },
-  saveButtonText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#fff',
-  },
-  pickerContent: {
-    padding: 20,
-  },
-  calendarHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 20,
-    paddingHorizontal: 10,
-  },
-  calendarNavButton: {
-    width: 40,
-    height: 40,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#1a1a1a',
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#333',
-  },
-  calendarNavText: {
-    fontSize: 24,
-    color: '#fff',
-    fontWeight: '600',
-  },
-  calendarHeaderText: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#fff',
-  },
-  calendarWeekdays: {
-    flexDirection: 'row',
-    marginBottom: 10,
-  },
-  calendarWeekdayCell: {
-    flex: 1,
-    alignItems: 'center',
-    paddingVertical: 8,
-  },
-  calendarWeekdayText: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: '#888',
-  },
-  calendarGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
-  },
-  calendarDayCell: {
-    width: '13%',
-    aspectRatio: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderRadius: 8,
-    backgroundColor: '#1a1a1a',
-  },
-  calendarDaySelected: {
-    backgroundColor: '#ff6b9d',
-  },
-  calendarDayToday: {
-    borderWidth: 2,
-    borderColor: '#4ade80',
-  },
-  calendarDayText: {
-    fontSize: 16,
-    color: '#fff',
-  },
-  calendarDayTextSelected: {
-    fontWeight: '700',
-    color: '#fff',
-  },
-  calendarDayTextToday: {
-    color: '#4ade80',
-    fontWeight: '600',
-  },
-  datePickerGrid: {
-    gap: 16,
-    marginBottom: 20,
-  },
-  datePickerRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-  },
-  datePickerLabel: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#fff',
-    width: 60,
-  },
-  datePickerInput: {
-    flex: 1,
-    backgroundColor: '#111',
-    borderRadius: 8,
-    padding: 12,
-    color: '#fff',
-    fontSize: 18,
-    fontWeight: '600',
-    textAlign: 'center',
-    borderWidth: 1,
-    borderColor: '#333',
-  },
-  wheelPickerContainer: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    gap: 20,
-    marginBottom: 30,
-  },
-  wheelColumn: {
-    alignItems: 'center',
-    gap: 10,
-  },
-  wheelLabel: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#888',
-    textTransform: 'uppercase',
-  },
-  wheelWrapper: {
-    height: 200,
-    width: 100,
-    position: 'relative',
-  },
-  wheelHighlight: {
-    position: 'absolute',
-    top: '50%',
-    left: 0,
-    right: 0,
-    height: 50,
-    marginTop: -25,
-    backgroundColor: 'rgba(74, 222, 128, 0.1)',
-    borderTopWidth: 2,
-    borderBottomWidth: 2,
-    borderColor: '#4ade80',
-    zIndex: 1,
-    pointerEvents: 'none',
-  },
-  wheelScroll: {
-    flex: 1,
-  },
-  wheelScrollContent: {
-    paddingVertical: 75,
-  },
-  wheelItem: {
-    height: 50,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  wheelItemText: {
-    fontSize: 28,
-    fontWeight: '400',
-    color: '#666',
-  },
-  wheelItemTextSelected: {
-    fontSize: 32,
-    fontWeight: '700',
-    color: '#4ade80',
-  },
-  wheelSeparator: {
-    fontSize: 32,
-    fontWeight: '700',
-    color: '#4ade80',
-    marginTop: 35,
-  },
-  datePreview: {
-    fontSize: 24,
-    fontWeight: '700',
-    color: '#4ade80',
-    textAlign: 'center',
-    marginBottom: 20,
-    padding: 16,
-    backgroundColor: '#111',
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: '#333',
-  },
-  pickerConfirmButton: {
-    backgroundColor: '#ff6b9d',
-    borderRadius: 12,
-    padding: 16,
-    alignItems: 'center',
-  },
-  pickerConfirmText: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: '#fff',
-  },
-});
 
 
