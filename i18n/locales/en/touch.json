@@ -61,6 +61,15 @@
     "forPartner":  "with {{name}}",
     "galleryEmptyTitle":  "No photos yet",
     "galleryEmptyHint":  "Tap + to add your first photo",
+    "galleryAddChoose": "Choose how to add a photo",
+    "galleryAddSuccess": "Photo added to gallery",
+    "galleryTakeFailed": "Could not take photo",
+    "galleryTakeError": "An error occurred while taking photo",
+    "galleryPickFailed": "Could not pick photo",
+    "galleryPickError": "An error occurred while picking photo",
+    "galleryDeleteTitle": "Delete Photo?",
+    "galleryDeleteMessage": "Do you really want to delete this photo from the gallery?",
+    "galleryDeleteFailed": "Could not delete photo",
     "calendarEmptyTitle":  "No events yet",
     "calendarEmptyHint":  "Tap + to add your first event",
     "calendarModal":  {
@@ -88,7 +97,16 @@
                           "timeHint":  "Tap to select hour and minute",
                           "hour":  "Hour",
                           "minute":  "Minute",
-                          "prevArrow":  "←",
-                          "nextArrow":  "→"
+                          "prevArrow":  "\u003c",
+                          "nextArrow":  "\u003e",
+                          "errorMissingTitleOrDate":  "Please enter a title and select a date",
+                          "addSuccess":  "Event added to calendar",
+                          "addFailed":  "Could not add event",
+                          "genericError":  "An error occurred. Please try again.",
+                          "updateSuccess":  "Event updated",
+                          "updateFailed":  "Could not update event",
+                          "deleteTitle":  "Delete Event?",
+                          "deleteMessage":  "Do you really want to delete \"{{title}}\"?",
+                          "deleteFailed":  "Could not delete event"
                       }
 }

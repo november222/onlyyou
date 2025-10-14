@@ -61,6 +61,15 @@
     "forPartner":  "con {{name}}",
     "galleryEmptyTitle":  "Aún no hay fotos",
     "galleryEmptyHint":  "Pulsa + para añadir tu primera foto",
+    "galleryAddChoose": "Elige cómo añadir una foto",
+    "galleryAddSuccess": "Foto añadida a la galería",
+    "galleryTakeFailed": "No se pudo tomar la foto",
+    "galleryTakeError": "Ocurrió un error al tomar la foto",
+    "galleryPickFailed": "No se pudo seleccionar la foto",
+    "galleryPickError": "Ocurrió un error al seleccionar la foto",
+    "galleryDeleteTitle": "¿Eliminar foto?",
+    "galleryDeleteMessage": "¿Seguro que quieres eliminar esta foto de la galería?",
+    "galleryDeleteFailed": "No se pudo eliminar la foto",
     "calendarEmptyTitle":  "Aún no hay eventos",
     "calendarEmptyHint":  "Pulsa + para añadir tu primer evento",
     "calendarModal":  {
@@ -88,7 +97,16 @@
                           "timeHint":  "Toca para seleccionar hora y minutos",
                           "hour":  "Hora",
                           "minute":  "Min",
-                          "prevArrow":  "←",
-                          "nextArrow":  "→"
+                          "prevArrow":  "\u003c",
+                          "nextArrow":  "\u003e",
+                          "errorMissingTitleOrDate":  "Introduce un título y selecciona una fecha",
+                          "addSuccess":  "Evento añadido al calendario",
+                          "addFailed":  "No se pudo añadir el evento",
+                          "genericError":  "Ocurrió un error. Inténtalo de nuevo.",
+                          "updateSuccess":  "Evento actualizado",
+                          "updateFailed":  "No se pudo actualizar el evento",
+                          "deleteTitle":  "¿Eliminar evento?",
+                          "deleteMessage":  "¿Seguro que quieres eliminar \"{{title}}\"?",
+                          "deleteFailed":  "No se pudo eliminar el evento"
                       }
 }

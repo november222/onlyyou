@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -11,12 +11,10 @@ import {
   Dimensions,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useTheme } from '@/providers/ThemeProvider';
-import { useThemeColors } from '@/providers/ThemeProvider';\nimport { useThemeColors } from '@/providers/ThemeProvider';
-import { useThemeColors } from '@/providers/ThemeProvider';
+import { useTheme, useThemeColors } from '@/providers/ThemeProvider';
 import { useTranslation } from 'react-i18next';
 import { router } from 'expo-router';
-import { ArrowLeft, Plus, Camera, ImageIcon, Trash2, X } from 'lucide-react-native';
+import { ArrowLeft, Plus, ImageIcon, Trash2, X } from 'lucide-react-native';
 import PhotoService, { Photo } from '@/services/PhotoService';
 import { isFeatureEnabled } from '@/config/features';
 import WebRTCService from '@/services/WebRTCService';
@@ -26,7 +24,7 @@ const itemSize = (screenWidth - 60) / 3; // 3 columns with padding
 
 export default function SharedGalleryScreen() {
   const { theme } = useTheme();
-  const colors = useThemeColors();\n  const colors = useThemeColors();
+  const colors = useThemeColors();
   const { t } = useTranslation('touch');
   const [photos, setPhotos] = useState<Photo[]>([]);
   const [selectedPhoto, setSelectedPhoto] = useState<Photo | null>(null);
@@ -47,7 +45,6 @@ export default function SharedGalleryScreen() {
 
   const loadPhotos = async () => {
     if (!isFeatureEnabled('sharedGallery')) return;
-    
     try {
       const allPhotos = await PhotoService.getAllPhotos();
       setPhotos(allPhotos);
@@ -58,12 +55,12 @@ export default function SharedGalleryScreen() {
 
   const handleAddPhoto = () => {
     Alert.alert(
-      'ThÃªm áº¢nh',
-      'Chá»n cÃ¡ch thÃªm áº£nh vÃ o thÆ° viá»‡n',
+      t('common:addPhoto'),
+      t('touch:galleryAddChoose'),
       [
-        { text: 'Há»§y', style: 'cancel' },
-        { text: 'Chá»¥p áº¢nh', onPress: takePhoto },
-        { text: 'Chá»n Tá»« ThÆ° Viá»‡n', onPress: pickPhoto },
+        { text: t('common:cancel'), style: 'cancel' },
+        { text: t('common:takePhoto'), onPress: takePhoto },
+        { text: t('common:pickFromLibrary'), onPress: pickPhoto },
       ]
     );
   };
@@ -71,30 +68,28 @@ export default function SharedGalleryScreen() {
   const takePhoto = async () => {
     try {
       const result = await PhotoService.takePhoto();
-      
       if (result.success) {
-        Alert.alert('ThÃ nh cÃ´ng! ðŸ“¸', 'áº¢nh Ä‘Ã£ Ä‘Æ°á»£c thÃªm vÃ o thÆ° viá»‡n');
+        Alert.alert(t('common:success'), t('touch:galleryAddSuccess'));
         loadPhotos();
       } else {
-        Alert.alert('Lá»—i', result.error || 'KhÃ´ng thá»ƒ chá»¥p áº£nh');
+        Alert.alert(t('common:error'), result.error || t('touch:galleryTakeFailed'));
       }
     } catch (error) {
-      Alert.alert('Lá»—i', 'CÃ³ lá»—i xáº£y ra khi chá»¥p áº£nh');
+      Alert.alert(t('common:error'), t('touch:galleryTakeError'));
     }
   };
 
   const pickPhoto = async () => {
     try {
       const result = await PhotoService.pickAndSave();
-      
       if (result.success) {
-        Alert.alert('ThÃ nh cÃ´ng! ðŸ“¸', 'áº¢nh Ä‘Ã£ Ä‘Æ°á»£c thÃªm vÃ o thÆ° viá»‡n');
+        Alert.alert(t('common:success'), t('touch:galleryAddSuccess'));
         loadPhotos();
       } else {
-        Alert.alert('Lá»—i', result.error || 'KhÃ´ng thá»ƒ chá»n áº£nh');
+        Alert.alert(t('common:error'), result.error || t('touch:galleryPickFailed'));
       }
     } catch (error) {
-      Alert.alert('Lá»—i', 'CÃ³ lá»—i xáº£y ra khi chá»n áº£nh');
+      Alert.alert(t('common:error'), t('touch:galleryPickError'));
     }
   };
 
@@ -105,12 +100,12 @@ export default function SharedGalleryScreen() {
 
   const handleDeletePhoto = (photo: Photo) => {
     Alert.alert(
-      'XÃ³a áº£nh?',
-      'Báº¡n cÃ³ cháº¯c muá»‘n xÃ³a áº£nh nÃ y khá»i thÆ° viá»‡n?',
+      t('touch:galleryDeleteTitle'),
+      t('touch:galleryDeleteMessage'),
       [
-        { text: 'Há»§y', style: 'cancel' },
+        { text: t('common:cancel'), style: 'cancel' },
         {
-          text: 'XÃ³a',
+          text: t('common:delete'),
           style: 'destructive',
           onPress: async () => {
             try {
@@ -119,7 +114,7 @@ export default function SharedGalleryScreen() {
               setSelectedPhoto(null);
               loadPhotos();
             } catch (error) {
-              Alert.alert('Lá»—i', 'KhÃ´ng thá»ƒ xÃ³a áº£nh. Vui lÃ²ng thá»­ láº¡i.');
+              Alert.alert(t('common:error'), t('touch:galleryDeleteFailed'));
             }
           },
         },
@@ -148,15 +143,29 @@ export default function SharedGalleryScreen() {
   );
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]} edges={['top', 'bottom']}>
+    <SafeAreaView
+      style={[styles.container, { backgroundColor: theme.background }]}
+      edges={['top', 'bottom']}
+    >
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
-          <ArrowLeft size={24} color={theme.onBackground || '#111'} strokeWidth={2} />
+        <TouchableOpacity
+          style={styles.backButton}
+          onPress={() => router.back()}
+        >
+          <ArrowLeft
+            size={24}
+            color={theme.onBackground || '#111'}
+            strokeWidth={2}
+          />
         </TouchableOpacity>
         <View style={styles.titleContainer}>
-          <Text style={[styles.title, { color: theme.text }]}>{t('common:sharedGallery')}</Text>
-          <Text style={[styles.partnerNameSubtitle, { color: theme.primary }]}>{t('touch:forPartner', { name: partnerName })} 💕</Text>
+          <Text style={[styles.title, { color: theme.text }]}>
+            {t('common:sharedGallery')}
+          </Text>
+          <Text style={[styles.partnerNameSubtitle, { color: theme.primary }]}>
+            {t('touch:forPartner', { name: partnerName })}
+          </Text>
         </View>
         <TouchableOpacity style={styles.addButton} onPress={handleAddPhoto}>
           <Plus size={24} color={theme.primary} strokeWidth={2} />
@@ -167,16 +176,22 @@ export default function SharedGalleryScreen() {
       <FlatList
         data={photos}
         renderItem={renderPhoto}
-        keyExtractor={item => item.id}
+        keyExtractor={(item) => item.id}
         numColumns={3}
         style={styles.photosList}
         contentContainerStyle={styles.photosContent}
         showsVerticalScrollIndicator={false}
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
-            <ImageIcon size={64} color={theme.border || colors.mutedText || theme.text} strokeWidth={1} />
+            <ImageIcon
+              size={64}
+              color={theme.border || colors.mutedText || theme.text}
+              strokeWidth={1}
+            />
             <Text style={styles.emptyText}>{t('touch:galleryEmptyTitle')}</Text>
-            <Text style={styles.emptySubtext}>{t('touch:galleryEmptyHint')}</Text>
+            <Text style={styles.emptySubtext}>
+              {t('touch:galleryEmptyHint')}
+            </Text>
           </View>
         }
       />
@@ -188,25 +203,38 @@ export default function SharedGalleryScreen() {
         presentationStyle="fullScreen"
         onRequestClose={() => setShowFullScreen(false)}
       >
-        <View style={[styles.fullScreenModal, { backgroundColor: theme.background }]>
+        <View
+          style={[
+            styles.fullScreenModal,
+            { backgroundColor: theme.background },
+          ]}
+        >
           <View style={styles.fullScreenHeader}>
             <TouchableOpacity
               style={styles.fullScreenCloseButton}
               onPress={() => setShowFullScreen(false)}
             >
-              <X size={24} color={theme.onBackground || colors.text} strokeWidth={2} />
+              <X
+                size={24}
+                color={theme.onBackground || colors.text}
+                strokeWidth={2}
+              />
             </TouchableOpacity>
-            
+
             {selectedPhoto && (
               <TouchableOpacity
                 style={styles.fullScreenDeleteButton}
                 onPress={() => handleDeletePhoto(selectedPhoto)}
               >
-                <Trash2 size={24} color="#ef4444" strokeWidth={2} />
+                <Trash2
+                  size={24}
+                  color={theme.danger || '#ef4444'}
+                  strokeWidth={2}
+                />
               </TouchableOpacity>
             )}
           </View>
-          
+
           {selectedPhoto && (
             <View style={styles.fullScreenContent}>
               <Image
@@ -214,19 +242,40 @@ export default function SharedGalleryScreen() {
                 style={styles.fullScreenImage}
                 resizeMode="contain"
               />
-              
+
               {selectedPhoto.caption && (
                 <View style={styles.fullScreenCaption}>
-                  <Text style={[styles.fullScreenCaptionText, { color: theme.onBackground || "#fff" }]}>
+                  <Text
+                    style={[
+                      styles.fullScreenCaptionText,
+                      { color: theme.onBackground || '#fff' },
+                    ]}
+                  >
                     {selectedPhoto.caption}
                   </Text>
                 </View>
               )}
-              
+
               <View style={styles.fullScreenInfo}>
-                <Text style={[styles.fullScreenInfoText, { color: colors.mutedText || theme.mutedText || theme.text }]}>{new Date(selectedPhoto.timestamp).toLocaleString()}</Text>
-                <Text style={[styles.fullScreenInfoText, { color: colors.mutedText || theme.mutedText || theme.text }]>
-                  {selectedPhoto.width} Ã— {selectedPhoto.height}
+                <Text
+                  style={[
+                    styles.fullScreenInfoText,
+                    {
+                      color: colors.mutedText || theme.mutedText || theme.text,
+                    },
+                  ]}
+                >
+                  {new Date(selectedPhoto.timestamp).toLocaleString()}
+                </Text>
+                <Text
+                  style={[
+                    styles.fullScreenInfoText,
+                    {
+                      color: colors.mutedText || theme.mutedText || theme.text,
+                    },
+                  ]}
+                >
+                  {selectedPhoto.width} x {selectedPhoto.height}
                 </Text>
               </View>
             </View>
@@ -238,9 +287,7 @@ export default function SharedGalleryScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
+  container: { flex: 1 },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -248,35 +295,13 @@ const styles = StyleSheet.create({
     padding: 20,
     paddingBottom: 10,
   },
-  backButton: {
-    padding: 8,
-    marginLeft: -8,
-  },
-  titleContainer: {
-    flex: 1,
-    alignItems: 'center',
-  },
-  title: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: '#fff',
-  },
-  partnerNameSubtitle: {
-    fontSize: 12,
-    color: '#ff6b9d',
-    marginTop: 2,
-  },
-  addButton: {
-    padding: 8,
-    marginRight: -8,
-  },
-  photosList: {
-    flex: 1,
-  },
-  photosContent: {
-    padding: 20,
-    paddingTop: 10,
-  },
+  backButton: { padding: 8, marginLeft: -8 },
+  titleContainer: { flex: 1, alignItems: 'center' },
+  title: { fontSize: 20, fontWeight: '700', color: '#fff' },
+  partnerNameSubtitle: { fontSize: 12, color: '#ff6b9d', marginTop: 2 },
+  addButton: { padding: 8, marginRight: -8 },
+  photosList: { flex: 1 },
+  photosContent: { padding: 20, paddingTop: 10 },
   photoItem: {
     width: itemSize,
     height: itemSize,
@@ -284,12 +309,8 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     borderRadius: 8,
     overflow: 'hidden',
-    position: 'relative',
   },
-  photoImage: {
-    width: '100%',
-    height: '100%',
-  },
+  photoImage: { width: '100%', height: '100%' },
   photoCaptionOverlay: {
     position: 'absolute',
     bottom: 0,
@@ -298,11 +319,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0, 0, 0, 0.7)',
     padding: 8,
   },
-  photoCaptionText: {
-    fontSize: 12,
-    color: '#fff',
-    fontWeight: '500',
-  },
+  photoCaptionText: { fontSize: 12, color: '#fff', fontWeight: '500' },
   emptyContainer: {
     flex: 1,
     justifyContent: 'center',
@@ -316,13 +333,8 @@ const styles = StyleSheet.create({
     marginTop: 16,
     marginBottom: 8,
   },
-  emptySubtext: {
-    fontSize: 14,
-    color: '#888',
-  },
-  fullScreenModal: {
-    flex: 1,
-  },
+  emptySubtext: { fontSize: 14, color: '#888' },
+  fullScreenModal: { flex: 1 },
   fullScreenHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -330,45 +342,23 @@ const styles = StyleSheet.create({
     padding: 20,
     paddingTop: 60,
   },
-  fullScreenCloseButton: {
-    padding: 8,
-  },
-  fullScreenDeleteButton: {
-    padding: 8,
-  },
+  fullScreenCloseButton: { padding: 8 },
+  fullScreenDeleteButton: { padding: 8 },
   fullScreenContent: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
     padding: 20,
   },
-  fullScreenImage: {
-    width: '100%',
-    height: '70%',
-  },
-  fullScreenCaption: {
-    marginTop: 20,
-    paddingHorizontal: 20,
-  },
+  fullScreenImage: { width: '100%', height: '70%' },
+  fullScreenCaption: { marginTop: 20, paddingHorizontal: 20 },
   fullScreenCaptionText: {
     fontSize: 16,
     color: '#fff',
     textAlign: 'center',
     fontStyle: 'italic',
   },
-  fullScreenInfo: {
-    marginTop: 20,
-    alignItems: 'center',
-  },
-  fullScreenInfoText: {
-    fontSize: 14,
-    color: '#888',
-    marginBottom: 4,
-  },
+  fullScreenInfo: { marginTop: 20, alignItems: 'center' },
+  fullScreenInfoText: { fontSize: 14, color: '#888', marginBottom: 4 },
 });
-
-
-
-
-
 
