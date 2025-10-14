@@ -282,14 +282,11 @@ export default function TouchScreen() {
                     <Text
                       style={[styles.buzzButtonLabel, { color: colors.text }]}
                       numberOfLines={2}
+                      ellipsizeMode="tail"
                     >
                       {template.text}
                     </Text>
-                    {template.type === 'custom' && (
-                      <Text style={styles.customBadge}>
-                        {t('touch:customBadge')}
-                      </Text>
-                    )}
+                    {/* Removed custom badge label for buzz buttons */}
                   </TouchableOpacity>
                 ))}
             </ScrollView>
@@ -596,14 +593,13 @@ const styles = StyleSheet.create({
   },
   buzzButton: {
     alignItems: 'center',
+    justifyContent: 'center',
     paddingVertical: 12,
-    paddingHorizontal: 12,
+    paddingHorizontal: 10,
     borderRadius: 12,
-
-    minWidth: 80,
-    maxWidth: 100,
+    width: 100,
+    height: 96,
     borderWidth: 1,
-
     position: 'relative',
   },
   buzzButtonDisabled: {
@@ -639,14 +635,14 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
   bigBuzzButton: {
-    width: 110,
-    height: 110,
-    borderRadius: 55,
     alignItems: 'center',
     justifyContent: 'center',
-    shadowOpacity: 0.55,
-    shadowRadius: 16,
-    shadowOffset: { width: 0, height: 8 },
+    width: 96,
+    height: 96,
+    borderRadius: 48,
+    shadowOpacity: 0.25,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 4 },
     elevation: 8,
   },
   bigBuzzInnerGlow: {
@@ -671,3 +667,6 @@ const styles = StyleSheet.create({
     fontSize: 12,
   },
 });
+
+
+
