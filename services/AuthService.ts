@@ -1,9 +1,8 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { supabase } from '@/lib/supabase';
-import features from '@/config/features';
-import type { Session } from '@supabase/supabase-js';
-import * as WebBrowser from 'expo-web-browser';
+import type { User as SupabaseUser, Session } from '@supabase/supabase-js';
 import * as AuthSession from 'expo-auth-session';
+import * as WebBrowser from 'expo-web-browser';
 import Constants from 'expo-constants';
 import { Platform } from 'react-native';
 
@@ -39,18 +38,11 @@ class AuthService {
     if (this.initialized) return;
     this.initialized = true;
 
-
-    supabase.auth.onAuthStateChange((event, session) => {
+    supabase.auth.onAuthStateChange(async (event, session) => {
       console.log('Auth event:', event);
 
       if (event === 'SIGNED_IN' && session) {
-        // Defer heavy work outside native callback context
-        setTimeout(() => {
-          this.handleSessionChange(session).catch((err) => {
-            console.error('SIGNED_IN handler failed:', err);
-            this.updateAuthState({ isLoading: false });
-          });
-        }, 0);
+        await this.handleSessionChange(session);
       } else if (event === 'SIGNED_OUT') {
         this.updateAuthState({
           isAuthenticated: false,
@@ -58,12 +50,7 @@ class AuthService {
           isLoading: false,
         });
       } else if (event === 'TOKEN_REFRESHED' && session) {
-        // Avoid doing synchronous work on token refresh; schedule it
-        setTimeout(() => {
-          this.handleSessionChange(session).catch((err) => {
-            console.error('TOKEN_REFRESHED handler failed:', err);
-          });
-        }, 0);
+        await this.handleSessionChange(session);
       }
     });
 
@@ -104,50 +91,6 @@ class AuthService {
           user,
           isLoading: false,
         });
-      } else {
-        // Fallback: create a profile row if it does not exist
-        try {
-          const { data: created, error: insertError } = await supabase
-            .from('users')
-            .insert({
-              id: session.user.id,
-              email: (session.user as any).email || '',
-              full_name:
-                ((session.user as any).user_metadata?.full_name as string) ||
-                ((session.user as any).email as string) ||
-                'User',
-              avatar_url:
-                ((session.user as any).user_metadata?.avatar_url as string) || null,
-              premium_tier: 'free',
-              premium_expires_at: null,
-            })
-            .select('*')
-            .maybeSingle();
-
-          if (insertError || !created) {
-            console.error('Failed to create user profile:', insertError);
-            this.updateAuthState({ isLoading: false });
-            return;
-          }
-
-          const user: User = {
-            id: created.id,
-            email: created.email,
-            name: created.full_name || created.email,
-            avatar: created.avatar_url || undefined,
-            premiumTier: created.premium_tier,
-            premiumExpiresAt: created.premium_expires_at,
-          };
-
-          this.updateAuthState({
-            isAuthenticated: true,
-            user,
-            isLoading: false,
-          });
-        } catch (createErr) {
-          console.error('Error creating profile row:', createErr);
-          this.updateAuthState({ isLoading: false });
-        }
       }
     } catch (error) {
       console.error('Error handling session change:', error);
@@ -157,40 +100,7 @@ class AuthService {
 
   private updateAuthState(updates: Partial<AuthState>) {
     this.authState = { ...this.authState, ...updates };
-    // Notify listeners on next tick to avoid running inside native callbacks
-    const snapshot = this.authState;
-    if (this.onAuthStateChange) {
-      setTimeout(() => {
-        try {
-          this.onAuthStateChange?.(snapshot);
-        } catch (err) {
-          console.error('Auth state listener error:', err);
-        }
-      }, 0);
-    }
-  }
-
-  private extractOAuthTokens(url: string): { accessToken: string; refreshToken: string } | null {
-    try {
-      const parsedUrl = new URL(url);
-      let accessToken = parsedUrl.searchParams.get('access_token');
-      let refreshToken = parsedUrl.searchParams.get('refresh_token');
-
-      if ((!accessToken || !refreshToken) && parsedUrl.hash) {
-        const hash = parsedUrl.hash.startsWith('#') ? parsedUrl.hash.slice(1) : parsedUrl.hash;
-        const hashParams = new URLSearchParams(hash);
-        accessToken = accessToken || hashParams.get('access_token');
-        refreshToken = refreshToken || hashParams.get('refresh_token');
-      }
-
-      if (accessToken && refreshToken) {
-        return { accessToken, refreshToken };
-      }
-    } catch (error) {
-      console.error('Failed to parse OAuth callback URL:', error);
-    }
-
-    return null;
+    this.onAuthStateChange?.(this.authState);
   }
 
   public async signInWithEmail(email: string, password: string): Promise<void> {
@@ -317,191 +227,139 @@ class AuthService {
     }
   }
 
-  public async signInWithGoogle(): Promise<boolean> {
-    let success = false;
-
+  public async signInWithGoogle(): Promise<void> {
     try {
       this.updateAuthState({ isLoading: true });
 
-      // Compute redirect URL per environment
-      const redirectUrl = Platform.OS === 'web'
-        ? (typeof window !== 'undefined' && window.location
-            ? `${window.location.protocol}//${window.location.host}/auth/callback`
-            : '/auth/callback')
-        : (Constants?.appOwnership === 'expo'
-            ? AuthSession.makeRedirectUri({ useProxy: true })
-            : 'onlyyou://auth/callback');
+      const isWeb = Platform.OS === 'web';
+      console.log('Platform.OS:', Platform.OS);
+      console.log('isWeb:', isWeb);
+
+      let redirectUrl = '';
+      if (isWeb && typeof window !== 'undefined' && window.location) {
+        redirectUrl = `${window.location.protocol}//${window.location.host}/auth/callback`;
+      } else {
+        redirectUrl = (Constants?.appOwnership === 'expo')
+          ? AuthSession.makeRedirectUri({ useProxy: true, path: 'auth/callback' })
+          : 'onlyyou://auth/callback';
+      }
 
       console.log('Auth (Google) redirectUrl:', redirectUrl);
+
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
           redirectTo: redirectUrl,
+          // On native we handle the auth session manually
           skipBrowserRedirect: Platform.OS !== 'web',
         },
       });
 
+      console.log('OAuth response:', { data, error });
+
       if (error) {
+        console.error('OAuth error:', error);
         throw error;
       }
 
-      if (Platform.OS === 'web') {
-        success = true;
-        this.updateAuthState({ isLoading: false });
-        return true;
+      if (isWeb) {
+        return;
       }
 
-      if (!data?.url) {
-        throw new Error('Khong nhan duoc URL xac thuc Google.');
-      }
+      if (data?.url) {
+        console.log('Opening auth session with URL:', data.url);
+        const result = await WebBrowser.openAuthSessionAsync(
+          data.url,
+          redirectUrl
+        );
 
-      console.log('Auth (Google) provider URL:', data?.url);
-      const result = await WebBrowser.openAuthSessionAsync(data.url, redirectUrl);
+        console.log('Auth session result:', result);
 
-      if (result.type !== 'success' || !result.url) {
-        if (result.type === 'dismiss' || result.type === 'cancel') {
-          throw new Error('Dang nhap Google da bi huy.');
+        if (result.type === 'success' && result.url) {
+          const url = result.url;
+          console.log('Success URL:', url);
+
+          // Try PKCE code exchange first
+          let authCode: string | null = null;
+          try {
+            const parsed = AuthSession.parse(url);
+            authCode = (parsed as any)?.params?.code || null;
+          } catch {}
+          if (!authCode) {
+            try {
+              const u = new URL(url);
+              authCode = u.searchParams.get('code');
+            } catch {}
+          }
+          if (authCode) {
+            const { data: sessionData, error: sessionError } = await supabase.auth.exchangeCodeForSession({ authCode });
+            if (sessionError) {
+              console.error('Auth (Google) code exchange failed:', sessionError);
+              throw sessionError;
+            }
+            if (sessionData?.session) {
+              console.log('Session created via code exchange');
+              await this.handleSessionChange(sessionData.session);
+              return;
+            }
+          }
+
+          const params = new URL(url).searchParams;
+          let accessToken = params.get('access_token');
+          let refreshToken = params.get('refresh_token');
+
+          // Fallback: parse from hash fragment if not present in query
+          if (!accessToken || !refreshToken) {
+            try {
+              const u = new URL(url);
+              const hash = u.hash?.startsWith('#') ? u.hash.slice(1) : u.hash;
+              const hashParams = new URLSearchParams(hash || '');
+              accessToken = accessToken || hashParams.get('access_token');
+              refreshToken = refreshToken || hashParams.get('refresh_token');
+            } catch {}
+          }
+
+          console.log('Tokens present:', {
+            hasAccessToken: !!accessToken,
+            hasRefreshToken: !!refreshToken
+          });
+
+          if (accessToken && refreshToken) {
+            const { data: sessionData, error: sessionError } =
+              await supabase.auth.setSession({
+                access_token: accessToken,
+                refresh_token: refreshToken,
+              });
+
+            if (sessionError) {
+              console.error('Session error:', sessionError);
+              throw sessionError;
+            }
+
+            if (sessionData.session) {
+              console.log('Session created successfully');
+              await this.handleSessionChange(sessionData.session);
+            }
+          } else {
+            throw new Error('Không nhận được tokens từ Google');
+          }
+        } else if (result.type === 'cancel') {
+          console.log('User cancelled auth');
+          this.updateAuthState({ isLoading: false });
+          throw new Error('Đã hủy đăng nhập');
+        } else {
+          console.log('Auth failed with type:', result.type);
+          this.updateAuthState({ isLoading: false });
+          throw new Error('Đăng nhập thất bại');
         }
-
-        throw new Error('Dang nhap Google khong hoan tat.');
       }
-
-      // Supabase uses PKCE on native; exchange auth code for a session
-      let authCode: string | null = null;
-      try {
-        const parsed = AuthSession.parse(result.url);
-        authCode = (parsed as any)?.params?.code || null;
-      } catch {
-        // Fallback parse
-        try {
-          const u = new URL(result.url);
-          authCode = u.searchParams.get('code');
-        } catch {}
-      }
-
-      if (!authCode) {
-        throw new Error('Không tìm thấy mã xác thực (code) từ Google.');
-      }
-
-      const { data: sessionData, error: sessionError } = await supabase.auth.exchangeCodeForSession({ authCode });
-      if (sessionError) {
-        console.error('Auth (Google) code exchange failed:', sessionError);
-      }
-
-      if (sessionError) {
-        throw sessionError;
-      }
-
-      if (!sessionData.session) {
-        throw new Error('Khong tao duoc phien dang nhap Google.');
-      }
-
-      await this.handleSessionChange(sessionData.session);
-      success = true;
-      return true;
     } catch (error: any) {
       console.error('Google sign in failed:', error);
-      if (error instanceof Error) {
-        throw error;
-      }
-      throw new Error('Dang nhap Google that bai. Vui long thu lai.');
-    } finally {
-      if (!success) {
-        this.updateAuthState({ isLoading: false });
-      }
-    }
-  }
+      console.error('Error details:', JSON.stringify(error, null, 2));
+      this.updateAuthState({ isLoading: false });
 
-  public async signInWithApple(): Promise<boolean> {
-    let success = false;
-
-    try {
-      this.updateAuthState({ isLoading: true });
-
-      const redirectUrl = Platform.OS === 'web'
-        ? (typeof window !== 'undefined' && window.location
-            ? `${window.location.protocol}//${window.location.host}/auth/callback`
-            : '/auth/callback')
-        : (Constants?.appOwnership === 'expo'
-            ? AuthSession.makeRedirectUri({ useProxy: true })
-            : 'onlyyou://auth/callback');
-
-      console.log('Auth (Apple) redirectUrl:', redirectUrl);
-      const { data, error } = await supabase.auth.signInWithOAuth({
-        provider: 'apple',
-        options: {
-          redirectTo: redirectUrl,
-          skipBrowserRedirect: Platform.OS !== 'web',
-        },
-      });
-
-      if (error) {
-        throw error;
-      }
-
-      if (Platform.OS === 'web') {
-        success = true;
-        this.updateAuthState({ isLoading: false });
-        return true;
-      }
-
-      if (!data?.url) {
-        throw new Error('Khong nhan duoc URL xac thuc Apple.');
-      }
-
-      console.log('Auth (Apple) provider URL:', data?.url);
-      const result = await WebBrowser.openAuthSessionAsync(data.url, redirectUrl);
-
-      if (result.type !== 'success' || !result.url) {
-        if (result.type === 'dismiss' || result.type === 'cancel') {
-          throw new Error('Dang nhap Apple da bi huy.');
-        }
-
-        throw new Error('Dang nhap Apple khong hoan tat.');
-      }
-
-      // Exchange PKCE code for session
-      let authCode: string | null = null;
-      try {
-        const parsed = AuthSession.parse(result.url);
-        authCode = (parsed as any)?.params?.code || null;
-      } catch {
-        try {
-          const u = new URL(result.url);
-          authCode = u.searchParams.get('code');
-        } catch {}
-      }
-
-      if (!authCode) {
-        throw new Error('Không tìm thấy mã xác thực (code) từ Apple.');
-      }
-
-      const { data: sessionData, error: sessionError } = await supabase.auth.exchangeCodeForSession({ authCode });
-      if (sessionError) {
-        console.error('Auth (Apple) code exchange failed:', sessionError);
-      }
-
-      if (sessionError) {
-        throw sessionError;
-      }
-
-      if (!sessionData.session) {
-        throw new Error('Khong tao duoc phien dang nhap Apple.');
-      }
-
-      await this.handleSessionChange(sessionData.session);
-      success = true;
-      return true;
-    } catch (error: any) {
-      console.error('Apple sign in failed:', error);
-      if (error instanceof Error) {
-        throw error;
-      }
-      throw new Error('Dang nhap Apple that bai. Vui long thu lai.');
-    } finally {
-      if (!success) {
-        this.updateAuthState({ isLoading: false });
-      }
+      const errorMessage = error?.message || error?.error_description || 'Đăng nhập Google thất bại. Vui lòng thử lại.';
+      throw new Error(errorMessage);
     }
   }
 
@@ -549,4 +407,3 @@ class AuthService {
 }
 
 export default new AuthService();
-
