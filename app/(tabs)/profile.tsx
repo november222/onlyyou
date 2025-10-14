@@ -1,4 +1,5 @@
 ﻿import React, { useState, useEffect, useMemo, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   View,
   Text,
@@ -619,32 +620,35 @@ export default function ProfileScreen() {
           <View style={[styles.loveCounterCard, cardSurfaceStyle]}>
             <View style={styles.loveCounterHeader}>
               <View style={styles.loveAvatarWrapper}>
-                <Animated.View
-                  pointerEvents="none"
-                  style={[
-                    styles.rippleWave,
-                    {
-                      borderColor: theme.primary,
-                      transform: [
-                        { scale: waveL1.interpolate({ inputRange: [0, 1], outputRange: [1, 1.8] }) },
-                      ],
-                      opacity: waveL1.interpolate({ inputRange: [0, 1], outputRange: [0.25, 0] }),
-                    },
-                  ]}
-                />
-                <Animated.View
-                  pointerEvents="none"
-                  style={[
-                    styles.rippleWave,
-                    {
-                      borderColor: theme.primary,
-                      transform: [
-                        { scale: waveL2.interpolate({ inputRange: [0, 1], outputRange: [1, 1.8] }) },
-                      ],
-                      opacity: waveL2.interpolate({ inputRange: [0, 1], outputRange: [0.25, 0] }),
-                    },
-                  ]}
-                />
+                {/* Show only the inward half (right side) of the ripple */}
+                <View style={styles.rippleHalfRight} pointerEvents="none">
+                  <Animated.View
+                    style={[
+                      styles.rippleWave,
+                      {
+                        left: -42,
+                        borderColor: theme.primary,
+                        transform: [
+                          { scale: waveL1.interpolate({ inputRange: [0, 1], outputRange: [1, 1.8] }) },
+                        ],
+                        opacity: waveL1.interpolate({ inputRange: [0, 1], outputRange: [0.25, 0] }),
+                      },
+                    ]}
+                  />
+                  <Animated.View
+                    style={[
+                      styles.rippleWave,
+                      {
+                        left: -42,
+                        borderColor: theme.primary,
+                        transform: [
+                          { scale: waveL2.interpolate({ inputRange: [0, 1], outputRange: [1, 1.8] }) },
+                        ],
+                        opacity: waveL2.interpolate({ inputRange: [0, 1], outputRange: [0.25, 0] }),
+                      },
+                    ]}
+                  />
+                </View>
                 {authState.user?.avatar ? (
                   <Image source={{ uri: authState.user.avatar }} style={[styles.loveAvatar, { borderColor: colors.border }]} />
                 ) : (
@@ -657,32 +661,35 @@ export default function ProfileScreen() {
                 <Heart size={24} color={theme.primary} strokeWidth={2.5} />
               </View>
               <View style={styles.loveAvatarWrapper}>
-                <Animated.View
-                  pointerEvents="none"
-                  style={[
-                    styles.rippleWave,
-                    {
-                      borderColor: theme.primary,
-                      transform: [
-                        { scale: waveR1.interpolate({ inputRange: [0, 1], outputRange: [1, 1.8] }) },
-                      ],
-                      opacity: waveR1.interpolate({ inputRange: [0, 1], outputRange: [0.25, 0] }),
-                    },
-                  ]}
-                />
-                <Animated.View
-                  pointerEvents="none"
-                  style={[
-                    styles.rippleWave,
-                    {
-                      borderColor: theme.primary,
-                      transform: [
-                        { scale: waveR2.interpolate({ inputRange: [0, 1], outputRange: [1, 1.8] }) },
-                      ],
-                      opacity: waveR2.interpolate({ inputRange: [0, 1], outputRange: [0.25, 0] }),
-                    },
-                  ]}
-                />
+                {/* Show only the inward half (left side) of the ripple */}
+                <View style={styles.rippleHalfLeft} pointerEvents="none">
+                  <Animated.View
+                    style={[
+                      styles.rippleWave,
+                      {
+                        left: 0,
+                        borderColor: theme.primary,
+                        transform: [
+                          { scale: waveR1.interpolate({ inputRange: [0, 1], outputRange: [1, 1.8] }) },
+                        ],
+                        opacity: waveR1.interpolate({ inputRange: [0, 1], outputRange: [0.25, 0] }),
+                      },
+                    ]}
+                  />
+                  <Animated.View
+                    style={[
+                      styles.rippleWave,
+                      {
+                        left: 0,
+                        borderColor: theme.primary,
+                        transform: [
+                          { scale: waveR2.interpolate({ inputRange: [0, 1], outputRange: [1, 1.8] }) },
+                        ],
+                        opacity: waveR2.interpolate({ inputRange: [0, 1], outputRange: [0.25, 0] }),
+                      },
+                    ]}
+                  />
+                </View>
                 {WebRTCService.getSavedConnection?.()?.partnerAvatarUrl ? (
                   <Image source={{ uri: WebRTCService.getSavedConnection()?.partnerAvatarUrl as string }} style={[styles.loveAvatar, { borderColor: colors.border }]} />
                 ) : (
@@ -1067,6 +1074,22 @@ const styles = StyleSheet.create({
     height: 84,
     borderRadius: 42,
     borderWidth: 2,
+  },
+  rippleHalfLeft: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    width: 42,
+    height: 84,
+    overflow: 'hidden',
+  },
+  rippleHalfRight: {
+    position: 'absolute',
+    top: 0,
+    left: 42,
+    width: 42,
+    height: 84,
+    overflow: 'hidden',
   },
   loveAvatarFallback: {
     alignItems: 'center',
@@ -1643,6 +1666,7 @@ const styles = StyleSheet.create({
     marginLeft: 4,
   },
 });
+
 
 
 
