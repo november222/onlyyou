@@ -600,7 +600,6 @@ export default function ProfileScreen() {
               )}
               <View style={styles.loveHeaderCenter}>
                 <Sparkles size={24} color={theme.primary} strokeWidth={2} />
-                <Text style={[styles.loveCounterTitle, { color: colors.text }]}>L-day</Text>
               </View>
               {WebRTCService.getSavedConnection?.()?.partnerAvatarUrl ? (
                 <Image source={{ uri: WebRTCService.getSavedConnection()?.partnerAvatarUrl as string }} style={[styles.loveAvatar, { borderColor: colors.border }]} />
@@ -618,9 +617,7 @@ export default function ProfileScreen() {
                 >
                   {loveDays}
                 </Text>
-                <Text style={[styles.loveCounterLabel, { color: colors.text }]}>
-                  {t('profile:daysConnected')}
-                </Text>
+                <Text style={[styles.loveCounterTitle, { color: colors.text }]}>L-day</Text>
                 <Text style={[styles.loveCounterSubtext, mutedTextStyle]}>
                   {t('profile:since')} {formatDate(relationshipStartAt)}
                 </Text>
@@ -965,9 +962,9 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   loveAvatar: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
     borderWidth: 2,
     backgroundColor: '#222',
     overflow: 'hidden',
