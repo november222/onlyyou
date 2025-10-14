@@ -604,7 +604,7 @@ export default function CalendarScreen() {
 
   const handleAddItem = async () => {
     if (!title.trim() || !date.trim()) {
-      Alert.alert('Lá»—i', 'Vui lÃ²ng nháº­p tiÃªu Ä‘á» vÃ  chá»n ngÃ y');
+      Alert.alert(t('common:error'), t('calendarModal.errorMissingTitleOrDate'));
       return;
     }
 
@@ -613,23 +613,23 @@ export default function CalendarScreen() {
 
       if (result.success) {
         Alert.alert(
-          'ThÃ nh cÃ´ng! ðŸ“…',
-          'Sá»± kiá»‡n Ä‘Ã£ Ä‘Æ°á»£c thÃªm vÃ o lá»‹ch'
+      t('calendarModal.deleteTitle'),
+      t('calendarModal.deleteMessage', { title: item.title }),
         );
         resetForm();
         setShowAddModal(false);
         loadCalendarItems();
       } else {
-        Alert.alert('Lá»—i', result.error || 'KhÃ´ng thá»ƒ thÃªm sá»± kiá»‡n');
+        Alert.alert(t('common:error'), result.error || t('calendarModal.addFailed'));
       }
     } catch (error) {
-      Alert.alert('Lá»—i', 'CÃ³ lá»—i xáº£y ra. Vui lÃ²ng thá»­ láº¡i.');
+      Alert.alert(t('common:error'), t('calendarModal.genericError'));
     }
   };
 
   const handleEditItem = async () => {
     if (!editingItem || !title.trim() || !date.trim()) {
-      Alert.alert('Lá»—i', 'Vui lÃ²ng nháº­p tiÃªu Ä‘á» vÃ  chá»n ngÃ y');
+      Alert.alert(t('common:error'), t('calendarModal.errorMissingTitleOrDate'));
       return;
     }
 
@@ -643,31 +643,31 @@ export default function CalendarScreen() {
 
       if (result.success) {
         Alert.alert(
-          'ThÃ nh cÃ´ng! âœï¸',
-          'Sá»± kiá»‡n Ä‘Ã£ Ä‘Æ°á»£c cáº­p nháº­t'
+      t('calendarModal.deleteTitle'),
+      t('calendarModal.deleteMessage', { title: item.title }),
         );
         resetForm();
         setShowAddModal(false);
         loadCalendarItems();
       } else {
         Alert.alert(
-          'Lá»—i',
-          result.error || 'KhÃ´ng thá»ƒ cáº­p nháº­t sá»± kiá»‡n'
+      t('calendarModal.deleteTitle'),
+      t('calendarModal.deleteMessage', { title: item.title }),
         );
       }
     } catch (error) {
-      Alert.alert('Lá»—i', 'CÃ³ lá»—i xáº£y ra. Vui lÃ²ng thá»­ láº¡i.');
+      Alert.alert(t('common:error'), t('calendarModal.genericError'));
     }
   };
 
   const handleDeleteItem = (item: CalItem) => {
     Alert.alert(
-      'XÃ³a sá»± kiá»‡n?',
-      `Báº¡n cÃ³ cháº¯c muá»‘n xÃ³a "${item.title}"?`,
+      t('calendarModal.deleteTitle'),
+      t('calendarModal.deleteMessage', { title: item.title }),
       [
-        { text: 'Há»§y', style: 'cancel' },
+        { text: t('common:cancel'), style: 'cancel' },
         {
-          text: 'XÃ³a',
+          text: t('common:delete'),
           style: 'destructive',
           onPress: async () => {
             try {
@@ -676,14 +676,14 @@ export default function CalendarScreen() {
                 loadCalendarItems();
               } else {
                 Alert.alert(
-                  'Lá»—i',
-                  result.error || 'KhÃ´ng thá»ƒ xÃ³a sá»± kiá»‡n'
+      t('calendarModal.deleteTitle'),
+      t('calendarModal.deleteMessage', { title: item.title }),
                 );
               }
             } catch (error) {
               Alert.alert(
-                'Lá»—i',
-                'CÃ³ lá»—i xáº£y ra. Vui lÃ²ng thá»­ láº¡i.'
+      t('calendarModal.deleteTitle'),
+      t('calendarModal.deleteMessage', { title: item.title }),
               );
             }
           },
@@ -1309,6 +1309,7 @@ export default function CalendarScreen() {
     </SafeAreaView>
   );
 }
+
 
 
 
