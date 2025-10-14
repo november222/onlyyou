@@ -41,7 +41,10 @@ class AuthService {
       return '/auth/callback';
     }
     if (Constants?.appOwnership === 'expo') {
-      return AuthSession.makeRedirectUri({ useProxy: true, path: 'auth/callback' });
+      const proxy = AuthSession.makeRedirectUri({ useProxy: true, path: 'auth/callback' });
+      // Some environments may still return exp:// — prefer the https proxy root
+      if (proxy.startsWith('exp://')) return 'https://auth.expo.dev';
+      return proxy;
     }
     return 'onlyyou://auth/callback';
   }
