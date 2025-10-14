@@ -1,12 +1,37 @@
-{
-  "madeForTwo": "Hecho para Dos Corazones",
-  "madeForTwoDesc": "Una aplicación de mensajería privada diseñada exclusivamente para parejas. Sin grupos, sin extraños - solo tú y tu persona especial.",
-  "encrypted": "Encriptado de Extremo a Extremo",
-  "encryptedDesc": "Todos tus mensajes y llamadas están encriptados con seguridad de grado militar. Solo tú y tu pareja pueden leer sus conversaciones.",
-  "messaging": "Mensajería en Tiempo Real",
-  "messagingDesc": "Envía mensajes instantáneamente con hermosas animaciones y confirmaciones de lectura. Expresa tu amor con emojis y palabras sinceras.",
-  "calls": "Llamadas de Voz y Video",
-  "callsDesc": "Llamadas de voz y video cristalinas con tu ser querido. Siéntete cerca incluso cuando estés separados.",
-  "private": "Completamente Privado",
-  "privateDesc": "No almacenamos tus mensajes o datos personales. Tus conversaciones permanecen entre tú y tu pareja para siempre."
+﻿{
+    "madeForTwo":  "Hecho para Dos Corazones",
+    "madeForTwoDesc":  "Una aplicaciÃ³n de mensajerÃ­a privada diseÃ±ada exclusivamente para parejas. Sin grupos, sin extraÃ±os - solo tÃº y tu persona especial.",
+    "encrypted":  "Encriptado de Extremo a Extremo",
+    "encryptedDesc":  "Todos tus mensajes y llamadas estÃ¡n encriptados con seguridad de grado militar. Solo tÃº y tu pareja pueden leer sus conversaciones.",
+    "messaging":  "MensajerÃ­a en Tiempo Real",
+    "messagingDesc":  "EnvÃ­a mensajes instantÃ¡neamente con hermosas animaciones y confirmaciones de lectura. Expresa tu amor con emojis y palabras sinceras.",
+    "calls":  "Llamadas de Voz y Video",
+    "callsDesc":  "Llamadas de voz y video cristalinas con tu ser querido. SiÃ©ntete cerca incluso cuando estÃ©s separados.",
+    "private":  "Completamente Privado",
+    "privateDesc":  "No almacenamos tus mensajes o datos personales. Tus conversaciones permanecen entre tÃº y tu pareja para siempre.",
+    "slide1":  {
+                   "title":  "Dos corazones conectados",
+                   "subtitle":  "Hecho solo para ustedes dos",
+                   "description":  "Crea una sala y conéctense con seguridad. Sin grupos ni extraños."
+               },
+    "slide2":  {
+                   "title":  "Buzz de amor",
+                   "subtitle":  "Toca para enviar una señal",
+                   "description":  "Envía buzz rápidos para sentirte cerca—simple y sincero."
+               },
+    "slide3":  {
+                   "title":  "Fotos compartidas",
+                   "subtitle":  "Guarda sus momentos",
+                   "description":  "Toma o elige de la galería y guarda en un álbum compartido."
+               },
+    "slide4":  {
+                   "title":  "Calendario compartido",
+                   "subtitle":  "Planes y recordatorios",
+                   "description":  "Planea citas y aniversarios sin perder lo importante."
+               },
+    "slide5":  {
+                   "title":  "Privado y seguro",
+                   "subtitle":  "Tu controlas tus datos",
+                   "description":  "Hecho para ustedes dos con máxima privacidad."
+               }
 }

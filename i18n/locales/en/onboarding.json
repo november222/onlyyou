@@ -1,12 +1,37 @@
-{
-  "madeForTwo": "Made for Two Hearts",
-  "madeForTwoDesc": "A private messaging app designed exclusively for couples. No groups, no strangers - just you and your special person.",
-  "encrypted": "End-to-End Encrypted",
-  "encryptedDesc": "All your messages and calls are encrypted with military-grade security. Only you and your partner can read your conversations.",
-  "messaging": "Real-time Messaging",
-  "messagingDesc": "Send messages instantly with beautiful animations and read receipts. Express your love with emojis and heartfelt words.",
-  "calls": "Voice & Video Calls",
-  "callsDesc": "Crystal clear voice and video calls with your loved one. Feel close even when you're apart.",
-  "private": "Completely Private",
-  "privateDesc": "We don't store your messages or personal data. Your conversations stay between you and your partner forever."
+﻿{
+    "madeForTwo":  "Made for Two Hearts",
+    "madeForTwoDesc":  "A private messaging app designed exclusively for couples. No groups, no strangers - just you and your special person.",
+    "encrypted":  "End-to-End Encrypted",
+    "encryptedDesc":  "All your messages and calls are encrypted with military-grade security. Only you and your partner can read your conversations.",
+    "messaging":  "Real-time Messaging",
+    "messagingDesc":  "Send messages instantly with beautiful animations and read receipts. Express your love with emojis and heartfelt words.",
+    "calls":  "Voice \u0026 Video Calls",
+    "callsDesc":  "Crystal clear voice and video calls with your loved one. Feel close even when you\u0027re apart.",
+    "private":  "Completely Private",
+    "privateDesc":  "We don\u0027t store your messages or personal data. Your conversations stay between you and your partner forever.",
+    "slide1":  {
+                   "title":  "Two Hearts Connected",
+                   "subtitle":  "Built for just the two of you",
+                   "description":  "Create a room and connect safely. No groups, no strangers—just you two."
+               },
+    "slide2":  {
+                   "title":  "Buzz Your Love",
+                   "subtitle":  "Tap to send a signal",
+                   "description":  "Send quick buzzes anytime to feel closer—fast, simple, heartfelt."
+               },
+    "slide3":  {
+                   "title":  "Shared Photos",
+                   "subtitle":  "Save your moments together",
+                   "description":  "Snap or pick from library and keep them in a shared album."
+               },
+    "slide4":  {
+                   "title":  "Shared Calendar",
+                   "subtitle":  "Plans \u0026 reminders",
+                   "description":  "Plan dates, celebrate anniversaries, never miss important moments."
+               },
+    "slide5":  {
+                   "title":  "Private \u0026 Secure",
+                   "subtitle":  "You control your data",
+                   "description":  "Made for just the two of you with strong privacy in mind."
+               }
 }

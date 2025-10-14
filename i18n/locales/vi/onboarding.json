@@ -1,12 +1,37 @@
-{
-  "madeForTwo": "Được tạo cho hai trái tim",
-  "madeForTwoDesc": "Ứng dụng nhắn tin riêng tư được thiết kế dành riêng cho các cặp đôi. Không có nhóm, không có người lạ - chỉ có bạn và người đặc biệt của bạn.",
-  "encrypted": "Mã hóa đầu cuối",
-  "encryptedDesc": "Tất cả tin nhắn và cuộc gọi của bạn đều được mã hóa với bảo mật cấp quân sự. Chỉ bạn và đối tác mới có thể đọc được cuộc trò chuyện.",
-  "messaging": "Nhắn tin thời gian thực",
-  "messagingDesc": "Gửi tin nhắn ngay lập tức với hiệu ứng đẹp mắt và xác nhận đã đọc. Thể hiện tình yêu bằng emoji và lời ngọt ngào.",
-  "calls": "Gọi thoại & Video",
-  "callsDesc": "Cuộc gọi thoại và video chất lượng cao với người yêu. Cảm thấy gần gũi ngay cả khi xa cách.",
-  "private": "Hoàn toàn riêng tư",
-  "privateDesc": "Chúng tôi không lưu trữ tin nhắn hay dữ liệu cá nhân của bạn. Cuộc trò chuyện chỉ tồn tại giữa bạn và đối tác mãi mãi."
+﻿{
+    "madeForTwo":  "ÄÆ°á»£c táº¡o cho hai trÃ¡i tim",
+    "madeForTwoDesc":  "á»¨ng dá»¥ng nháº¯n tin riÃªng tÆ° Ä‘Æ°á»£c thiáº¿t káº¿ dÃ nh riÃªng cho cÃ¡c cáº·p Ä‘Ã´i. KhÃ´ng cÃ³ nhÃ³m, khÃ´ng cÃ³ ngÆ°á»i láº¡ - chá»‰ cÃ³ báº¡n vÃ  ngÆ°á»i Ä‘áº·c biá»‡t cá»§a báº¡n.",
+    "encrypted":  "MÃ£ hÃ³a Ä‘áº§u cuá»‘i",
+    "encryptedDesc":  "Táº¥t cáº£ tin nháº¯n vÃ  cuá»™c gá»i cá»§a báº¡n Ä‘á»u Ä‘Æ°á»£c mÃ£ hÃ³a vá»›i báº£o máº­t cáº¥p quÃ¢n sá»±. Chá»‰ báº¡n vÃ  Ä‘á»‘i tÃ¡c má»›i cÃ³ thá»ƒ Ä‘á»c Ä‘Æ°á»£c cuá»™c trÃ² chuyá»‡n.",
+    "messaging":  "Nháº¯n tin thá»i gian thá»±c",
+    "messagingDesc":  "Gá»­i tin nháº¯n ngay láº­p tá»©c vá»›i hiá»‡u á»©ng Ä‘áº¹p máº¯t vÃ  xÃ¡c nháº­n Ä‘Ã£ Ä‘á»c. Thá»ƒ hiá»‡n tÃ¬nh yÃªu báº±ng emoji vÃ  lá»i ngá»t ngÃ o.",
+    "calls":  "Gá»i thoáº¡i \u0026 Video",
+    "callsDesc":  "Cuá»™c gá»i thoáº¡i vÃ  video cháº¥t lÆ°á»£ng cao vá»›i ngÆ°á»i yÃªu. Cáº£m tháº¥y gáº§n gÅ©i ngay cáº£ khi xa cÃ¡ch.",
+    "private":  "HoÃ n toÃ n riÃªng tÆ°",
+    "privateDesc":  "ChÃºng tÃ´i khÃ´ng lÆ°u trá»¯ tin nháº¯n hay dá»¯ liá»‡u cÃ¡ nhÃ¢n cá»§a báº¡n. Cuá»™c trÃ² chuyá»‡n chá»‰ tá»“n táº¡i giá»¯a báº¡n vÃ  Ä‘á»‘i tÃ¡c mÃ£i mÃ£i.",
+    "slide1":  {
+                   "title":  "Kết nối đôi",
+                   "subtitle":  "Thiết kế cho chỉ hai người",
+                   "description":  "Tạo phòng và kết nối an toàn. Không nhóm, không người lạ—chỉ hai bạn."
+               },
+    "slide2":  {
+                   "title":  "Buzz yêu thương",
+                   "subtitle":  "Chạm để gửi tín hiệu",
+                   "description":  "Gửi buzz thật nhanh để cảm thấy gần nhau hơn—đơn giản mà ý nghĩa."
+               },
+    "slide3":  {
+                   "title":  "Chia sẻ ảnh",
+                   "subtitle":  "Lưu khoảnh khắc chung",
+                   "description":  "Chụp hoặc chọn từ thư viện và lưu vào album chung."
+               },
+    "slide4":  {
+                   "title":  "Lịch chung",
+                   "subtitle":  "Kế hoạch \u0026 nhắc việc",
+                   "description":  "Lên lịch hẹn, ngày kỷ niệm, không bỏ lỡ điều quan trọng."
+               },
+    "slide5":  {
+                   "title":  "Riêng tư \u0026 bảo mật",
+                   "subtitle":  "Bạn làm chủ dữ liệu",
+                   "description":  "Ứng dụng dành riêng cho hai bạn với sự riêng tư hàng đầu."
+               }
 }
