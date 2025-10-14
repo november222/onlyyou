@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
   View,
   Text,
@@ -604,7 +604,7 @@ export default function CalendarScreen() {
 
   const handleAddItem = async () => {
     if (!title.trim() || !date.trim()) {
-      Alert.alert('Lá»—i', 'Vui lÃ²ng nháº­p tiÃªu Ä‘á» vÃ  chá»n ngÃ y');
+      Alert.alert('Lỗi', 'Vui lòng nhập tiêu đề và chọn ngày');
       return;
     }
 
@@ -613,23 +613,23 @@ export default function CalendarScreen() {
 
       if (result.success) {
         Alert.alert(
-          'ThÃ nh cÃ´ng! ðŸ“…',
-          'Sá»± kiá»‡n Ä‘Ã£ Ä‘Æ°á»£c thÃªm vÃ o lá»‹ch'
+          'Thành công! 📅',
+          'Sự kiện đã được thêm vào lịch'
         );
         resetForm();
         setShowAddModal(false);
         loadCalendarItems();
       } else {
-        Alert.alert('Lá»—i', result.error || 'KhÃ´ng thá»ƒ thÃªm sá»± kiá»‡n');
+        Alert.alert('Lỗi', result.error || 'Không thể thêm sự kiện');
       }
     } catch (error) {
-      Alert.alert('Lá»—i', 'CÃ³ lá»—i xáº£y ra. Vui lÃ²ng thá»­ láº¡i.');
+      Alert.alert('Lỗi', 'Có lỗi xảy ra. Vui lòng thử lại.');
     }
   };
 
   const handleEditItem = async () => {
     if (!editingItem || !title.trim() || !date.trim()) {
-      Alert.alert('Lá»—i', 'Vui lÃ²ng nháº­p tiÃªu Ä‘á» vÃ  chá»n ngÃ y');
+      Alert.alert('Lỗi', 'Vui lòng nhập tiêu đề và chọn ngày');
       return;
     }
 
@@ -643,31 +643,31 @@ export default function CalendarScreen() {
 
       if (result.success) {
         Alert.alert(
-          'ThÃ nh cÃ´ng! âœï¸',
-          'Sá»± kiá»‡n Ä‘Ã£ Ä‘Æ°á»£c cáº­p nháº­t'
+          'Thành công! ✏️',
+          'Sự kiện đã được cập nhật'
         );
         resetForm();
         setShowAddModal(false);
         loadCalendarItems();
       } else {
         Alert.alert(
-          'Lá»—i',
-          result.error || 'KhÃ´ng thá»ƒ cáº­p nháº­t sá»± kiá»‡n'
+          'Lỗi',
+          result.error || 'Không thể cập nhật sự kiện'
         );
       }
     } catch (error) {
-      Alert.alert('Lá»—i', 'CÃ³ lá»—i xáº£y ra. Vui lÃ²ng thá»­ láº¡i.');
+      Alert.alert('Lỗi', 'Có lỗi xảy ra. Vui lòng thử lại.');
     }
   };
 
   const handleDeleteItem = (item: CalItem) => {
     Alert.alert(
-      'XÃ³a sá»± kiá»‡n?',
-      `Báº¡n cÃ³ cháº¯c muá»‘n xÃ³a "${item.title}"?`,
+      'Xóa sự kiện?',
+      `Bạn có chắc muốn xóa "${item.title}"?`,
       [
-        { text: 'Há»§y', style: 'cancel' },
+        { text: 'Hủy', style: 'cancel' },
         {
-          text: 'XÃ³a',
+          text: 'Xóa',
           style: 'destructive',
           onPress: async () => {
             try {
@@ -676,14 +676,14 @@ export default function CalendarScreen() {
                 loadCalendarItems();
               } else {
                 Alert.alert(
-                  'Lá»—i',
-                  result.error || 'KhÃ´ng thá»ƒ xÃ³a sá»± kiá»‡n'
+                  'Lỗi',
+                  result.error || 'Không thể xóa sự kiện'
                 );
               }
             } catch (error) {
               Alert.alert(
-                'Lá»—i',
-                'CÃ³ lá»—i xáº£y ra. Vui lÃ²ng thá»­ láº¡i.'
+                'Lỗi',
+                'Có lỗi xảy ra. Vui lòng thử lại.'
               );
             }
           },
@@ -730,10 +730,7 @@ export default function CalendarScreen() {
       const date = parseDate(dateString);
       const lang = i18n.language || 'en';
       const locale = lang.startsWith('vi') ? 'vi-VN' : lang.startsWith('en') ? 'en-US' : lang.startsWith('ko') ? 'ko-KR' : lang.startsWith('es') ? 'es-ES' : undefined;
-      return date.toLocaleDateString(locale, {
-        month: '2-digit',
-        year: 'numeric',
-      });
+      return date.toLocaleDateString(locale, { weekday: 'long', day: '2-digit', month: '2-digit', year: 'numeric' });
     } catch {
       return dateString;
     }
@@ -1177,7 +1174,7 @@ export default function CalendarScreen() {
               <View style={styles.pickerContent}>
                 <View style={styles.wheelPickerContainer}>
                   <View style={styles.wheelColumn}>
-                    <Text style={styles.wheelLabel}>Giá»</Text>
+                    <Text style={styles.wheelLabel}>Giờ</Text>
                     <View style={styles.wheelWrapper}>
                       <View style={styles.wheelHighlight} />
                       <ScrollView
@@ -1234,7 +1231,7 @@ export default function CalendarScreen() {
                   <Text style={styles.wheelSeparator}>:</Text>
 
                   <View style={styles.wheelColumn}>
-                    <Text style={styles.wheelLabel}>PhÃºt</Text>
+                    <Text style={styles.wheelLabel}>Phút</Text>
                     <View style={styles.wheelWrapper}>
                       <View style={styles.wheelHighlight} />
                       <ScrollView
@@ -1312,5 +1309,6 @@ export default function CalendarScreen() {
     </SafeAreaView>
   );
 }
+
 
 
