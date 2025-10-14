@@ -184,7 +184,7 @@ export default function OnboardingScreen() {
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
       {/* Skip Button */}
       <TouchableOpacity style={styles.skipButton} onPress={handleSkip}>
-        <Text style={[styles.skipText, { color: colors.mutedText || colors.text }]}>{t('common.skip')}</Text>
+        <Text style={[styles.skipText, { color: colors.mutedText || colors.text }]}>{t('common:skip')}</Text>
       </TouchableOpacity>
 
       {/* Slides */}
