@@ -12,6 +12,8 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTheme } from '@/providers/ThemeProvider';
+import { useThemeColors } from '@/providers/ThemeProvider';\nimport { useThemeColors } from '@/providers/ThemeProvider';
+import { useThemeColors } from '@/providers/ThemeProvider';
 import { useTranslation } from 'react-i18next';
 import { router } from 'expo-router';
 import { ArrowLeft, Plus, Camera, ImageIcon, Trash2, X } from 'lucide-react-native';
@@ -24,6 +26,7 @@ const itemSize = (screenWidth - 60) / 3; // 3 columns with padding
 
 export default function SharedGalleryScreen() {
   const { theme } = useTheme();
+  const colors = useThemeColors();\n  const colors = useThemeColors();
   const { t } = useTranslation('touch');
   const [photos, setPhotos] = useState<Photo[]>([]);
   const [selectedPhoto, setSelectedPhoto] = useState<Photo | null>(null);
@@ -152,11 +155,11 @@ export default function SharedGalleryScreen() {
           <ArrowLeft size={24} color={theme.onBackground || '#111'} strokeWidth={2} />
         </TouchableOpacity>
         <View style={styles.titleContainer}>
-          <Text style={styles.title}>{t('common:sharedGallery')}</Text>
-          <Text style={styles.partnerNameSubtitle}>Vá»›i {partnerName} ðŸ’•</Text>
+          <Text style={[styles.title, { color: theme.text }]}>{t('common:sharedGallery')}</Text>
+          <Text style={[styles.partnerNameSubtitle, { color: theme.primary }]}>{t('touch:forPartner', { name: partnerName })} 💕</Text>
         </View>
         <TouchableOpacity style={styles.addButton} onPress={handleAddPhoto}>
-          <Plus size={24} color="#ff6b9d" strokeWidth={2} />
+          <Plus size={24} color={theme.primary} strokeWidth={2} />
         </TouchableOpacity>
       </View>
 
@@ -171,7 +174,7 @@ export default function SharedGalleryScreen() {
         showsVerticalScrollIndicator={false}
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
-            <ImageIcon size={64} color="#333" strokeWidth={1} />
+            <ImageIcon size={64} color={theme.border || colors.mutedText || theme.text} strokeWidth={1} />
             <Text style={styles.emptyText}>{t('touch:galleryEmptyTitle')}</Text>
             <Text style={styles.emptySubtext}>{t('touch:galleryEmptyHint')}</Text>
           </View>
@@ -185,13 +188,13 @@ export default function SharedGalleryScreen() {
         presentationStyle="fullScreen"
         onRequestClose={() => setShowFullScreen(false)}
       >
-        <View style={styles.fullScreenModal}>
+        <View style={[styles.fullScreenModal, { backgroundColor: theme.background }]>
           <View style={styles.fullScreenHeader}>
             <TouchableOpacity
               style={styles.fullScreenCloseButton}
               onPress={() => setShowFullScreen(false)}
             >
-              <X size={24} color={theme.onBackground || '#111'} strokeWidth={2} />
+              <X size={24} color={theme.onBackground || colors.text} strokeWidth={2} />
             </TouchableOpacity>
             
             {selectedPhoto && (
@@ -214,17 +217,15 @@ export default function SharedGalleryScreen() {
               
               {selectedPhoto.caption && (
                 <View style={styles.fullScreenCaption}>
-                  <Text style={styles.fullScreenCaptionText}>
+                  <Text style={[styles.fullScreenCaptionText, { color: theme.onBackground || "#fff" }]}>
                     {selectedPhoto.caption}
                   </Text>
                 </View>
               )}
               
               <View style={styles.fullScreenInfo}>
-                <Text style={styles.fullScreenInfoText}>
-                  {new Date(selectedPhoto.timestamp).toLocaleString('vi-VN')}
-                </Text>
-                <Text style={styles.fullScreenInfoText}>
+                <Text style={[styles.fullScreenInfoText, { color: colors.mutedText || theme.mutedText || theme.text }]}>{new Date(selectedPhoto.timestamp).toLocaleString()}</Text>
+                <Text style={[styles.fullScreenInfoText, { color: colors.mutedText || theme.mutedText || theme.text }]>
                   {selectedPhoto.width} Ã— {selectedPhoto.height}
                 </Text>
               </View>
@@ -365,5 +366,9 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
 });
+
+
+
+
 
 
