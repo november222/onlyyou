@@ -655,7 +655,9 @@ export default function ProfileScreen() {
                   </View>
                 )}
               </View>
-              <View style={styles.loveHeaderCenter} />
+              <View style={styles.loveHeaderCenter}>
+                <Heart size={24} color={theme.primary} strokeWidth={2.5} />
+              </View>
               <View style={styles.loveAvatarWrapper}>
                 {/* Full-circle outward ripples */}
                 <Animated.View
@@ -696,7 +698,6 @@ export default function ProfileScreen() {
 
             {relationshipStartAt && (
               <View style={styles.loveCounterContent}>
-                <Heart size={24} color={theme.primary} strokeWidth={2.5} />
                 <Text
                   style={[styles.loveCounterNumber, { color: colors.text }]}
                 >
