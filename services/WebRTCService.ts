@@ -1,4 +1,4 @@
-import { Platform } from 'react-native';
+﻿import { Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { isFeatureEnabled } from '@/config/features';
 
@@ -46,21 +46,21 @@ class WebRTCService {
   private mockMessages: WebRTCMessage[] = [
     {
       id: '1',
-      text: 'Hey babe! How was your day? 💕',
+      text: 'Hey babe! How was your day? ðŸ’•',
       timestamp: new Date(Date.now() - 3600000),
       isOwn: false,
       encrypted: true,
     },
     {
       id: '2', 
-      text: 'It was good! Missing you though ❤️',
+      text: 'It was good! Missing you though â¤ï¸',
       timestamp: new Date(Date.now() - 3500000),
       isOwn: true,
       encrypted: true,
     },
     {
       id: '3',
-      text: 'Can\'t wait to see you tonight! 😘',
+      text: 'Can\'t wait to see you tonight! ðŸ˜˜',
       timestamp: new Date(Date.now() - 3000000),
       isOwn: false,
       encrypted: true,
@@ -184,7 +184,7 @@ class WebRTCService {
     
     this.updateConnectionState({ 
       isConnecting: true, 
-      error: 'Đang kết nối lại...' 
+      error: 'Äang káº¿t ná»‘i láº¡i...' 
     });
     
     try {
@@ -206,7 +206,7 @@ class WebRTCService {
       console.error('Auto-reconnect failed:', error);
       this.updateConnectionState({ 
         isConnecting: false, 
-        error: 'Kết nối lại thất bại. Vui lòng thử lại.' 
+        error: 'Káº¿t ná»‘i láº¡i tháº¥t báº¡i. Vui lÃ²ng thá»­ láº¡i.' 
       });
       
       // Retry after 10 seconds
@@ -238,7 +238,7 @@ class WebRTCService {
         isConnected: false,
         isConnecting: false,
         partnerConnected: false,
-        error: 'Mất kết nối mạng',
+        error: 'Máº¥t káº¿t ná»‘i máº¡ng',
       });
       
       // Try to reconnect after 3 seconds
@@ -281,9 +281,9 @@ class WebRTCService {
       this.updateConnectionState({
         ...previousState,
         isConnecting: false,
-        error: 'Mã phòng không hợp lệ'
+        error: 'MÃ£ phÃ²ng khÃ´ng há»£p lá»‡'
       });
-      throw new Error('Mã phòng không hợp lệ');
+      throw new Error('MÃ£ phÃ²ng khÃ´ng há»£p lá»‡');
     }
 
     // Validate format: should be 16 alphanumeric characters
@@ -291,9 +291,9 @@ class WebRTCService {
       this.updateConnectionState({
         ...previousState,
         isConnecting: false,
-        error: 'Mã phòng không đúng định dạng'
+        error: 'MÃ£ phÃ²ng khÃ´ng Ä‘Ãºng Ä‘á»‹nh dáº¡ng'
       });
-      throw new Error('Mã phòng không đúng định dạng. Vui lòng nhập đúng 16 ký tự.');
+      throw new Error('MÃ£ phÃ²ng khÃ´ng Ä‘Ãºng Ä‘á»‹nh dáº¡ng. Vui lÃ²ng nháº­p Ä‘Ãºng 16 kÃ½ tá»±.');
     }
 
     // Simulate connection delay
@@ -305,9 +305,9 @@ class WebRTCService {
       this.updateConnectionState({
         ...previousState,
         isConnecting: false,
-        error: 'Mã phòng không tồn tại'
+        error: 'MÃ£ phÃ²ng khÃ´ng tá»“n táº¡i'
       });
-      throw new Error('Mã phòng không tồn tại. Vui lòng kiểm tra lại mã từ đối tác.');
+      throw new Error('MÃ£ phÃ²ng khÃ´ng tá»“n táº¡i. Vui lÃ²ng kiá»ƒm tra láº¡i mÃ£ tá»« Ä‘á»‘i tÃ¡c.');
     }
 
     // Start connection timer
@@ -368,12 +368,22 @@ class WebRTCService {
     }
     return Math.floor((Date.now() - this.connectionStartTime) / 1000);
   }
-
   // Get total connected time (in seconds)
   public getTotalConnectedTime(): number {
     return this.totalConnectedTime;
   }
 
+  // Increment buzz calls count for the current saved connection
+  public async incrementBuzzCallsCount(): Promise<void> {
+    try {
+      if (!this.savedConnection) return;
+      const current = this.savedConnection.buzzCallsCount || 0;
+      this.savedConnection.buzzCallsCount = current + 1;
+      await AsyncStorage.setItem('savedConnection', JSON.stringify(this.savedConnection));
+    } catch (e) {
+      console.warn('incrementBuzzCallsCount failed', e);
+    }
+  }
   // Handle app going to background
   public handleAppStateChange(nextAppState: string): void {
     if (nextAppState === 'background' || nextAppState === 'inactive') {
@@ -410,12 +420,12 @@ class WebRTCService {
       if (!this.connectionState.isConnected) return; // Don't send response if disconnected
       
       const responses = [
-        'I love you too! 💕',
-        'That sounds amazing! 😍',
-        'Can\'t wait! ❤️',
-        'You\'re the best! 🥰',
-        'Miss you so much! 💖',
-        'Aww that\'s so sweet! 😘',
+        'I love you too! ðŸ’•',
+        'That sounds amazing! ðŸ˜',
+        'Can\'t wait! â¤ï¸',
+        'You\'re the best! ðŸ¥°',
+        'Miss you so much! ðŸ’–',
+        'Aww that\'s so sweet! ðŸ˜˜',
       ];
       
       const randomResponse = responses[Math.floor(Math.random() * responses.length)];
@@ -439,7 +449,7 @@ class WebRTCService {
     // Call feature removed
     return;
     if (!this.connectionState.isConnected) {
-      throw new Error('Không thể gọi: chưa kết nối');
+      throw new Error('KhÃ´ng thá»ƒ gá»i: chÆ°a káº¿t ná»‘i');
     }
     
     if (isFeatureEnabled('simpleCallLink')) {
@@ -625,6 +635,23 @@ class WebRTCService {
     }
   }
 
+  // Delete a session history entry by id
+  public async deleteSessionHistory(sessionId: string): Promise<void> {
+    try {
+      const historyJson = await AsyncStorage.getItem('sessionHistory');
+      const history: SessionHistory[] = historyJson ? JSON.parse(historyJson) : [];
+      const filtered = history.filter((s) => s.id !== sessionId);
+      await AsyncStorage.setItem('sessionHistory', JSON.stringify(filtered));
+      if (this.onSessionHistoryChanged) this.onSessionHistoryChanged(filtered);
+    } catch (error) {
+      console.error('Failed to delete session history:', error);
+      throw error;
+    }
+  }
+
+  // optional listener for history updates
+  public onSessionHistoryChanged: ((list: SessionHistory[]) => void) | null = null;
+
   // Mock: Generate room code and enter waiting state
   public async generateRoomCode(): Promise<string> {
     console.log('Mock: Generating room code...');
@@ -758,3 +785,7 @@ class WebRTCService {
 }
 
 export default new WebRTCService();
+
+
+
+

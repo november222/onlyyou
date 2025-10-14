@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+﻿import React, { useState, useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   View,
@@ -667,7 +667,7 @@ export default function ProfileScreen() {
               <View style={[styles.statIcon, { backgroundColor: primaryTint }]}>
                 <TrendingUp size={20} color={theme.secondary} strokeWidth={2} />
               </View>
-              <Text style={[styles.statValue, { color: colors.text }]}>{connectionSessions.length}</Text>
+              <Text style={[styles.statValue, { color: colors.text }]}>{allConnectionSessions.length}</Text>
               <Text style={[styles.statLabel, mutedTextStyle]}>{t('profile:totalSessions')}</Text>
             </View>
           </View>
@@ -1533,3 +1533,4 @@ const styles = StyleSheet.create({
     marginLeft: 4,
   },
 });
+

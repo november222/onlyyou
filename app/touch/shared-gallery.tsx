@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -12,6 +12,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTheme } from '@/providers/ThemeProvider';
+import { useTranslation } from 'react-i18next';
 import { router } from 'expo-router';
 import { ArrowLeft, Plus, Camera, ImageIcon, Trash2, X } from 'lucide-react-native';
 import PhotoService, { Photo } from '@/services/PhotoService';
@@ -23,6 +24,7 @@ const itemSize = (screenWidth - 60) / 3; // 3 columns with padding
 
 export default function SharedGalleryScreen() {
   const { theme } = useTheme();
+  const { t } = useTranslation('touch');
   const [photos, setPhotos] = useState<Photo[]>([]);
   const [selectedPhoto, setSelectedPhoto] = useState<Photo | null>(null);
   const [showFullScreen, setShowFullScreen] = useState(false);
@@ -53,12 +55,12 @@ export default function SharedGalleryScreen() {
 
   const handleAddPhoto = () => {
     Alert.alert(
-      'Thêm Ảnh',
-      'Chọn cách thêm ảnh vào thư viện',
+      'ThÃªm áº¢nh',
+      'Chá»n cÃ¡ch thÃªm áº£nh vÃ o thÆ° viá»‡n',
       [
-        { text: 'Hủy', style: 'cancel' },
-        { text: 'Chụp Ảnh', onPress: takePhoto },
-        { text: 'Chọn Từ Thư Viện', onPress: pickPhoto },
+        { text: 'Há»§y', style: 'cancel' },
+        { text: 'Chá»¥p áº¢nh', onPress: takePhoto },
+        { text: 'Chá»n Tá»« ThÆ° Viá»‡n', onPress: pickPhoto },
       ]
     );
   };
@@ -68,13 +70,13 @@ export default function SharedGalleryScreen() {
       const result = await PhotoService.takePhoto();
       
       if (result.success) {
-        Alert.alert('Thành công! 📸', 'Ảnh đã được thêm vào thư viện');
+        Alert.alert('ThÃ nh cÃ´ng! ðŸ“¸', 'áº¢nh Ä‘Ã£ Ä‘Æ°á»£c thÃªm vÃ o thÆ° viá»‡n');
         loadPhotos();
       } else {
-        Alert.alert('Lỗi', result.error || 'Không thể chụp ảnh');
+        Alert.alert('Lá»—i', result.error || 'KhÃ´ng thá»ƒ chá»¥p áº£nh');
       }
     } catch (error) {
-      Alert.alert('Lỗi', 'Có lỗi xảy ra khi chụp ảnh');
+      Alert.alert('Lá»—i', 'CÃ³ lá»—i xáº£y ra khi chá»¥p áº£nh');
     }
   };
 
@@ -83,13 +85,13 @@ export default function SharedGalleryScreen() {
       const result = await PhotoService.pickAndSave();
       
       if (result.success) {
-        Alert.alert('Thành công! 📸', 'Ảnh đã được thêm vào thư viện');
+        Alert.alert('ThÃ nh cÃ´ng! ðŸ“¸', 'áº¢nh Ä‘Ã£ Ä‘Æ°á»£c thÃªm vÃ o thÆ° viá»‡n');
         loadPhotos();
       } else {
-        Alert.alert('Lỗi', result.error || 'Không thể chọn ảnh');
+        Alert.alert('Lá»—i', result.error || 'KhÃ´ng thá»ƒ chá»n áº£nh');
       }
     } catch (error) {
-      Alert.alert('Lỗi', 'Có lỗi xảy ra khi chọn ảnh');
+      Alert.alert('Lá»—i', 'CÃ³ lá»—i xáº£y ra khi chá»n áº£nh');
     }
   };
 
@@ -100,12 +102,12 @@ export default function SharedGalleryScreen() {
 
   const handleDeletePhoto = (photo: Photo) => {
     Alert.alert(
-      'Xóa ảnh?',
-      'Bạn có chắc muốn xóa ảnh này khỏi thư viện?',
+      'XÃ³a áº£nh?',
+      'Báº¡n cÃ³ cháº¯c muá»‘n xÃ³a áº£nh nÃ y khá»i thÆ° viá»‡n?',
       [
-        { text: 'Hủy', style: 'cancel' },
+        { text: 'Há»§y', style: 'cancel' },
         {
-          text: 'Xóa',
+          text: 'XÃ³a',
           style: 'destructive',
           onPress: async () => {
             try {
@@ -114,7 +116,7 @@ export default function SharedGalleryScreen() {
               setSelectedPhoto(null);
               loadPhotos();
             } catch (error) {
-              Alert.alert('Lỗi', 'Không thể xóa ảnh. Vui lòng thử lại.');
+              Alert.alert('Lá»—i', 'KhÃ´ng thá»ƒ xÃ³a áº£nh. Vui lÃ²ng thá»­ láº¡i.');
             }
           },
         },
@@ -150,8 +152,8 @@ export default function SharedGalleryScreen() {
           <ArrowLeft size={24} color={theme.onBackground || '#111'} strokeWidth={2} />
         </TouchableOpacity>
         <View style={styles.titleContainer}>
-          <Text style={styles.title}>Shared Gallery</Text>
-          <Text style={styles.partnerNameSubtitle}>Với {partnerName} 💕</Text>
+          <Text style={styles.title}>{t('common:sharedGallery')}</Text>
+          <Text style={styles.partnerNameSubtitle}>Vá»›i {partnerName} ðŸ’•</Text>
         </View>
         <TouchableOpacity style={styles.addButton} onPress={handleAddPhoto}>
           <Plus size={24} color="#ff6b9d" strokeWidth={2} />
@@ -170,8 +172,8 @@ export default function SharedGalleryScreen() {
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
             <ImageIcon size={64} color="#333" strokeWidth={1} />
-            <Text style={styles.emptyText}>No photos yet</Text>
-            <Text style={styles.emptySubtext}>Tap + to add your first photo</Text>
+            <Text style={styles.emptyText}>{t('touch:galleryEmptyTitle')}</Text>
+            <Text style={styles.emptySubtext}>{t('touch:galleryEmptyHint')}</Text>
           </View>
         }
       />
@@ -223,7 +225,7 @@ export default function SharedGalleryScreen() {
                   {new Date(selectedPhoto.timestamp).toLocaleString('vi-VN')}
                 </Text>
                 <Text style={styles.fullScreenInfoText}>
-                  {selectedPhoto.width} × {selectedPhoto.height}
+                  {selectedPhoto.width} Ã— {selectedPhoto.height}
                 </Text>
               </View>
             </View>
@@ -363,4 +365,5 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
 });
+
 

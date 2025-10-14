@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -29,6 +29,7 @@ import {
   Crown,
 } from 'lucide-react-native';
 import WebRTCService from '@/services/WebRTCService';
+import { usePremium } from '@/providers/PremiumProvider';
 
 interface ConnectionSession {
   id: string;
@@ -50,11 +51,23 @@ interface BuzzCall {
 export default function SessionDetailScreen() {
   const { theme } = useTheme();
   const colors = useThemeColors();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const mutedTextStyle = React.useMemo(() => ({ color: (colors as any).mutedText || (colors as any).text }), [(colors as any).mutedText, (colors as any).text]);
   const { id, sessionData } = useLocalSearchParams();
   const [session, setSession] = useState<ConnectionSession | null>(null);
   const [buzzCalls, setBuzzCalls] = useState<BuzzCall[]>([]);
-  const [isPremium, setIsPremium] = useState(false);
+  const { isPremium } = usePremium();
+  const partnerDisplayName = React.useMemo(() => {
+    if (!session) return t('history:session');
+    const anySession: any = session as any;
+    const direct = anySession.partnerName || anySession.displayName || anySession.name;
+    if (typeof direct === 'string' && direct.trim()) return direct as string;
+    if (typeof anySession.roomCode === 'string') {
+      const m = anySession.roomCode.match(/^(.+?)\s*\(/);
+      if (m && m[1]) return m[1].trim();
+    }
+    return t('history:session');
+  }, [session, t]);
 
   useEffect(() => {
     if (sessionData && typeof sessionData === 'string') {
@@ -74,42 +87,19 @@ export default function SessionDetailScreen() {
     }
   }, [sessionData]);
 
-  const loadBuzzCallsForSession = (sessionId: string) => {
-    // Mock buzz calls data
-    const mockBuzzCalls: BuzzCall[] = [
-      {
-        id: '1',
-        message: "I'm hungry :(",
-        timestamp: new Date('2024-01-15T15:20:15'),
-        sentByUser: true,
-      },
-      {
-        id: '2',
-        message: 'Miss you a lot :(',
-        timestamp: new Date('2024-01-15T15:45:33'),
-        sentByUser: false,
-      },
-      {
-        id: '3',
-        message: 'Babe, are you awake?',
-        timestamp: new Date('2024-01-15T16:30:22'),
-        sentByUser: true,
-      },
-      {
-        id: '4',
-        message: "I'm hungry :(",
-        timestamp: new Date('2024-01-15T17:15:45'),
-        sentByUser: false,
-      },
-      {
-        id: '5',
-        message: 'Miss you a lot :(',
-        timestamp: new Date('2024-01-15T18:00:12'),
-        sentByUser: true,
-      },
-    ];
-
-    setBuzzCalls(mockBuzzCalls);
+  const loadBuzzCallsForSession = async (sessionId: string) => {
+    try {
+      const { default: BuzzService } = await import('@/services/BuzzService');
+      const all = await BuzzService.getBuzzHistory();
+      const start = session?.startDate ? new Date(session.startDate).getTime() : 0;
+      const end = session?.endDate ? new Date(session.endDate).getTime() : Date.now();
+      const filtered = all.filter(ev => ev.timestamp >= start && ev.timestamp <= end)
+        .map(ev => ({ id: ev.id, message: ev.text, timestamp: new Date(ev.timestamp), sentByUser: ev.senderId === 'current_user' }));
+      setBuzzCalls(filtered);
+    } catch (e) {
+      // fallback: keep empty or mock
+      setBuzzCalls([]);
+    }
   };
 
   const handleDeleteSession = async () => {
@@ -138,7 +128,7 @@ export default function SessionDetailScreen() {
           style: 'destructive',
           onPress: async () => {
             try {
-              await WebRTCService.deleteSavedConnection(session.roomCode);
+              await WebRTCService.deleteSessionHistory(session.id);
             } catch (e) {
               console.warn('delete session failed', e);
             }
@@ -150,7 +140,8 @@ export default function SessionDetailScreen() {
   };
 
   const formatFullDateTime = (date: Date): string => {
-    return date.toLocaleString('vi-VN', {
+    const locale = i18n.language === 'vi' ? 'vi-VN' : i18n.language === 'en' ? 'en-US' : i18n.language === 'ko' ? 'ko-KR' : i18n.language === 'es' ? 'es-ES' : undefined;
+    return date.toLocaleString(locale, {
       weekday: 'long',
       day: '2-digit',
       month: '2-digit',
@@ -165,11 +156,15 @@ export default function SessionDetailScreen() {
     const hours = Math.floor(seconds / 3600);
     const minutes = Math.floor((seconds % 3600) / 60);
     const secs = seconds % 60;
-    return `${hours} giờ ${minutes} phút ${secs} giây`;
+    const h = t('history:hoursShort', { defaultValue: 'h' });
+    const m = t('history:minutesShort', { defaultValue: 'm' });
+    const s = t('history:secondsShort', { defaultValue: 's' });
+    return hours + h + ' ' + minutes + m + ' ' + secs + s;
   };
 
   const formatTime = (date: Date): string => {
-    return date.toLocaleTimeString('vi-VN', {
+    const locale = i18n.language === 'vi' ? 'vi-VN' : i18n.language === 'en' ? 'en-US' : i18n.language === 'ko' ? 'ko-KR' : i18n.language === 'es' ? 'es-ES' : undefined;
+    return date.toLocaleTimeString(locale, {
       hour: '2-digit',
       minute: '2-digit',
       second: '2-digit',
@@ -203,7 +198,7 @@ export default function SessionDetailScreen() {
           </TouchableOpacity>
 
           <Text style={[styles.title, { color: colors.text }]}>
-            {t('history:detailTitle')}
+            {partnerDisplayName}
           </Text>
 
           <TouchableOpacity
@@ -242,10 +237,10 @@ export default function SessionDetailScreen() {
                   numberOfLines={1}
                   ellipsizeMode="tail"
                 >
-                  {session.name || session.displayName || t('history:session')}
+                  {partnerDisplayName}
                 </Text>
                 <Text
-                  style={[styles.roomCodeSmall, { color: colors.muted }]}
+                  style={[styles.roomCodeSmall, mutedTextStyle]}
                   numberOfLines={1}
                   ellipsizeMode="middle"
                 >
@@ -315,7 +310,7 @@ export default function SessionDetailScreen() {
               />
             </View>
             <View style={styles.timestampContent}>
-              <Text style={[styles.timestampLabel, { color: colors.muted }]}>
+              <Text style={[styles.timestampLabel, mutedTextStyle]}>
                 {t('history:startLabel')}
               </Text>
               <Text style={[styles.timestampValue, { color: colors.text }]}>
@@ -339,7 +334,7 @@ export default function SessionDetailScreen() {
                 />
               </View>
               <View style={styles.timestampContent}>
-                <Text style={[styles.timestampLabel, { color: colors.muted }]}>
+                <Text style={[styles.timestampLabel, mutedTextStyle]}>
                   {t('history:endLabel')}
                 </Text>
                 <Text style={[styles.timestampValue, { color: colors.text }]}>
@@ -363,7 +358,7 @@ export default function SessionDetailScreen() {
               />
             </View>
             <View style={styles.timestampContent}>
-              <Text style={[styles.timestampLabel, { color: colors.muted }]}>
+              <Text style={[styles.timestampLabel, mutedTextStyle]}>
                 {t('history:durationLabel')}
               </Text>
               <Text style={[styles.timestampValue, { color: colors.text }]}>
@@ -399,12 +394,12 @@ export default function SessionDetailScreen() {
               ]}
             >
               <Text style={styles.buzzCallsCountText}>
-                {session.buzzCallsCount}
+                {buzzCalls.length}
               </Text>
             </View>
           </View>
 
-          <Text style={[styles.buzzCallsDescription, { color: colors.muted }]}>
+          <Text style={[styles.buzzCallsDescription, mutedTextStyle]}>
             {t('history:buzzCallsDesc')}
           </Text>
 
@@ -424,8 +419,8 @@ export default function SessionDetailScreen() {
                   >
                     "{buzzCall.message}"
                   </Text>
-                  <Text style={[styles.buzzCallTime, { color: colors.muted }]}>
-                    {formatTime(buzzCall.timestamp)} •{' '}
+                  <Text style={[styles.buzzCallTime, mutedTextStyle]}>
+                    {formatTime(buzzCall.timestamp)} â€¢{' '}
                     {buzzCall.sentByUser
                       ? t('history:youSent')
                       : t('history:partnerSent')}
@@ -655,3 +650,14 @@ const styles = StyleSheet.create({
     marginLeft: 12,
   },
 });
+
+
+
+
+
+
+
+
+
+
+

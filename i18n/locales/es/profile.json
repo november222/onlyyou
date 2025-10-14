@@ -3,11 +3,12 @@
   "subtitle": "Estadísticas de conexión",
   "daysConnected": "días conectados",
   "since": "Desde",
-  "viewAllSessions": "Ver Todas las Sesiones de Conexión",
-  "currentlyConnected": "Actualmente conectado",
+  "viewAllSessions": "Ver todas las sesiones de conexión",
+  "currentlyConnected": "Conectado actualmente",
   "lastSession": "Última sesión",
   "totalConnectedTime": "Tiempo total conectado",
   "totalDisconnectedTime": "Tiempo total desconectado",
   "totalSessions": "Total de sesiones",
-  "historyTitle": "Historial de conexión"
+  "historyTitle": "Historial de conexión",
+  "historyTotalBuzzCalls": "Llamadas Buzz"
 }

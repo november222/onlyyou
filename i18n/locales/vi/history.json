@@ -38,5 +38,8 @@
   "buzzCallsTitle": "Buzz Calls",
   "buzzCallsDesc": "Các tin nhắn nhanh đã gửi trong phiên kết nối này",
   "youSent": "Bạn gửi",
-  "partnerSent": "Đối tác gửi"
+  "partnerSent": "Đối tác gửi",
+  "hoursShort": "giờ",
+  "minutesShort": "phút",
+  "secondsShort": "giây"
 }

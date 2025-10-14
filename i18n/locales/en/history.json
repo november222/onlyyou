@@ -40,5 +40,8 @@
   "buzzCallsTitle": "Buzz Calls",
   "buzzCallsDesc": "Quick messages sent during this session",
   "youSent": "You sent",
-  "partnerSent": "Partner sent"
+  "partnerSent": "Partner sent",
+  "hoursShort": "h",
+  "minutesShort": "m",
+  "secondsShort": "s"
 }

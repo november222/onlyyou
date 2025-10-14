@@ -1,4 +1,4 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
+﻿import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Linking, Platform, Alert } from 'react-native';
 import TimelineService from './TimelineService';
 import { rateLimiter, RATE_LIMITS } from './RateLimiter';
@@ -40,11 +40,11 @@ class BuzzService {
 
   // Default buzz templates for free users
   private readonly DEFAULT_TEMPLATES: BuzzTemplate[] = [
-    { id: 'default_1', text: 'I\'m hungry :(', type: 'default', emoji: '🍽️', showInQuickBuzz: true },
-    { id: 'default_2', text: 'Miss you a lot :(', type: 'default', emoji: '🥺', showInQuickBuzz: true },
-    { id: 'default_3', text: 'Babe, are you awake?', type: 'default', emoji: '😴', showInQuickBuzz: true },
-    { id: 'default_4', text: 'Thinking of you 💭', type: 'default', emoji: '💭', showInQuickBuzz: true },
-    { id: 'default_5', text: 'Love you so much! 💕', type: 'default', emoji: '💕', showInQuickBuzz: true },
+    { id: 'default_1', text: 'I\'m hungry :(', type: 'default', emoji: 'ðŸ½ï¸', showInQuickBuzz: true },
+    { id: 'default_2', text: 'Miss you a lot :(', type: 'default', emoji: 'ðŸ¥º', showInQuickBuzz: true },
+    { id: 'default_3', text: 'Babe, are you awake?', type: 'default', emoji: 'ðŸ˜´', showInQuickBuzz: true },
+    { id: 'default_4', text: 'Thinking of you', type: 'default', emoji: 'ðŸ’­', showInQuickBuzz: true },
+    { id: 'default_5', text: 'Love you so much! ðŸ’•', type: 'default', emoji: 'ðŸ’•', showInQuickBuzz: true },
   ];
 
   // Get all buzz templates (default + custom)
@@ -62,7 +62,7 @@ class BuzzService {
       return defaultTemplates;
     } catch (error) {
       console.error('Failed to get buzz templates:', error);
-      return this.DEFAULT_TEMPLATES;
+      return this.DEFAULT_TEMPLATES.map(t => ({ ...t, emoji: this.resolveEmoji(t.id, t.emoji) }));
     }
   }
 
@@ -71,21 +71,41 @@ class BuzzService {
     try {
       const savedState = await AsyncStorage.getItem('onlyyou_default_buzz_state');
       if (!savedState) {
-        return [...this.DEFAULT_TEMPLATES];
+        return this.DEFAULT_TEMPLATES.map(t => ({ ...t, emoji: this.resolveEmoji(t.id, t.emoji) }));
       }
 
       const stateMap: Record<string, boolean> = JSON.parse(savedState);
       return this.DEFAULT_TEMPLATES.map(template => ({
         ...template,
+        emoji: this.resolveEmoji(template.id, template.emoji),
         showInQuickBuzz: stateMap[template.id] !== undefined
           ? stateMap[template.id]
           : template.showInQuickBuzz,
       }));
     } catch (error) {
       console.error('Failed to load default templates state:', error);
-      return [...this.DEFAULT_TEMPLATES];
+      return this.DEFAULT_TEMPLATES.map(t => ({ ...t, emoji: this.resolveEmoji(t.id, t.emoji) }));
     }
   }
+
+  // Normalize broken emoji encodings for default templates
+  private resolveEmoji(id: string, emoji?: string): string {
+    switch (id) {
+      case "default_1":
+        return "🍔";
+      case "default_2":
+        return "🥺";
+      case "default_3":
+        return "🌙";
+      case "default_4":
+        return "💭";
+      case "default_5":
+        return "❤️";
+      default:
+        return emoji || "✨";
+    }
+  }
+
 
   // Get templates for quick buzz display (only enabled ones)
   public async getQuickBuzzTemplates(isPremium: boolean = false): Promise<BuzzTemplate[]> {
@@ -94,7 +114,7 @@ class BuzzService {
       return allTemplates.filter(template => template.showInQuickBuzz);
     } catch (error) {
       console.error('Failed to get quick buzz templates:', error);
-      return this.DEFAULT_TEMPLATES.filter(template => template.showInQuickBuzz);
+      return this.DEFAULT_TEMPLATES.map(t => ({ ...t, emoji: this.resolveEmoji(t.id, t.emoji) })).filter(template => template.showInQuickBuzz);
     }
   }
 
@@ -140,7 +160,7 @@ class BuzzService {
         text: text.trim(),
         type: 'custom',
         ownerId: 'current_user', // Replace with actual user ID
-        emoji: emoji || '💫',
+        emoji: emoji || 'ðŸ’«',
         showInQuickBuzz: false, // Default to not showing in quick buzz
       };
 
@@ -338,7 +358,7 @@ class BuzzService {
       if (!rateLimitCheck.allowed) {
         return {
           success: false,
-          error: rateLimitCheck.reason || 'Vui lòng đợi trước khi gửi buzz tiếp theo',
+          error: rateLimitCheck.reason || 'Vui lÃ²ng Ä‘á»£i trÆ°á»›c khi gá»­i buzz tiáº¿p theo',
         };
       }
 
@@ -390,7 +410,7 @@ class BuzzService {
       console.log(`Buzz sent: ${template.text}`);
 
       if (recordResult.isSpamWarning) {
-        console.warn('⚠️ Spam detected: 10 minute penalty applied');
+        console.warn('âš ï¸ Spam detected: 10 minute penalty applied');
       }
 
       return {
@@ -466,3 +486,7 @@ class BuzzService {
 }
 
 export default new BuzzService();
+
+
+
+

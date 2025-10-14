@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+﻿import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   View,
@@ -277,7 +277,7 @@ export default function TouchScreen() {
                     disabled={!buzzCooldown.canSend}
                   >
                     <Text style={styles.buzzButtonText}>
-                      {template.emoji || '⚡'}
+                      {template.emoji || '✨'}
                     </Text>
                     <Text
                       style={[styles.buzzButtonLabel, { color: colors.text }]}
@@ -355,13 +355,13 @@ export default function TouchScreen() {
               }}
               disabled={!connectionState.isConnected}
             >
-              <Text style={styles.touchButtonIcon}>💌</Text>
+              <Text style={styles.touchButtonIcon}>💬</Text>
               <Text style={[styles.touchButtonText, { color: colors.text }]}>
                 {t('touch:customBuzz')}
               </Text>
               {!isPremium && (
                 <Text style={styles.touchButtonPremiumBadge}>
-                  ✨ {t('common:premium')}
+                  âœ¨ {t('common:premium')}
                 </Text>
               )}
               {!connectionState.isConnected && (
@@ -402,13 +402,13 @@ export default function TouchScreen() {
               }}
               disabled={!connectionState.isConnected}
             >
-              <Text style={styles.touchButtonIcon}>🗓️</Text>
+              <Text style={styles.touchButtonIcon}>📅</Text>
               <Text style={[styles.touchButtonText, { color: colors.text }]}>
                 {t('common:calendar')}
               </Text>
               {!isPremium && (
                 <Text style={styles.touchButtonPremiumBadge}>
-                  ✨ {t('common:premium')}
+                  âœ¨ {t('common:premium')}
                 </Text>
               )}
               {!connectionState.isConnected && (
@@ -455,7 +455,7 @@ export default function TouchScreen() {
               </Text>
               {!isPremium && (
                 <Text style={styles.touchButtonPremiumBadge}>
-                  ✨ {t('common:premium')}
+                  âœ¨ {t('common:premium')}
                 </Text>
               )}
               {!connectionState.isConnected && (
