@@ -18,6 +18,7 @@ import BuzzService, { BuzzTemplate } from '@/services/BuzzService';
 import { usePremium } from '@/providers/PremiumProvider';
 import { rateLimiter, RATE_LIMITS } from '@/services/RateLimiter';
 import { useTheme, useThemeColors } from '@/providers/ThemeProvider';
+import { useDailyQuote, defaultQuotes } from '@/services/QuoteService';
 
 export default function TouchScreen() {
   const { t } = useTranslation();
@@ -43,6 +44,14 @@ export default function TouchScreen() {
     remainingTime: 0,
   });
   const [buzzTemplates, setBuzzTemplates] = useState<BuzzTemplate[]>([]);
+  // Daily quote (deterministic) + test button to cycle
+  const dailyQuote = useDailyQuote();
+  const [quoteTestIndex, setQuoteTestIndex] = useState<number | null>(null);
+  const quoteText = React.useMemo(
+    () => (quoteTestIndex === null ? dailyQuote : defaultQuotes[quoteTestIndex % defaultQuotes.length]),
+    [dailyQuote, quoteTestIndex]
+  );
+  const cycleQuote = () => setQuoteTestIndex((prev) => (prev === null ? 1 : (prev + 1) % defaultQuotes.length));
   const { isPremium } = usePremium();
   const [partnerName, setPartnerName] = useState<string>(t('common:touch'));
 
@@ -549,6 +558,21 @@ export default function TouchScreen() {
             </TouchableOpacity>
           </View>
         </View>
+
+        {/* Quote at bottom */}
+        <View
+          style={[
+            styles.quoteBar,
+            { borderColor: colors.border, backgroundColor: colors.card },
+          ]}
+        >
+          <Text style={[styles.quoteBarText, { color: colors.mutedText || colors.text }]}>
+            {quoteText}
+          </Text>
+          <TouchableOpacity style={[styles.quoteTestButton, { borderColor: colors.border }]} onPress={cycleQuote}>
+            <Text style={[styles.quoteTestButtonText, { color: colors.text }]}>Test Quote</Text>
+          </TouchableOpacity>
+        </View>
       </ScrollView>
     </SafeAreaView>
   );
@@ -760,5 +784,31 @@ const styles = StyleSheet.create({
     marginTop: 6,
 
     fontSize: 12,
+  },
+  quoteBar: {
+    marginTop: 20,
+    marginHorizontal: 20,
+    marginBottom: 20,
+    borderRadius: 12,
+    borderWidth: 1,
+    padding: 12,
+  },
+  quoteBarText: {
+    fontSize: 14,
+    lineHeight: 20,
+    fontStyle: 'italic',
+    textAlign: 'center',
+    marginBottom: 10,
+  },
+  quoteTestButton: {
+    alignSelf: 'center',
+    borderWidth: 1,
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+  },
+  quoteTestButtonText: {
+    fontSize: 12,
+    fontWeight: '600',
   },
 });
