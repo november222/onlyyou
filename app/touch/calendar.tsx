@@ -530,7 +530,7 @@ export default function CalendarScreen() {
     }
   };
 
-  const parseDate = (dateStr: string): Date => {\n    // Support YYYY-MM-DD and DD/MM/YYYY\n    try {\n      if (/^\\d{4}-\\d{2}-\\d{2}$/.test(dateStr)) {\n        const [y, m, d] = dateStr.split('-');\n        return new Date(parseInt(y, 10), parseInt(m, 10) - 1, parseInt(d, 10));\n      }\n      if (/^\\d{1,2}\\/\\d{1,2}\\/\\d{4}$/.test(dateStr)) {\n        const [day, month, year] = dateStr.split('/');\n        return new Date(parseInt(year, 10), parseInt(month, 10) - 1, parseInt(day, 10));\n      }\n      const dt = new Date(dateStr);\n      if (!isNaN(dt.getTime())) return dt;\n      return new Date();\n    } catch {\n      return new Date();\n    }\n  };
+  const parseDate = (dateStr: string): Date => {\n  const trimmed = (dateStr || '').trim();\n  try {\n    if (/^\\d{4}-\\d{2}-\\d{2}$/.test(trimmed)) {\n      const [y, m, d] = trimmed.split('-').map(n => parseInt(n, 10));\n      const dt = new Date(y, m - 1, d);\n      dt.setHours(0, 0, 0, 0);\n      return dt;\n    }\n    if (/^\\d{1,2}\\/\\d{1,2}\\/\\d{4}$/.test(trimmed)) {\n      const [day, month, year] = trimmed.split('/').map(n => parseInt(n, 10));\n      const dt = new Date(year, month - 1, day);\n      dt.setHours(0, 0, 0, 0);\n      return dt;\n    }\n    const parts = trimmed.split(/\\D+/).filter(Boolean);\n    if (parts.length >= 3) {\n      let y, m, d;\n      if (parts[0].length === 4) {\n        [y, m, d] = parts.slice(0, 3).map(n => parseInt(n, 10));\n      } else {\n        [d, m, y] = parts.slice(0, 3).map(n => parseInt(n, 10));\n      }\n      const dt = new Date(y, m - 1, d);\n      dt.setHours(0, 0, 0, 0);\n      return dt;\n    }\n    const dt = new Date(trimmed);\n    if (!isNaN(dt.getTime())) {\n      dt.setHours(0, 0, 0, 0);\n      return dt;\n    }\n  } catch {}\n  const now = new Date();\n  now.setHours(0, 0, 0, 0);\n  return now;\n};
 
   const parseTime = (timeStr: string): Date => {
     // Parse HH:MM to Date
@@ -1305,6 +1305,7 @@ export default function CalendarScreen() {
     </SafeAreaView>
   );
 }
+
 
 
 
