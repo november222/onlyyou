@@ -1,5 +1,4 @@
-﻿import React, { useState, useEffect, useMemo } from 'react';
-import { useTranslation } from 'react-i18next';
+﻿import React, { useState, useEffect, useMemo, useRef } from 'react';
 import {
   View,
   Text,
@@ -9,6 +8,9 @@ import {
   FlatList,
   Alert,
   Modal,
+  Image,
+  Animated,
+  Easing,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import {
@@ -67,6 +69,31 @@ export default function ProfileScreen() {
   const { t } = useTranslation();
   const { theme, isDark } = useTheme();
   const colors = useThemeColors();
+  // Ripple waves for avatars
+  const waveL1 = useRef(new Animated.Value(0)).current;
+  const waveL2 = useRef(new Animated.Value(0)).current;
+  const waveR1 = useRef(new Animated.Value(0)).current;
+  const waveR2 = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    const startWave = (val: Animated.Value, delayMs: number) => {
+      const loop = () => {
+        val.setValue(0);
+        Animated.timing(val, {
+          toValue: 1,
+          duration: 1800,
+          delay: delayMs,
+          easing: Easing.out(Easing.quad),
+          useNativeDriver: true,
+        }).start(() => loop());
+      };
+      loop();
+    };
+    startWave(waveL1, 0);
+    startWave(waveL2, 900);
+    startWave(waveR1, 0);
+    startWave(waveR2, 900);
+  }, []);
   const cardSurfaceStyle = useMemo(
     () => ({ backgroundColor: colors.card, borderColor: colors.border }),
     [colors.card, colors.border]
@@ -591,23 +618,79 @@ export default function ProfileScreen() {
           {/* Love Counter (L-day) */}
           <View style={[styles.loveCounterCard, cardSurfaceStyle]}>
             <View style={styles.loveCounterHeader}>
-              {authState.user?.avatar ? (
-                <Image source={{ uri: authState.user.avatar }} style={[styles.loveAvatar, { borderColor: colors.border }]} />
-              ) : (
-                <View style={[styles.loveAvatar, styles.loveAvatarFallback, { borderColor: colors.border }]}>
-                  <Text style={styles.loveAvatarInitial}>{(authState.user?.name || 'U').charAt(0).toUpperCase()}</Text>
-                </View>
-              )}
+              <View style={styles.loveAvatarWrapper}>
+                <Animated.View
+                  pointerEvents="none"
+                  style={[
+                    styles.rippleWave,
+                    {
+                      borderColor: theme.primary,
+                      transform: [
+                        { scale: waveL1.interpolate({ inputRange: [0, 1], outputRange: [1, 1.8] }) },
+                      ],
+                      opacity: waveL1.interpolate({ inputRange: [0, 1], outputRange: [0.25, 0] }),
+                    },
+                  ]}
+                />
+                <Animated.View
+                  pointerEvents="none"
+                  style={[
+                    styles.rippleWave,
+                    {
+                      borderColor: theme.primary,
+                      transform: [
+                        { scale: waveL2.interpolate({ inputRange: [0, 1], outputRange: [1, 1.8] }) },
+                      ],
+                      opacity: waveL2.interpolate({ inputRange: [0, 1], outputRange: [0.25, 0] }),
+                    },
+                  ]}
+                />
+                {authState.user?.avatar ? (
+                  <Image source={{ uri: authState.user.avatar }} style={[styles.loveAvatar, { borderColor: colors.border }]} />
+                ) : (
+                  <View style={[styles.loveAvatar, styles.loveAvatarFallback, { borderColor: colors.border }]}>
+                    <Text style={styles.loveAvatarInitial}>{(authState.user?.name || 'U').charAt(0).toUpperCase()}</Text>
+                  </View>
+                )}
+              </View>
               <View style={styles.loveHeaderCenter}>
                 <Heart size={24} color={theme.primary} strokeWidth={2.5} />
               </View>
-              {WebRTCService.getSavedConnection?.()?.partnerAvatarUrl ? (
-                <Image source={{ uri: WebRTCService.getSavedConnection()?.partnerAvatarUrl as string }} style={[styles.loveAvatar, { borderColor: colors.border }]} />
-              ) : (
-                <View style={[styles.loveAvatar, styles.loveAvatarFallback, { borderColor: colors.border }]}>
-                  <Text style={styles.loveAvatarInitial}>{(WebRTCService.getSavedConnection?.()?.partnerName || '?').charAt(0).toUpperCase()}</Text>
-                </View>
-              )}
+              <View style={styles.loveAvatarWrapper}>
+                <Animated.View
+                  pointerEvents="none"
+                  style={[
+                    styles.rippleWave,
+                    {
+                      borderColor: theme.primary,
+                      transform: [
+                        { scale: waveR1.interpolate({ inputRange: [0, 1], outputRange: [1, 1.8] }) },
+                      ],
+                      opacity: waveR1.interpolate({ inputRange: [0, 1], outputRange: [0.25, 0] }),
+                    },
+                  ]}
+                />
+                <Animated.View
+                  pointerEvents="none"
+                  style={[
+                    styles.rippleWave,
+                    {
+                      borderColor: theme.primary,
+                      transform: [
+                        { scale: waveR2.interpolate({ inputRange: [0, 1], outputRange: [1, 1.8] }) },
+                      ],
+                      opacity: waveR2.interpolate({ inputRange: [0, 1], outputRange: [0.25, 0] }),
+                    },
+                  ]}
+                />
+                {WebRTCService.getSavedConnection?.()?.partnerAvatarUrl ? (
+                  <Image source={{ uri: WebRTCService.getSavedConnection()?.partnerAvatarUrl as string }} style={[styles.loveAvatar, { borderColor: colors.border }]} />
+                ) : (
+                  <View style={[styles.loveAvatar, styles.loveAvatarFallback, { borderColor: colors.border }]}>
+                    <Text style={styles.loveAvatarInitial}>{(WebRTCService.getSavedConnection?.()?.partnerName || '?').charAt(0).toUpperCase()}</Text>
+                  </View>
+                )}
+              </View>
             </View>
 
             {relationshipStartAt && (
@@ -970,6 +1053,20 @@ const styles = StyleSheet.create({
     backgroundColor: '#222',
     overflow: 'hidden',
     marginHorizontal: 10,
+  },
+  loveAvatarWrapper: {
+    position: 'relative',
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: 84,
+    height: 84,
+  },
+  rippleWave: {
+    position: 'absolute',
+    width: 84,
+    height: 84,
+    borderRadius: 42,
+    borderWidth: 2,
   },
   loveAvatarFallback: {
     alignItems: 'center',
@@ -1546,5 +1643,8 @@ const styles = StyleSheet.create({
     marginLeft: 4,
   },
 });
+
+
+
 
 
