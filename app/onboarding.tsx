@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+﻿import React, { useState, useRef } from 'react';
 import {
   View,
   Text,
@@ -54,46 +54,41 @@ export default function OnboardingScreen() {
     {
       id: '1',
       icon: <Heart size={80} color="#ff6b9d" strokeWidth={1.5} fill="#ff6b9d" />,
-      title: 'Kết nối đôi',
-      subtitle: 'Chỉ dành cho 2 người',
-      description:
-        'Tạo phòng và kết nối an toàn giữa hai bạn. Không nhóm, không người lạ.',
+      title: t('onboarding:slide1.title'),
+      subtitle: t('onboarding:slide1.subtitle'),
+      description: t('onboarding:slide1.description'),
       color: '#ff6b9d',
     },
     {
       id: '2',
       icon: <Zap size={80} color="#f59e0b" strokeWidth={1.5} />,
-      title: 'Buzz yêu thương',
-      subtitle: 'Chạm để gửi tín hiệu',
-      description:
-        'Gửi Buzz để nhắc nhớ và kết nối nhau mọi lúc. Nhanh gọn, đầy cảm xúc.',
+      title: t('onboarding:slide2.title'),
+      subtitle: t('onboarding:slide2.subtitle'),
+      description: t('onboarding:slide2.description'),
       color: '#f59e0b',
     },
     {
       id: '3',
       icon: <Camera size={80} color="#10b981" strokeWidth={1.5} />,
-      title: 'Chia sẻ hình ảnh',
-      subtitle: 'Lưu giữ khoảnh khắc chung',
-      description:
-        'Chụp hoặc chọn ảnh từ thư viện, lưu vào album dùng chung để cùng xem lại.',
+      title: t('onboarding:slide3.title'),
+      subtitle: t('onboarding:slide3.subtitle'),
+      description: t('onboarding:slide3.description'),
       color: '#10b981',
     },
     {
       id: '4',
       icon: <Calendar size={80} color="#3b82f6" strokeWidth={1.5} />,
-      title: 'Lịch chung',
-      subtitle: 'Hẹn hò & nhắc việc',
-      description:
-        'Lên lịch hẹn, ngày kỷ niệm và việc chung để không bỏ lỡ điều quan trọng.',
+      title: t('onboarding:slide4.title'),
+      subtitle: t('onboarding:slide4.subtitle'),
+      description: t('onboarding:slide4.description'),
       color: '#3b82f6',
     },
     {
       id: '5',
       icon: <Lock size={80} color="#8b5cf6" strokeWidth={1.5} />,
-      title: 'Riêng tư & bảo mật',
-      subtitle: 'Bạn làm chủ dữ liệu',
-      description:
-        'Ứng dụng được thiết kế cho riêng hai bạn với khóa riêng tư và dữ liệu cục bộ.',
+      title: t('onboarding:slide5.title'),
+      subtitle: t('onboarding:slide5.subtitle'),
+      description: t('onboarding:slide5.description'),
       color: '#8b5cf6',
     },
   ];
@@ -330,3 +325,4 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
 });
+
