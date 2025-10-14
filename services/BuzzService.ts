@@ -33,6 +33,7 @@ export interface BuzzResult {
 class BuzzService {
   private readonly STORAGE_KEY = 'onlyyou_buzz_history';
   private readonly TEMPLATES_KEY = 'onlyyou_buzz_templates';
+  private readonly PINNED_KEY = 'onlyyou_pinned_buzz_ids';
   private readonly API_BASE = 'https://api.onlyyou.app'; // Replace with actual API
 
   // Event callback for buzz templates changes
@@ -107,11 +108,11 @@ class BuzzService {
   }
 
 
-  // Get templates for quick buzz display (only enabled ones)
+  // Get templates for quick buzz display (show all)
   public async getQuickBuzzTemplates(isPremium: boolean = false): Promise<BuzzTemplate[]> {
     try {
       const allTemplates = await this.getBuzzTemplates(isPremium);
-      const enabled = allTemplates.filter(template => template.showInQuickBuzz);
+      const enabled = allTemplates; // show all in horizontal row
 
       // Sort so that newer custom templates appear first (leftmost/top)
       const parseCustomTimestamp = (id: string): number => {
@@ -128,10 +129,60 @@ class BuzzService {
       return [...customs, ...defaults];
     } catch (error) {
       console.error('Failed to get quick buzz templates:', error);
-      return this.DEFAULT_TEMPLATES
-        .map(t => ({ ...t, emoji: this.resolveEmoji(t.id, t.emoji) }))
-        .filter(template => template.showInQuickBuzz);
+      return this.DEFAULT_TEMPLATES.map(t => ({ ...t, emoji: this.resolveEmoji(t.id, t.emoji) }));
     }
+  }
+
+  // Get up to `limit` pinned templates to render as big buttons
+  public async getPrimaryBuzzTemplates(limit: number = 3): Promise<BuzzTemplate[]> {
+    const all = await this.getBuzzTemplates(true);
+    const pinnedIds = await this.getPinnedBuzzIds();
+    const byId: Record<string, BuzzTemplate> = Object.fromEntries(all.map(t => [t.id, t]));
+    const pinned = pinnedIds.map(id => byId[id]).filter(Boolean) as BuzzTemplate[];
+    return pinned.slice(0, limit);
+  }
+
+  public async isPinned(templateId: string): Promise<boolean> {
+    const pinned = await this.getPinnedBuzzIds();
+    return pinned.includes(templateId);
+  }
+
+  public async togglePinned(templateId: string): Promise<BuzzResult> {
+    try {
+      const pinned = await this.getPinnedBuzzIds();
+      const exists = pinned.includes(templateId);
+      let next = pinned.slice();
+      if (exists) {
+        next = next.filter(id => id !== templateId);
+      } else {
+        if (next.length >= 3) {
+          return { success: false, error: 'PIN_LIMIT' };
+        }
+        // Add to front as most-recently pinned
+        next.unshift(templateId);
+      }
+      await this.setPinnedBuzzIds(next);
+      this.notifyBuzzTemplatesChanged();
+      return { success: true };
+    } catch (error) {
+      console.error('Failed to toggle pinned buzz:', error);
+      return { success: false, error: 'Failed to update pinned buzz' };
+    }
+  }
+
+  private async getPinnedBuzzIds(): Promise<string[]> {
+    try {
+      const data = await AsyncStorage.getItem(this.PINNED_KEY);
+      if (!data) return [];
+      const arr = JSON.parse(data);
+      return Array.isArray(arr) ? (arr as string[]) : [];
+    } catch (e) {
+      return [];
+    }
+  }
+
+  private async setPinnedBuzzIds(ids: string[]): Promise<void> {
+    await AsyncStorage.setItem(this.PINNED_KEY, JSON.stringify(ids.slice(0, 3)));
   }
 
   // Get custom templates from local storage

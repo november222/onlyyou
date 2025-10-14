@@ -12,7 +12,7 @@
                        "contentPlaceholder":  "Enter buzz content (max 20 chars)",
                        "previewLabel":  "Preview",
                        "previewPlaceholder":  "Buzz content...",
-                       "showInQuickBuzz":  "Show in Quick Buzz",
+                       "showInQuickBuzz":  "Show in Quick Buzz",\n                       "pinToPrimary":  "Pin to Big Button",\n                       "pinLimitTitle": "Pin Limit",\n                       "pinLimitMessage": "You can pin up to 3 buzzes.",
                        "saveCreate":  "Save Custom Buzz",
                        "saveUpdate":  "Update Buzz",
                        "collapse":  "Collapse",
@@ -110,3 +110,4 @@
                           "deleteFailed":  "Could not delete event"
                       }
 }
+

@@ -12,7 +12,7 @@
                        "contentPlaceholder":  "Introduce el contenido del buzz (máx. 20 caracteres)",
                        "previewLabel":  "Vista previa",
                        "previewPlaceholder":  "Contenido del buzz...",
-                       "showInQuickBuzz":  "Mostrar en Quick Buzz",
+                       "showInQuickBuzz": "Mostrar en Quick Buzz",\n                       "pinToPrimary": "Fijar al botón grande",\n                       "pinLimitTitle": "Límite de fijación",\n                       "pinLimitMessage": "Puedes fijar hasta 3 buzz.",
                        "saveCreate":  "Guardar Buzz Personalizado",
                        "saveUpdate":  "Actualizar Buzz",
                        "collapse":  "Contraer",
@@ -110,3 +110,4 @@
                           "deleteFailed":  "No se pudo eliminar el evento"
                       }
 }
+
