@@ -8,7 +8,7 @@ import {
   Alert,
   ScrollView,
 } from 'react-native';
-import { Easing } from 'react-native';
+import { Animated, Easing } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Wifi, WifiOff, Zap } from 'lucide-react-native';
 import { router } from 'expo-router';
@@ -22,7 +22,10 @@ import { useTheme, useThemeColors } from '@/providers/ThemeProvider';
 export default function TouchScreen() {
   const { t } = useTranslation();
   const { isDark, theme } = useTheme();
-  const colors = useThemeColors();\n  const pulse = React.useRef(new Animated.Value(1)).current;\n  const wave1 = React.useRef(new Animated.Value(0)).current;\n  const wave2 = React.useRef(new Animated.Value(0)).current;
+  const colors = useThemeColors();
+  const pulse = React.useRef(new Animated.Value(1)).current;
+  const wave1 = React.useRef(new Animated.Value(0)).current;
+  const wave2 = React.useRef(new Animated.Value(0)).current;
 
   const [connectionState, setConnectionState] = useState<ConnectionState>({
     isConnected: false,
@@ -56,7 +59,42 @@ export default function TouchScreen() {
     loadBuzzCooldown();
     loadBuzzTemplates();
 
-    const cooldownTimer = setInterval(loadBuzzCooldown, 1000);\n\n    // Start animations for pulsing and ripple waves\n    Animated.loop(\n      Animated.sequence([\n        Animated.timing(pulse, { toValue: 1.08, duration: 800, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),\n        Animated.timing(pulse, { toValue: 1, duration: 800, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),\n      ])\n    ).start();\n\n    const startWave = (val: Animated.Value, delayMs: number) => {\n      const run = () => {\n        val.setValue(0);\n        Animated.timing(val, { toValue: 1, duration: 1800, delay: delayMs, easing: Easing.out(Easing.quad), useNativeDriver: true }).start(() => run());\n      };\n      run();\n    };\n    startWave(wave1, 0);\n    startWave(wave2, 900);
+    const cooldownTimer = setInterval(loadBuzzCooldown, 1000);
+
+    // Start animations for pulsing and ripple waves
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(pulse, {
+          toValue: 1.08,
+          duration: 800,
+          easing: Easing.inOut(Easing.ease),
+          useNativeDriver: true,
+        }),
+        Animated.timing(pulse, {
+          toValue: 1,
+          duration: 800,
+          easing: Easing.inOut(Easing.ease),
+          useNativeDriver: true,
+        }),
+      ])
+    ).start();
+
+    const startWave = (val: Animated.Value, delayMs: number) => {
+      const run = () => {
+        val.setValue(0);
+        Animated.timing(val, {
+          toValue: 1,
+          duration: 1800,
+          delay: delayMs,
+          easing: Easing.out(Easing.quad),
+          useNativeDriver: true,
+        }).start(() => run());
+      };
+      run();
+    };
+
+    startWave(wave1, 0);
+    startWave(wave2, 900);
 
     const currentState = WebRTCService.getConnectionState();
     setConnectionState(currentState);
@@ -219,10 +257,18 @@ export default function TouchScreen() {
                     styles.rippleWave,
                     {
                       borderColor: theme.primary,
-                      transform: [{
-                        scale: wave1.interpolate({ inputRange: [0, 1], outputRange: [1, 2.4] }),
-                      }],
-                      opacity: wave1.interpolate({ inputRange: [0, 1], outputRange: [0.25, 0] }),
+                      transform: [
+                        {
+                          scale: wave1.interpolate({
+                            inputRange: [0, 1],
+                            outputRange: [1, 2.4],
+                          }),
+                        },
+                      ],
+                      opacity: wave1.interpolate({
+                        inputRange: [0, 1],
+                        outputRange: [0.25, 0],
+                      }),
                     },
                   ]}
                 />
@@ -232,46 +278,56 @@ export default function TouchScreen() {
                     styles.rippleWave,
                     {
                       borderColor: theme.primary,
-                      transform: [{
-                        scale: wave2.interpolate({ inputRange: [0, 1], outputRange: [1, 2.4] }),
-                      }],
-                      opacity: wave2.interpolate({ inputRange: [0, 1], outputRange: [0.25, 0] }),
+                      transform: [
+                        {
+                          scale: wave2.interpolate({
+                            inputRange: [0, 1],
+                            outputRange: [1, 2.4],
+                          }),
+                        },
+                      ],
+                      opacity: wave2.interpolate({
+                        inputRange: [0, 1],
+                        outputRange: [0.25, 0],
+                      }),
                     },
                   ]}
                 />
                 <Animated.View style={{ transform: [{ scale: pulse }] }}>
                   <TouchableOpacity
-                activeOpacity={0.85}
-                style={[
-                  styles.bigBuzzButton,
-                  {
-                    backgroundColor: theme.primary,
-                    shadowColor: theme.primary,
-                  },
-                  (!connectionState.isConnected || !buzzCooldown.canSend) &&
-                    styles.bigBuzzButtonDisabled,
-                ]}
-                onPress={() => {
-                  if (buzzTemplates[0]) {
-                    sendBuzz(buzzTemplates[0].id);
-                  }
-                }}
-                disabled={!connectionState.isConnected || !buzzCooldown.canSend}
-              >
-                <View style={styles.bigBuzzInnerGlow} />
-                <Zap
-                  size={30}
-                  color={theme.onPrimary || colors.text}
-                  strokeWidth={2.5}
-                />
-                <Text
-                  style={[
-                    styles.bigBuzzLabel,
-                    { color: theme.onPrimary || colors.text },
-                  ]}
-                >
-                  {t('common:sendBuzz')}
-                </Text>
+                    activeOpacity={0.85}
+                    style={[
+                      styles.bigBuzzButton,
+                      {
+                        backgroundColor: theme.primary,
+                        shadowColor: theme.primary,
+                      },
+                      (!connectionState.isConnected || !buzzCooldown.canSend) &&
+                        styles.bigBuzzButtonDisabled,
+                    ]}
+                    onPress={() => {
+                      if (buzzTemplates[0]) {
+                        sendBuzz(buzzTemplates[0].id);
+                      }
+                    }}
+                    disabled={
+                      !connectionState.isConnected || !buzzCooldown.canSend
+                    }
+                  >
+                    <View style={styles.bigBuzzInnerGlow} />
+                    <Zap
+                      size={30}
+                      color={theme.onPrimary || colors.text}
+                      strokeWidth={2.5}
+                    />
+                    <Text
+                      style={[
+                        styles.bigBuzzLabel,
+                        { color: theme.onPrimary || colors.text },
+                      ]}
+                    >
+                      {t('common:sendBuzz')}
+                    </Text>
                   </TouchableOpacity>
                 </Animated.View>
               </View>
@@ -706,10 +762,3 @@ const styles = StyleSheet.create({
     fontSize: 12,
   },
 });
-
-
-
-
-
-
-
