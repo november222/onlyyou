@@ -853,7 +853,7 @@ export default function CalendarScreen() {
         <View style={styles.titleContainer}>
           <Text style={styles.title}>{t('common:calendar')}</Text>
           <Text style={styles.partnerNameSubtitle}>
-            {t('touch:forPartner', { name: partnerName })} 💕
+            {t('touch:forPartner', { name: partnerName })}
           </Text>
         </View>
         <TouchableOpacity style={styles.addButton} onPress={openAddModal}>
@@ -957,7 +957,9 @@ export default function CalendarScreen() {
                 </View>
 
                 <View style={styles.formGroup}>
-                  <Text style={styles.formLabel}>{t('calendarModal.dateLabel')}</Text>
+                  <Text style={styles.formLabel}>
+                    {t('calendarModal.dateLabel')}
+                  </Text>
                   <TouchableOpacity
                     style={styles.datePickerButton}
                     onPress={openDatePicker}
@@ -1051,7 +1053,9 @@ export default function CalendarScreen() {
                       setSelectedDate(newDate);
                     }}
                   >
-                    <Text style={styles.calendarNavText}>{t('calendarModal.prevArrow')}</Text>
+                    <Text style={styles.calendarNavText}>
+                      {t('calendarModal.prevArrow')}
+                    </Text>
                   </TouchableOpacity>
 
                   <Text style={styles.calendarHeaderText}>
@@ -1069,7 +1073,9 @@ export default function CalendarScreen() {
                       setSelectedDate(newDate);
                     }}
                   >
-                    <Text style={styles.calendarNavText}>{t('calendarModal.nextArrow')}</Text>
+                    <Text style={styles.calendarNavText}>
+                      {t('calendarModal.nextArrow')}
+                    </Text>
                   </TouchableOpacity>
                 </View>
 
@@ -1292,4 +1298,3 @@ export default function CalendarScreen() {
     </SafeAreaView>
   );
 }
-
