@@ -530,7 +530,43 @@ export default function CalendarScreen() {
     }
   };
 
-  const parseDate = (dateStr: string): Date => {\n  const trimmed = (dateStr || '').trim();\n  try {\n    if (/^\\d{4}-\\d{2}-\\d{2}$/.test(trimmed)) {\n      const [y, m, d] = trimmed.split('-').map(n => parseInt(n, 10));\n      const dt = new Date(y, m - 1, d);\n      dt.setHours(0, 0, 0, 0);\n      return dt;\n    }\n    if (/^\\d{1,2}\\/\\d{1,2}\\/\\d{4}$/.test(trimmed)) {\n      const [day, month, year] = trimmed.split('/').map(n => parseInt(n, 10));\n      const dt = new Date(year, month - 1, day);\n      dt.setHours(0, 0, 0, 0);\n      return dt;\n    }\n    const parts = trimmed.split(/\\D+/).filter(Boolean);\n    if (parts.length >= 3) {\n      let y, m, d;\n      if (parts[0].length === 4) {\n        [y, m, d] = parts.slice(0, 3).map(n => parseInt(n, 10));\n      } else {\n        [d, m, y] = parts.slice(0, 3).map(n => parseInt(n, 10));\n      }\n      const dt = new Date(y, m - 1, d);\n      dt.setHours(0, 0, 0, 0);\n      return dt;\n    }\n    const dt = new Date(trimmed);\n    if (!isNaN(dt.getTime())) {\n      dt.setHours(0, 0, 0, 0);\n      return dt;\n    }\n  } catch {}\n  const now = new Date();\n  now.setHours(0, 0, 0, 0);\n  return now;\n};
+    const parseDate = (dateStr: string): Date => {
+    const trimmed = (dateStr || '').trim();
+    try {
+      if (/^\d{4}-\d{2}-\d{2}$/.test(trimmed)) {
+        const [y, m, d] = trimmed.split('-').map(n => parseInt(n, 10));
+        const dt = new Date(y, m - 1, d);
+        dt.setHours(0, 0, 0, 0);
+        return dt;
+      }
+      if (/^\d{1,2}\/\d{1,2}\/\d{4}$/.test(trimmed)) {
+        const [day, month, year] = trimmed.split('/').map(n => parseInt(n, 10));
+        const dt = new Date(year, month - 1, day);
+        dt.setHours(0, 0, 0, 0);
+        return dt;
+      }
+      const parts = trimmed.split(/\D+/).filter(Boolean);
+      if (parts.length >= 3) {
+        let y: number, m: number, d: number;
+        if (parts[0].length === 4) {
+          [y, m, d] = parts.slice(0, 3).map(n => parseInt(n, 10));
+        } else {
+          [d, m, y] = parts.slice(0, 3).map(n => parseInt(n, 10));
+        }
+        const dt = new Date(y, m - 1, d);
+        dt.setHours(0, 0, 0, 0);
+        return dt;
+      }
+      const dt = new Date(trimmed);
+      if (!isNaN(dt.getTime())) {
+        dt.setHours(0, 0, 0, 0);
+        return dt;
+      }
+    } catch {}
+    const now = new Date();
+    now.setHours(0, 0, 0, 0);
+    return now;
+  };
 
   const parseTime = (timeStr: string): Date => {
     // Parse HH:MM to Date
@@ -1305,6 +1341,7 @@ export default function CalendarScreen() {
     </SafeAreaView>
   );
 }
+
 
 
 
