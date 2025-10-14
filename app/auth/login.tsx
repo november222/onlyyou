@@ -28,7 +28,7 @@ export default function LoginScreen() {
     try {
       const success = await AuthService.signInWithGoogle();
       if (success && AuthService.isAuthenticated()) {
-        router.replace('/(tabs)/profile');
+        router.replace('/(tabs)/connection');
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : t('auth:signInFailed'));
@@ -43,7 +43,7 @@ export default function LoginScreen() {
     try {
       const success = await AuthService.signInWithApple();
       if (success && AuthService.isAuthenticated()) {
-        router.replace('/(tabs)/profile');
+        router.replace('/(tabs)/connection');
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : t('auth:signInFailed'));

@@ -4,15 +4,24 @@ import { View, ActivityIndicator, StyleSheet, InteractionManager } from 'react-n
 import { useThemeColors } from '@/providers/ThemeProvider';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import AuthService, { AuthState } from '@/services/AuthService';
+import WebRTCService from '@/services/WebRTCService';
 
 export default function IndexScreen() {
   const [isChecking, setIsChecking] = useState(true);
   const colors = useThemeColors();
 
   useEffect(() => {
-    // Bypass auth: always go to tabs for UI/UX work
     const task = InteractionManager.runAfterInteractions(() => {
-      router.replace('/(tabs)/profile');
+      try {
+        const state = WebRTCService.getConnectionState?.();
+        if (state?.isConnected) {
+          router.replace('/(tabs)'); // Touch screen (tabs index)
+        } else {
+          router.replace('/(tabs)/connection');
+        }
+      } catch (e) {
+        router.replace('/(tabs)/connection');
+      }
     });
     return () => task.cancel?.();
   }, []);
