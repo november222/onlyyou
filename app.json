@@ -10,7 +10,9 @@
     "developer": {
       "tool": "expo-cli"
     },
-    "assetBundlePatterns": ["**/*"],
+    "assetBundlePatterns": [
+      "**/*"
+    ],
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.onlyyou.app",
@@ -19,7 +21,9 @@
         "NSMicrophoneUsageDescription": "This app uses the microphone for voice and video calls.",
         "NSFaceIDUsageDescription": "OnlyYou uses Face ID to unlock your private content."
       },
-      "associatedDomains": ["applinks:onlyyou.app"]
+      "associatedDomains": [
+        "applinks:onlyyou.app"
+      ]
     },
     "android": {
       "softwareKeyboardLayoutMode": "resize",
@@ -29,22 +33,34 @@
       },
       "package": "com.onlyyou.app",
       "permissions": [
-        "INTERNET",
-        "CAMERA",
-        "RECORD_AUDIO",
-        "BLUETOOTH",
-        "BLUETOOTH_ADMIN",
-        "MODIFY_AUDIO_SETTINGS"
+        "android.permission.INTERNET",
+        "android.permission.CAMERA",
+        "android.permission.RECORD_AUDIO",
+        "android.permission.BLUETOOTH",
+        "android.permission.BLUETOOTH_ADMIN",
+        "android.permission.MODIFY_AUDIO_SETTINGS",
+        "android.permission.RECORD_AUDIO"
       ],
       "intentFilters": [
         {
           "action": "VIEW",
           "autoVerify": true,
           "data": [
-            { "scheme": "https", "host": "onlyyou.app", "pathPrefix": "/connect" },
-            { "scheme": "https", "host": "onlyyou.app", "pathPrefix": "/auth/callback" }
+            {
+              "scheme": "https",
+              "host": "onlyyou.app",
+              "pathPrefix": "/connect"
+            },
+            {
+              "scheme": "https",
+              "host": "onlyyou.app",
+              "pathPrefix": "/auth/callback"
+            }
           ],
-          "category": ["BROWSABLE", "DEFAULT"]
+          "category": [
+            "BROWSABLE",
+            "DEFAULT"
+          ]
         }
       ]
     },
@@ -58,6 +74,14 @@
       "expo-font",
       "expo-web-browser",
       "expo-localization",
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "kotlinVersion": "2.1.0"
+          }
+        }
+      ],
       [
         "expo-notifications",
         {
@@ -82,6 +106,14 @@
     },
     "experiments": {
       "typedRoutes": true
+    },
+    "extra": {
+      "router": {
+        "origin": false
+      },
+      "eas": {
+        "projectId": "a24d0def-168e-4b7f-a8e3-57c3f6d87701"
+      }
     }
   }
 }
