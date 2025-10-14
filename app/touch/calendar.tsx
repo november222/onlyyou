@@ -515,6 +515,20 @@ export default function CalendarScreen() {
     const minutes = timeObj.getMinutes().toString().padStart(2, '0');
     return `${hours}:${minutes}`;
   };
+  const formatDateWithWeekday = (dateObj: Date): string => {
+    try {
+      const lang = i18n.language || 'en';
+      const locale = lang.startsWith('vi') ? 'vi-VN' : lang.startsWith('en') ? 'en-US' : lang.startsWith('ko') ? 'ko-KR' : lang.startsWith('es') ? 'es-ES' : undefined;
+      return new Intl.DateTimeFormat(locale, {
+        weekday: 'long',
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+      }).format(dateObj);
+    } catch {
+      return formatDate(dateObj);
+    }
+  };
 
   const parseDate = (dateStr: string): Date => {
     // Parse DD/MM/YYYY to Date
@@ -1145,7 +1159,7 @@ export default function CalendarScreen() {
                 </View>
 
                 <Text style={styles.datePreview}>
-                  {formatDate(selectedDate)}
+                  {formatDateWithWeekday(selectedDate)}
                 </Text>
 
                 <TouchableOpacity
@@ -1298,4 +1312,5 @@ export default function CalendarScreen() {
     </SafeAreaView>
   );
 }
+
 
