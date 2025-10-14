@@ -8,6 +8,7 @@ import {
   Alert,
   ScrollView,
 } from 'react-native';
+import { Easing } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Wifi, WifiOff, Zap } from 'lucide-react-native';
 import { router } from 'expo-router';
@@ -21,7 +22,7 @@ import { useTheme, useThemeColors } from '@/providers/ThemeProvider';
 export default function TouchScreen() {
   const { t } = useTranslation();
   const { isDark, theme } = useTheme();
-  const colors = useThemeColors();
+  const colors = useThemeColors();\n  const pulse = React.useRef(new Animated.Value(1)).current;\n  const wave1 = React.useRef(new Animated.Value(0)).current;\n  const wave2 = React.useRef(new Animated.Value(0)).current;
 
   const [connectionState, setConnectionState] = useState<ConnectionState>({
     isConnected: false,
@@ -55,7 +56,7 @@ export default function TouchScreen() {
     loadBuzzCooldown();
     loadBuzzTemplates();
 
-    const cooldownTimer = setInterval(loadBuzzCooldown, 1000);
+    const cooldownTimer = setInterval(loadBuzzCooldown, 1000);\n\n    // Start animations for pulsing and ripple waves\n    Animated.loop(\n      Animated.sequence([\n        Animated.timing(pulse, { toValue: 1.08, duration: 800, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),\n        Animated.timing(pulse, { toValue: 1, duration: 800, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),\n      ])\n    ).start();\n\n    const startWave = (val: Animated.Value, delayMs: number) => {\n      const run = () => {\n        val.setValue(0);\n        Animated.timing(val, { toValue: 1, duration: 1800, delay: delayMs, easing: Easing.out(Easing.quad), useNativeDriver: true }).start(() => run());\n      };\n      run();\n    };\n    startWave(wave1, 0);\n    startWave(wave2, 900);
 
     const currentState = WebRTCService.getConnectionState();
     setConnectionState(currentState);
@@ -211,7 +212,35 @@ export default function TouchScreen() {
             ]}
           >
             <View style={{ alignItems: 'center', marginBottom: 12 }}>
-              <TouchableOpacity
+              <View style={styles.bigBuzzWrapper}>
+                <Animated.View
+                  pointerEvents="none"
+                  style={[
+                    styles.rippleWave,
+                    {
+                      borderColor: theme.primary,
+                      transform: [{
+                        scale: wave1.interpolate({ inputRange: [0, 1], outputRange: [1, 2.4] }),
+                      }],
+                      opacity: wave1.interpolate({ inputRange: [0, 1], outputRange: [0.25, 0] }),
+                    },
+                  ]}
+                />
+                <Animated.View
+                  pointerEvents="none"
+                  style={[
+                    styles.rippleWave,
+                    {
+                      borderColor: theme.primary,
+                      transform: [{
+                        scale: wave2.interpolate({ inputRange: [0, 1], outputRange: [1, 2.4] }),
+                      }],
+                      opacity: wave2.interpolate({ inputRange: [0, 1], outputRange: [0.25, 0] }),
+                    },
+                  ]}
+                />
+                <Animated.View style={{ transform: [{ scale: pulse }] }}>
+                  <TouchableOpacity
                 activeOpacity={0.85}
                 style={[
                   styles.bigBuzzButton,
@@ -243,7 +272,9 @@ export default function TouchScreen() {
                 >
                   {t('common:sendBuzz')}
                 </Text>
-              </TouchableOpacity>
+                  </TouchableOpacity>
+                </Animated.View>
+              </View>
               {/* Removed inline cooldown wait text under big buzz button */}
             </View>
             <Text style={[styles.buzzTitle, { color: theme.primary }]}>
@@ -628,6 +659,20 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginTop: 8,
   },
+  bigBuzzWrapper: {
+    position: 'relative',
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: 120,
+    height: 120,
+  },
+  rippleWave: {
+    position: 'absolute',
+    width: 96,
+    height: 96,
+    borderRadius: 48,
+    borderWidth: 2,
+  },
   bigBuzzButton: {
     alignItems: 'center',
     justifyContent: 'center',
@@ -661,6 +706,10 @@ const styles = StyleSheet.create({
     fontSize: 12,
   },
 });
+
+
+
+
 
 
 
