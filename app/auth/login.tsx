@@ -11,15 +11,13 @@ import { router, Stack } from 'expo-router';
 import { Heart } from 'lucide-react-native';
 import AuthService from '@/services/AuthService';
 import { useTranslation } from 'react-i18next';
-import { useTheme, useThemeMode, useThemeColors } from '@/providers/ThemeProvider';
+import { useTheme, useThemeColors } from '@/providers/ThemeProvider';
 
 export default function LoginScreen() {
   const [isLoadingGoogle, setIsLoadingGoogle] = useState(false);
   const { theme } = useTheme();
-  const [isLoadingApple, setIsLoadingApple] = useState(false);
   const [error, setError] = useState('');
   const { t } = useTranslation();
-  const { isDark } = useThemeMode();
   const colors = useThemeColors();
 
   const handleGoogleSignIn = async () => {
@@ -37,20 +35,7 @@ export default function LoginScreen() {
     }
   };
 
-  const handleAppleSignIn = async () => {
-    setError('');
-    setIsLoadingApple(true);
-    try {
-      const success = await AuthService.signInWithApple();
-      if (success && AuthService.isAuthenticated()) {
-        router.replace('/(tabs)/connection');
-      }
-    } catch (err) {
-      setError(err instanceof Error ? err.message : t('auth:signInFailed'));
-    } finally {
-      setIsLoadingApple(false);
-    }
-  };
+  // Apple sign-in removed per requirement: Google only
 
   return (
     <>
