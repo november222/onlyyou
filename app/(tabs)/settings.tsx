@@ -8,6 +8,7 @@ import {
   Alert,
   ScrollView,
   Modal,
+  Linking,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useEffect } from 'react';
@@ -521,6 +522,39 @@ export default function SettingsScreen() {
               icon={<Info size={20} color={theme.primary} strokeWidth={2} />}
               title={t('settings:aboutApp')}
               subtitle={t('settings:aboutAppDesc')}
+              showChevron
+            />
+          </View>
+        </View>
+
+        {/* Legal Section */}
+        <View style={styles.section}>
+          <Text
+            style={[
+              styles.sectionTitle,
+              { color: colors.mutedText || colors.text },
+            ]}
+          >
+            Legal
+          </Text>
+          <View
+            style={[
+              styles.sectionContent,
+              { backgroundColor: colors.card, borderColor: colors.border },
+            ]}
+          >
+            <SettingItem
+              icon={<Globe size={20} color={theme.primary} strokeWidth={2} />}
+              title="Privacy Policy"
+              subtitle="Read how we handle your data"
+              onPress={() => Linking.openURL('https://november222.github.io/onlyyou/privacy-policy.html')}
+              showChevron
+            />
+            <SettingItem
+              icon={<Globe size={20} color={theme.primary} strokeWidth={2} />}
+              title="Terms of Service"
+              subtitle="Rules for using the app"
+              onPress={() => Linking.openURL('https://november222.github.io/onlyyou/terms.html')}
               showChevron
             />
           </View>
