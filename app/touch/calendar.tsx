@@ -25,7 +25,9 @@ export default function CalendarScreen() {
   const insets = useSafeAreaInsets();
   const { theme } = useTheme();
   const { t } = useTranslation('touch');
-  const colors = useThemeColors();  
+  const colors = useThemeColors();
+  // Localized weekday labels for calendar header
+  const weekdayLabels = t('calendarModal.weekdays', { returnObjects: true }) as string[];
   // Theme-aware styles for light/dark modes
   const styles = useMemo(() => StyleSheet.create({
     container: {
@@ -926,7 +928,10 @@ export default function CalendarScreen() {
                   </TouchableOpacity>
 
                   <Text style={styles.calendarHeaderText}>
-                    Tháng {selectedDate.getMonth() + 1}, {selectedDate.getFullYear()}
+                    {t('calendarModal.monthHeader', {
+                      month: selectedDate.getMonth() + 1,
+                      year: selectedDate.getFullYear(),
+                    })}
                   </Text>
 
                   <TouchableOpacity
@@ -942,7 +947,7 @@ export default function CalendarScreen() {
                 </View>
 
                 <View style={styles.calendarWeekdays}>
-                  {['CN', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7'].map((day) => (
+                  {weekdayLabels.map((day) => (
                     <View key={day} style={styles.calendarWeekdayCell}>
                       <Text style={styles.calendarWeekdayText}>{day}</Text>
                     </View>

@@ -62,5 +62,9 @@
     "galleryEmptyTitle": "No photos yet",
     "galleryEmptyHint": "Tap + to add your first photo",
     "calendarEmptyTitle": "No events yet",
-    "calendarEmptyHint": "Tap + to add your first event"
+    "calendarEmptyHint": "Tap + to add your first event",
+    "calendarModal": {
+      "monthHeader": "Month {{month}}, {{year}}",
+      "weekdays": ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
+    }
 }
