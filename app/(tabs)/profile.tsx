@@ -574,10 +574,24 @@ export default function ProfileScreen() {
           {/* Love Counter (L-day) */}
           <View style={[styles.loveCounterCard, cardSurfaceStyle]}>
             <View style={styles.loveCounterHeader}>
-              <Sparkles size={24} color={theme.primary} strokeWidth={2} />
-              <Text style={[styles.loveCounterTitle, { color: colors.text }]}>
-                L-day
-              </Text>
+              {authState.user?.avatar ? (
+                <Image source={{ uri: authState.user.avatar }} style={[styles.loveAvatar, { borderColor: colors.border }]} />
+              ) : (
+                <View style={[styles.loveAvatar, styles.loveAvatarFallback, { borderColor: colors.border }]}>
+                  <Text style={styles.loveAvatarInitial}>{(authState.user?.name || 'U').charAt(0).toUpperCase()}</Text>
+                </View>
+              )}
+              <View style={styles.loveHeaderCenter}>
+                <Sparkles size={24} color={theme.primary} strokeWidth={2} />
+                <Text style={[styles.loveCounterTitle, { color: colors.text }]}>L-day</Text>
+              </View>
+              {WebRTCService.getSavedConnection?.()?.partnerAvatarUrl ? (
+                <Image source={{ uri: WebRTCService.getSavedConnection()?.partnerAvatarUrl as string }} style={[styles.loveAvatar, { borderColor: colors.border }]} />
+              ) : (
+                <View style={[styles.loveAvatar, styles.loveAvatarFallback, { borderColor: colors.border }]}>
+                  <Text style={styles.loveAvatarInitial}>{(WebRTCService.getSavedConnection?.()?.partnerName || '?').charAt(0).toUpperCase()}</Text>
+                </View>
+              )}
             </View>
 
             {relationshipStartAt && (
@@ -925,7 +939,31 @@ const styles = StyleSheet.create({
   loveCounterHeader: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'space-between',
     marginBottom: 20,
+  },
+  loveHeaderCenter: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  loveAvatar: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    borderWidth: 2,
+    backgroundColor: '#222',
+    overflow: 'hidden',
+  },
+  loveAvatarFallback: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#333',
+  },
+  loveAvatarInitial: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#fff',
   },
   loveCounterTitle: {
     fontSize: 18,

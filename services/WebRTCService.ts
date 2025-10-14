@@ -30,6 +30,9 @@ export interface SavedConnection {
   buzzCallsCount?: number;
   currentSessionStart?: string;
   totalConnectedTime?: number;
+  // Optional partner identity fields (for avatars)
+  partnerId?: string;
+  partnerAvatarUrl?: string | null;
 }
 
 export interface SessionHistory {
@@ -165,6 +168,8 @@ class WebRTCService {
         connectionDate: new Date().toISOString(),
         lastConnected: new Date().toISOString(),
         totalConnectedTime: this.totalConnectedTime,
+        partnerId: this.savedConnection?.partnerId,
+        partnerAvatarUrl: this.savedConnection?.partnerAvatarUrl ?? null,
       };
       
       await AsyncStorage.setItem('savedConnection', JSON.stringify(connection));
