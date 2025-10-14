@@ -530,11 +530,7 @@ export default function CalendarScreen() {
     }
   };
 
-  const parseDate = (dateStr: string): Date => {
-    // Parse DD/MM/YYYY to Date
-    const [day, month, year] = dateStr.split('/');
-    return new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
-  };
+  const parseDate = (dateStr: string): Date => {\n    // Support YYYY-MM-DD and DD/MM/YYYY\n    try {\n      if (/^\\d{4}-\\d{2}-\\d{2}$/.test(dateStr)) {\n        const [y, m, d] = dateStr.split('-');\n        return new Date(parseInt(y, 10), parseInt(m, 10) - 1, parseInt(d, 10));\n      }\n      if (/^\\d{1,2}\\/\\d{1,2}\\/\\d{4}$/.test(dateStr)) {\n        const [day, month, year] = dateStr.split('/');\n        return new Date(parseInt(year, 10), parseInt(month, 10) - 1, parseInt(day, 10));\n      }\n      const dt = new Date(dateStr);\n      if (!isNaN(dt.getTime())) return dt;\n      return new Date();\n    } catch {\n      return new Date();\n    }\n  };
 
   const parseTime = (timeStr: string): Date => {
     // Parse HH:MM to Date
@@ -1309,6 +1305,7 @@ export default function CalendarScreen() {
     </SafeAreaView>
   );
 }
+
 
 
 
