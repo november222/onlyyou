@@ -612,10 +612,10 @@ export default function CalendarScreen() {
       const result = await CalendarService.addItem(title, date, time, note);
 
       if (result.success) {
-        Alert.alert(
-      t('calendarModal.deleteTitle'),
-      t('calendarModal.deleteMessage', { title: item.title }),
-        );
+        Alert.alert(t('common:success'), t('calendarModal.addSuccess'));
+
+
+
         resetForm();
         setShowAddModal(false);
         loadCalendarItems();
@@ -642,18 +642,18 @@ export default function CalendarScreen() {
       });
 
       if (result.success) {
-        Alert.alert(
-      t('calendarModal.deleteTitle'),
-      t('calendarModal.deleteMessage', { title: item.title }),
-        );
+        Alert.alert(t('common:success'), t('calendarModal.updateSuccess'));
+
+
+
         resetForm();
         setShowAddModal(false);
         loadCalendarItems();
       } else {
-        Alert.alert(
-      t('calendarModal.deleteTitle'),
-      t('calendarModal.deleteMessage', { title: item.title }),
-        );
+        Alert.alert(t('common:error'), result.error || t('calendarModal.updateFailed'));
+
+
+
       }
     } catch (error) {
       Alert.alert(t('common:error'), t('calendarModal.genericError'));
@@ -675,10 +675,10 @@ export default function CalendarScreen() {
               if (result.success) {
                 loadCalendarItems();
               } else {
-                Alert.alert(
-      t('calendarModal.deleteTitle'),
-      t('calendarModal.deleteMessage', { title: item.title }),
-                );
+        Alert.alert(t('common:error'), result.error || t('calendarModal.updateFailed'));
+
+
+
               }
             } catch (error) {
               Alert.alert(
