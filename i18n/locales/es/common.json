@@ -16,5 +16,9 @@
     "done":  "Hecho",
     "continue":  "Continuar",
     "calendar":  "Calendario",
-    "sharedGallery":  "Galería compartida"
+    "sharedGallery":  "Galería compartida",
+    "event":  "Evento",
+    "addEvent":  "Añadir evento",
+    "editEvent":  "Editar evento",
+    "deleteEvent":  "Eliminar evento"
 }

@@ -16,5 +16,9 @@
     "done":  "ì™„ë£Œ",
     "continue":  "ê³„ì†",
     "calendar":  "달력",
-    "sharedGallery":  "공유 갤러리"
+    "sharedGallery":  "공유 갤러리",
+    "event":  "이벤트",
+    "addEvent":  "이벤트 추가",
+    "editEvent":  "이벤트 수정",
+    "deleteEvent":  "이벤트 삭제"
 }
