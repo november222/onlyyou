@@ -244,13 +244,7 @@ export default function TouchScreen() {
                   {t('common:sendBuzz')}
                 </Text>
               </TouchableOpacity>
-              {!buzzCooldown.canSend && (
-                <Text style={styles.cooldownLargeText}>
-                  {t('touch:cooldownWait', {
-                    seconds: Math.ceil(buzzCooldown.remainingTime / 1000),
-                  })}
-                </Text>
-              )}
+              {/* Removed inline cooldown wait text under big buzz button */}
             </View>
             <Text style={[styles.buzzTitle, { color: theme.primary }]}>
               {t('touch:quickBuzz')}

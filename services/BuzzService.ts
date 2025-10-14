@@ -111,10 +111,26 @@ class BuzzService {
   public async getQuickBuzzTemplates(isPremium: boolean = false): Promise<BuzzTemplate[]> {
     try {
       const allTemplates = await this.getBuzzTemplates(isPremium);
-      return allTemplates.filter(template => template.showInQuickBuzz);
+      const enabled = allTemplates.filter(template => template.showInQuickBuzz);
+
+      // Sort so that newer custom templates appear first (leftmost/top)
+      const parseCustomTimestamp = (id: string): number => {
+        const m = /^custom_(\d+)_/.exec(id);
+        return m ? parseInt(m[1], 10) : 0;
+      };
+
+      const customs = enabled
+        .filter(t => t.type === 'custom')
+        .sort((a, b) => parseCustomTimestamp(b.id) - parseCustomTimestamp(a.id));
+
+      const defaults = enabled.filter(t => t.type !== 'custom');
+
+      return [...customs, ...defaults];
     } catch (error) {
       console.error('Failed to get quick buzz templates:', error);
-      return this.DEFAULT_TEMPLATES.map(t => ({ ...t, emoji: this.resolveEmoji(t.id, t.emoji) })).filter(template => template.showInQuickBuzz);
+      return this.DEFAULT_TEMPLATES
+        .map(t => ({ ...t, emoji: this.resolveEmoji(t.id, t.emoji) }))
+        .filter(template => template.showInQuickBuzz);
     }
   }
 
