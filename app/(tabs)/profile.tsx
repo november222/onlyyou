@@ -37,6 +37,7 @@ import {
   daysBetween,
 } from '@/lib/loveDay';
 import { useTheme, useThemeColors } from '@/providers/ThemeProvider';
+import { useDailyQuote, defaultQuotes } from '@/services/QuoteService';
 
 // Helper: convert hex color to rgba with alpha
 function hexToRgba(hex: string, alpha: number) {
@@ -110,6 +111,15 @@ export default function ProfileScreen() {
   );
   const [loveDays, setLoveDays] = useState(0);
   const { isPremium } = usePremium();
+  // Daily quote (deterministic, no storage) + simple test cycling
+  const dailyQuote = useDailyQuote();
+  const [testQuoteIndex, setTestQuoteIndex] = useState<number | null>(null);
+  const quoteToShow = useMemo(() =>
+    testQuoteIndex === null ? dailyQuote : defaultQuotes[testQuoteIndex % defaultQuotes.length]
+  , [dailyQuote, testQuoteIndex]);
+  const nextTestQuote = () => {
+    setTestQuoteIndex((prev) => (prev === null ? 1 : (prev + 1) % defaultQuotes.length));
+  };
 
   // Mock Premier status - in real app this would come from user data/API
   const isPremierUser = isPremium;
@@ -567,6 +577,22 @@ export default function ProfileScreen() {
             <Text style={[styles.subtitle, mutedTextStyle]}>
               {t('profile:subtitle')}
             </Text>
+          </View>
+
+          {/* Quote of the Day + Test button */}
+          <View style={[styles.quoteCard, cardSurfaceStyle]}>
+            <View style={styles.quoteHeader}>
+              <Sparkles size={20} color={theme.secondary} strokeWidth={2} />
+              <Text style={[styles.quoteTitle, { color: colors.text }]}>Quote of the Day</Text>
+            </View>
+            <Text style={[styles.quoteText, { color: colors.mutedText || colors.text }]}>
+              {quoteToShow}
+            </Text>
+            <View style={styles.quoteActions}>
+              <TouchableOpacity style={[styles.quoteButton, { borderColor: colors.border }]} onPress={nextTestQuote}>
+                <Text style={[styles.quoteButtonText, { color: colors.text }]}>Test Next Quote</Text>
+              </TouchableOpacity>
+            </View>
           </View>
 
           {/* Love Counter (L-day) */}
@@ -1085,13 +1111,45 @@ const styles = StyleSheet.create({
     marginBottom: 32,
     paddingHorizontal: 20,
   },
-  premiumPrice: {
-    fontSize: 32,
-    fontWeight: '700',
-
-    marginBottom: 4,
+  
+  quoteCard: {
+    marginHorizontal: 20,
+    marginBottom: 16,
+    borderRadius: 16,
+    padding: 16,
+    borderWidth: 1,
   },
-  premiumPriceSubtext: {
+  quoteHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 8,
+  },
+  quoteTitle: {
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  quoteText: {
+    fontSize: 14,
+    lineHeight: 20,
+    fontStyle: 'italic',
+    marginBottom: 12,
+  },
+  quoteActions: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+  },
+  quoteButton: {
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 8,
+    borderWidth: 1,
+  },
+  quoteButtonText: {
+    fontSize: 12,
+    fontWeight: '600',
+  },
+ {
     fontSize: 14,
 
     textAlign: 'center',
@@ -1533,4 +1591,5 @@ const styles = StyleSheet.create({
     marginLeft: 4,
   },
 });
+
 
