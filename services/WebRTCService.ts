@@ -733,11 +733,39 @@ class WebRTCService {
       currentSessionStart: new Date().toISOString(),
       totalConnectedTime: this.totalConnectedTime,
       buzzCallsCount: 0,
+      partnerId: this.savedConnection?.partnerId,
+      partnerAvatarUrl: this.savedConnection?.partnerAvatarUrl ?? null,
     };
     
     this.savedConnection = connection;
     await AsyncStorage.setItem('savedConnection', JSON.stringify(connection));
     console.log('Saved connection with name:', partnerName);
+  }
+
+  /**
+   * Update partner profile info stored locally (e.g., after fetching from server)
+   */
+  public async updatePartnerProfile(info: { partnerId?: string; partnerAvatarUrl?: string | null }): Promise<void> {
+    try {
+      if (!this.savedConnection) {
+        this.savedConnection = {
+          roomCode: this.connectionState.roomCode || '',
+          partnerName: 'My Love',
+          connectionDate: new Date().toISOString(),
+          lastConnected: new Date().toISOString(),
+          totalConnectedTime: this.totalConnectedTime,
+          partnerId: info.partnerId,
+          partnerAvatarUrl: info.partnerAvatarUrl ?? null,
+        };
+      } else {
+        if (info.partnerId !== undefined) this.savedConnection.partnerId = info.partnerId;
+        if (info.partnerAvatarUrl !== undefined) this.savedConnection.partnerAvatarUrl = info.partnerAvatarUrl;
+      }
+      await AsyncStorage.setItem('savedConnection', JSON.stringify(this.savedConnection));
+      console.log('Updated partner profile info');
+    } catch (e) {
+      console.error('Failed to update partner profile info:', e);
+    }
   }
 
   // Check if connected

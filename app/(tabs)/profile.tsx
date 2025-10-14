@@ -28,6 +28,7 @@ import {
   Zap,
 } from 'lucide-react-native';
 import WebRTCService, { ConnectionState } from '@/services/WebRTCService';
+import { getPartnerInfoFromConnections } from '@/services/ConnectionService';
 import { router } from 'expo-router';
 import AuthService, { AuthState } from '@/services/AuthService';
 import { usePremium } from '@/providers/PremiumProvider';
@@ -330,6 +331,22 @@ export default function ProfileScreen() {
         setTotalConnectedTime(totalTime);
       }
     };
+
+    // Attempt to fetch partner avatar once on mount if missing
+    (async () => {
+      try {
+        const saved = WebRTCService.getSavedConnection?.();
+        if (saved?.roomCode && !saved?.partnerAvatarUrl) {
+          const info = await getPartnerInfoFromConnections(saved.roomCode);
+          if (info?.partnerAvatarUrl || info?.partnerId) {
+            await WebRTCService.updatePartnerProfile({
+              partnerId: info.partnerId,
+              partnerAvatarUrl: info.partnerAvatarUrl ?? null,
+            });
+          }
+        }
+      } catch {}
+    })();
 
     // Real-time timer that updates every second
     const timer = setInterval(() => {
