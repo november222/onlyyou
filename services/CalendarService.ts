@@ -1,4 +1,4 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
+﻿import AsyncStorage from '@react-native-async-storage/async-storage';
 import { rateLimiter, RATE_LIMITS } from './RateLimiter';
 
 export interface CalItem {
@@ -27,7 +27,7 @@ class CalendarService {
       if (!rateLimitCheck.allowed) {
         return {
           success: false,
-          error: rateLimitCheck.reason || 'Vui lòng đợi trước khi thêm sự kiện tiếp theo',
+          error: rateLimitCheck.reason || 'Vui lÃ²ng Ä‘á»£i trÆ°á»›c khi thÃªm sá»± kiá»‡n tiáº¿p theo',
         };
       }
 
@@ -48,7 +48,7 @@ class CalendarService {
       const item: CalItem = {
         id: `cal_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
         title: title.trim(),
-        date: date.trim(),
+        date: this.normalizeDate(date.trim()),
         time: time?.trim(),
         note: note?.trim(),
         timestamp: Date.now(),
@@ -69,7 +69,7 @@ class CalendarService {
       console.error('Failed to add calendar item:', error);
       return {
         success: false,
-        error: 'Không thể thêm sự kiện. Vui lòng thử lại.',
+        error: 'KhÃ´ng thá»ƒ thÃªm sá»± kiá»‡n. Vui lÃ²ng thá»­ láº¡i.',
       };
     }
   }
@@ -139,7 +139,7 @@ class CalendarService {
         };
       }
       
-      items[itemIndex] = { ...items[itemIndex], ...updates };
+      const next: any = { ...items[itemIndex], ...updates };\n      if (updates.date) {\n        next.date = this.normalizeDate(updates.date);\n      }\n      items[itemIndex] = next;
       
       await AsyncStorage.setItem(this.STORAGE_KEY, JSON.stringify(items));
       
@@ -153,7 +153,7 @@ class CalendarService {
       console.error('Failed to update calendar item:', error);
       return {
         success: false,
-        error: 'Không thể cập nhật sự kiện. Vui lòng thử lại.',
+        error: 'KhÃ´ng thá»ƒ cáº­p nháº­t sá»± kiá»‡n. Vui lÃ²ng thá»­ láº¡i.',
       };
     }
   }
@@ -165,7 +165,7 @@ class CalendarService {
       if (!rateLimitCheck.allowed) {
         return {
           success: false,
-          error: rateLimitCheck.reason || 'Vui lòng đợi trước khi xóa tiếp',
+          error: rateLimitCheck.reason || 'Vui lÃ²ng Ä‘á»£i trÆ°á»›c khi xÃ³a tiáº¿p',
         };
       }
 
@@ -193,7 +193,7 @@ class CalendarService {
       console.error('Failed to delete calendar item:', error);
       return {
         success: false,
-        error: 'Không thể xóa sự kiện. Vui lòng thử lại.',
+        error: 'KhÃ´ng thá»ƒ xÃ³a sá»± kiá»‡n. Vui lÃ²ng thá»­ láº¡i.',
       };
     }
   }
@@ -230,4 +230,4 @@ class CalendarService {
   }
 }
 
-export default new CalendarService();
+  // Normalize date input to YYYY-MM-DD if possible\n  private normalizeDate(input: string): string {\n    try {\n      if (/^\\d{4}-\\d{2}-\\d{2}$/.test(input)) return input;\n      const m = input.match(/^(\\d{1,2})\\/(\\d{1,2})\\/(\\d{4})$/);\n      if (m) {\n        const d = m[1].padStart(2, '0');\n        const mo = m[2].padStart(2, '0');\n        const y = m[3];\n        return ${y}--;\n      }\n      const dt = new Date(input);\n      if (!isNaN(dt.getTime())) {\n        const y = dt.getFullYear();\n        const mo = String(dt.getMonth() + 1).padStart(2, '0');\n        const d = String(dt.getDate()).padStart(2, '0');\n        return ${y}--;\n      }\n      return input;\n    } catch {\n      return input;\n    }\n  }\n}\n\nexport default new CalendarService();
