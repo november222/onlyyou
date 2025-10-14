@@ -39,7 +39,6 @@ export default function TouchScreen() {
     remainingTime: 0,
   });
   const [buzzTemplates, setBuzzTemplates] = useState<BuzzTemplate[]>([]);
-  const [pinnedTemplates, setPinnedTemplates] = useState<BuzzTemplate[]>([]);
   const { isPremium } = usePremium();
   const [partnerName, setPartnerName] = useState<string>(t('common:touch'));
 
@@ -50,14 +49,11 @@ export default function TouchScreen() {
 
     BuzzService.onBuzzTemplatesChanged = () => {
       loadBuzzTemplates();
-    loadPinnedTemplates();
-      loadPinnedTemplates();
     };
 
     loadPartnerName();
     loadBuzzCooldown();
     loadBuzzTemplates();
-    loadPinnedTemplates();
 
     const cooldownTimer = setInterval(loadBuzzCooldown, 1000);
 
@@ -97,12 +93,6 @@ export default function TouchScreen() {
     if (isFeatureEnabled('buzz')) {
       const templates = await BuzzService.getQuickBuzzTemplates(isPremium);
       setBuzzTemplates(templates);
-    }
-  };
-  const loadPinnedTemplates = async () => {
-    if (isFeatureEnabled('buzz')) {
-      const templates = await BuzzService.getPrimaryBuzzTemplates(3);
-      setPinnedTemplates(templates);
     }
   };
 
@@ -220,42 +210,42 @@ export default function TouchScreen() {
               },
             ]}
           >
-            {(() => {
-  const ids = new Set(pinnedTemplates.map(p => p.id));
-  const bigButtons: BuzzTemplate[] = [...pinnedTemplates];
-  for (const tpl of buzzTemplates) {
-    if (bigButtons.length >= 3) break;
-    if (!ids.has(tpl.id)) bigButtons.push(tpl);
-  }
-  return (
-    <View style={{ flexDirection: 'row', justifyContent: 'space-between', paddingHorizontal: 12, marginBottom: 12 }}>
-      {bigButtons.slice(0,3).map((tpl) => (
-        <View key={tpl.id} style={{ alignItems: 'center', flex: 1 }}>
-          <TouchableOpacity
-            activeOpacity={0.85}
-            style={[
-              styles.bigBuzzButton,
-              { backgroundColor: theme.primary, shadowColor: theme.primary },
-              (!connectionState.isConnected || !buzzCooldown.canSend) && styles.bigBuzzButtonDisabled,
-            ]}
-            onPress={() => sendBuzz(tpl.id)}
-            disabled={!connectionState.isConnected || !buzzCooldown.canSend}
-          >
-            <View style={styles.bigBuzzInnerGlow} />
-            {tpl.emoji ? (
-              <Text style={{ fontSize: 28 }}>{tpl.emoji}</Text>
-            ) : (
-              <Zap size={30} color={theme.onPrimary || colors.text} strokeWidth={2.5} />
-            )}
-          </TouchableOpacity>
-          <Text style={[styles.bigBuzzLabel, { color: colors.text }]} numberOfLines={1} ellipsizeMode="tail">
-            {tpl.text}
-          </Text>
-        </View>
-      ))}
-    </View>
-  );
-})()}
+            <View style={{ alignItems: 'center', marginBottom: 12 }}>
+              <TouchableOpacity
+                activeOpacity={0.85}
+                style={[
+                  styles.bigBuzzButton,
+                  {
+                    backgroundColor: theme.primary,
+                    shadowColor: theme.primary,
+                  },
+                  (!connectionState.isConnected || !buzzCooldown.canSend) &&
+                    styles.bigBuzzButtonDisabled,
+                ]}
+                onPress={() => {
+                  if (buzzTemplates[0]) {
+                    sendBuzz(buzzTemplates[0].id);
+                  }
+                }}
+                disabled={!connectionState.isConnected || !buzzCooldown.canSend}
+              >
+                <View style={styles.bigBuzzInnerGlow} />
+                <Zap
+                  size={30}
+                  color={theme.onPrimary || colors.text}
+                  strokeWidth={2.5}
+                />
+                <Text
+                  style={[
+                    styles.bigBuzzLabel,
+                    { color: theme.onPrimary || colors.text },
+                  ]}
+                >
+                  {t('common:sendBuzz')}
+                </Text>
+              </TouchableOpacity>
+              {/* Removed inline cooldown wait text under big buzz button */}
+            </View>
             <Text style={[styles.buzzTitle, { color: theme.primary }]}>
               {t('touch:quickBuzz')}
             </Text>
@@ -671,11 +661,6 @@ const styles = StyleSheet.create({
     fontSize: 12,
   },
 });
-
-
-
-
-
 
 
 
