@@ -599,7 +599,7 @@ export default function ProfileScreen() {
                 </View>
               )}
               <View style={styles.loveHeaderCenter}>
-                <Sparkles size={24} color={theme.primary} strokeWidth={2} />
+                <Heart size={24} color={theme.primary} strokeWidth={2.5} />
               </View>
               {WebRTCService.getSavedConnection?.()?.partnerAvatarUrl ? (
                 <Image source={{ uri: WebRTCService.getSavedConnection()?.partnerAvatarUrl as string }} style={[styles.loveAvatar, { borderColor: colors.border }]} />
