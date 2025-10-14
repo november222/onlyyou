@@ -18,7 +18,7 @@ import BuzzService, { BuzzTemplate } from '@/services/BuzzService';
 import { usePremium } from '@/providers/PremiumProvider';
 import { rateLimiter, RATE_LIMITS } from '@/services/RateLimiter';
 import { useTheme, useThemeColors } from '@/providers/ThemeProvider';
-import { useDailyQuote, defaultQuotes } from '@/services/QuoteService';
+import { useDailyQuote } from '@/services/QuoteService';
 
 export default function TouchScreen() {
   const { t } = useTranslation();
@@ -44,14 +44,9 @@ export default function TouchScreen() {
     remainingTime: 0,
   });
   const [buzzTemplates, setBuzzTemplates] = useState<BuzzTemplate[]>([]);
-  // Daily quote (deterministic) + test button to cycle
+  // Daily quote (deterministic)
   const dailyQuote = useDailyQuote();
-  const [quoteTestIndex, setQuoteTestIndex] = useState<number | null>(null);
-  const quoteText = React.useMemo(
-    () => (quoteTestIndex === null ? dailyQuote : defaultQuotes[quoteTestIndex % defaultQuotes.length]),
-    [dailyQuote, quoteTestIndex]
-  );
-  const cycleQuote = () => setQuoteTestIndex((prev) => (prev === null ? 1 : (prev + 1) % defaultQuotes.length));
+  const quoteText = dailyQuote;
   const { isPremium } = usePremium();
   const [partnerName, setPartnerName] = useState<string>(t('common:touch'));
 
@@ -569,9 +564,7 @@ export default function TouchScreen() {
           <Text style={[styles.quoteBarText, { color: colors.mutedText || colors.text }]}>
             {quoteText}
           </Text>
-          <TouchableOpacity style={[styles.quoteTestButton, { borderColor: colors.border }]} onPress={cycleQuote}>
-            <Text style={[styles.quoteTestButtonText, { color: colors.text }]}>Test Quote</Text>
-          </TouchableOpacity>
+          {/* Removed test button */}
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -800,15 +793,5 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginBottom: 10,
   },
-  quoteTestButton: {
-    alignSelf: 'center',
-    borderWidth: 1,
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-  },
-  quoteTestButtonText: {
-    fontSize: 12,
-    fontWeight: '600',
-  },
+  
 });
