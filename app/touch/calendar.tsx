@@ -35,7 +35,7 @@ import WebRTCService from '@/services/WebRTCService';
 export default function CalendarScreen() {
   const insets = useSafeAreaInsets();
   const { theme } = useTheme();
-  const { t } = useTranslation('touch');
+  const { t, i18n } = useTranslation('touch');
   const colors = useThemeColors();
   // Localized weekday labels for calendar header
   const weekdayLabels = t('calendarModal.weekdays', {
@@ -714,9 +714,9 @@ export default function CalendarScreen() {
   const formatDateDisplay = (dateString: string) => {
     try {
       const date = parseDate(dateString);
-      return date.toLocaleDateString('vi-VN', {
-        weekday: 'long',
-        day: '2-digit',
+      const lang = i18n.language || 'en';
+      const locale = lang.startsWith('vi') ? 'vi-VN' : lang.startsWith('en') ? 'en-US' : lang.startsWith('ko') ? 'ko-KR' : lang.startsWith('es') ? 'es-ES' : undefined;
+      return date.toLocaleDateString(locale, {
         month: '2-digit',
         year: 'numeric',
       });
@@ -1298,3 +1298,4 @@ export default function CalendarScreen() {
     </SafeAreaView>
   );
 }
+
