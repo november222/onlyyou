@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -44,226 +44,8 @@ export default function BuzzCallScreen() {
     [colors.mutedText, colors.text]
   );
   const { t, i18n } = useTranslation('touch');
-  const [customBuzzTemplates, setCustomBuzzTemplates] = useState<
-    BuzzTemplate[]
-  >([]);
+  const [customBuzzTemplates, setCustomBuzzTemplates] = useState<BuzzTemplate[]>([]);
   const [pinnedIds, setPinnedIds] = useState<string[]>([]);
-  const [showCreateModal, setShowCreateModal] = useState(false);
-  const [editingTemplate, setEditingTemplate] = useState<BuzzTemplate | null>(
-    null
-  );
-  const [customBuzzText, setCustomBuzzText] = useState('');
-  const [customBuzzEmoji, setCustomBuzzEmoji] = useState('💫');
-  const [showAllEmojis, setShowAllEmojis] = useState(false);
-  const { isPremium } = usePremium();
-  const [partnerName, setPartnerName] = useState<string>('My Love');
-
-  useEffect(() => {
-    loadCustomBuzzTemplates();
-    loadPinned();
-    loadPartnerName();
-  }, []);
-
-  const loadPartnerName = () => {
-    const savedConnection = WebRTCService.getSavedConnection();
-    if (savedConnection?.partnerName) {
-      setPartnerName(savedConnection.partnerName);
-    }
-  };
-
-  const loadCustomBuzzTemplates = async () => {
-    try {
-      const allTemplates = await BuzzService.getBuzzTemplates(isPremium);
-      // Show all templates (both custom and default)
-      setCustomBuzzTemplates(allTemplates);
-    } catch (error) {
-      console.error('Failed to load custom buzz templates:', error);
-    }
-  };
-
-  const openCreateModal = () => {
-    if (!isPremium) {
-      Alert.alert(
-        t('createBuzz.premiumTitle'),
-        t('createBuzz.premiumMessage'),
-        [
-          { text: t('common:cancel'), style: 'cancel' },
-          {
-            text: t('createBuzz.upgrade'),
-            onPress: () => router.push('/premium'),
-          },
-        ]
-      );
-      return;
-    }
-
-    resetForm();
-    setShowCreateModal(true);
-  };
-
-  const openEditModal = (template: BuzzTemplate) => {
-    setEditingTemplate(template);
-    setCustomBuzzText(template.text);
-    setCustomBuzzEmoji(template.emoji || '💫');
-    setShowCreateModal(true);
-  };
-
-  const resetForm = () => {
-    setEditingTemplate(null);
-    setCustomBuzzText('');
-    setCustomBuzzEmoji('💫');
-  };
-
-  const handleSaveCustomBuzz = async () => {
-    if (!customBuzzText.trim()) {
-      Alert.alert(t('common:error'), t('createBuzz.errorEmpty'));
-      return;
-    }
-
-    if (customBuzzText.length > 20) {
-      Alert.alert(t('common:error'), t('createBuzz.errorTooLong'));
-      return;
-    }
-
-    try {
-      let result;
-
-      if (editingTemplate) {
-        // Update existing template
-        result = await BuzzService.updateCustomBuzz(
-          editingTemplate.id,
-          customBuzzText,
-          customBuzzEmoji
-        );
-      } else {
-        // Create new template
-        result = await BuzzService.createCustomBuzz(
-          customBuzzText,
-          customBuzzEmoji,
-          isPremium
-        );
-      }
-
-      if (result.success) {
-        Alert.alert(
-          t('common:success'),
-          editingTemplate ? t('createBuzz.updated') : t('createBuzz.saved')
-        );
-        setShowCreateModal(false);
-        await loadCustomBuzzTemplates();
-        BuzzService.notifyBuzzTemplatesChanged();
-      } else {
-        Alert.alert(
-          t('common:error'),
-          result.error || t('createBuzz.saveFailed')
-        );
-      }
-    } catch (error) {
-      Alert.alert(t('common:error'), t('createBuzz.genericError'));
-    }
-  };
-
-  const handleDeleteTemplate = (template: BuzzTemplate) => {
-    Alert.alert(
-      t('createBuzz.deleteTitle'),
-      t('createBuzz.deleteMessage', { text: template.text }),
-      [
-        { text: t('common:cancel'), style: 'cancel' as const },
-        {
-          text: t('common:delete'),
-          style: 'destructive' as const,
-          onPress: async () => {
-            try {
-              const result = await BuzzService.deleteCustomBuzz(template.id);
-              if (result.success) {
-                loadCustomBuzzTemplates();
-              } else {
-                Alert.alert(
-                  t('common:error'),
-                  result.error || t('createBuzz.deleteFailed')
-                );
-              }
-            } catch (e) {
-              Alert.alert(t('common:error'), t('createBuzz.genericError'));
-            }
-          },
-        },
-      ]
-    );
-  };
-
-  const loadPinned = async () => {
-    const pinned = await BuzzService.getPrimaryBuzzTemplates(3);
-    setPinnedIds(pinned.map((p) => p.id));
-  };
-
-  const handleTogglePinned = async (template: BuzzTemplate) => {
-    try {
-      const result = await BuzzService.togglePinned(template.id);
-      if (result.success) {
-        await loadPinned();
-      } else if ((result as any).error === 'PIN_LIMIT') {
-        Alert.alert(t('createBuzz.pinLimitTitle'), t('createBuzz.pinLimitMessage'));
-      } else {
-        Alert.alert(t('common:error'), result.error || t('createBuzz.toggleFailed'));
-      }
-    } catch (error) {
-      Alert.alert(t('common:error'), t('createBuzz.genericError'));
-    }
-  };
-
-  // Emoji Selector Component
-  const EmojiSelector = () => {
-    const allEmojis = [
-      '💫',
-      '✨',
-      '⚡',
-      '🔥',
-      '💖',
-      '🌟',
-      '💝',
-      '🎉',
-      '💕',
-      '💗',
-      '💓',
-      '💘',
-      '💞',
-      '💌',
-      '💋',
-      '😘',
-      '🥰',
-      '😍',
-      '🤗',
-      '😊',
-      '😚',
-      '🥺',
-      '🤭',
-      '😇',
-      '🌸',
-      '🌺',
-      '🌻',
-      '🌷',
-      '🌹',
-      '🦋',
-      '🐰',
-      '🐱',
-      '🍓',
-      '🍑',
-      '🍯',
-      '🧁',
-      '🍰',
-      '🎂',
-      '🍭',
-      '🍬',
-      '🌙',
-      '⭐',
-      '☀️',
-      '🌈',
-      '☁️',
-      '❄️',
-      '🎀',
-      '👑',
-    ];
 
     const basicEmojis = allEmojis.slice(0, 16); // First 2 rows (8 per row)
     const displayEmojis = showAllEmojis ? allEmojis : basicEmojis;
@@ -317,7 +99,26 @@ export default function BuzzCallScreen() {
     );
   };
 
-  const renderCustomBuzzTemplate = ({ item }: { item: BuzzTemplate }) => (
+  
+  const loadPinned = async () => {
+    const pinned = await BuzzService.getPrimaryBuzzTemplates(3);
+    setPinnedIds(pinned.map(p => p.id));
+  };
+
+  const handleTogglePinned = async (template: BuzzTemplate) => {
+    try {
+      const result = await BuzzService.togglePinned(template.id);
+      if (result.success) {
+        await loadPinned();
+      } else if ((result as any).error === 'PIN_LIMIT') {
+        Alert.alert(t('createBuzz.pinLimitTitle'), t('createBuzz.pinLimitMessage'));
+      } else {
+        Alert.alert(t('common:error'), result.error || t('createBuzz.toggleFailed'));
+      }
+    } catch (error) {
+      Alert.alert(t('common:error'), t('createBuzz.genericError'));
+    }
+  };const renderCustomBuzzTemplate = ({ item }: { item: BuzzTemplate }) => (
     <View
       style={[
         styles.customBuzzCard,
@@ -326,7 +127,7 @@ export default function BuzzCallScreen() {
     >
       <View style={styles.customBuzzHeader}>
         <View style={styles.customBuzzLeft}>
-          <Text style={styles.customBuzzEmoji}>{item.emoji || '💫'}</Text>
+          <Text style={styles.customBuzzEmoji}>{item.emoji || 'ðŸ’«'}</Text>
           <View style={styles.customBuzzInfo}>
             <View style={styles.customBuzzTextRow}>
               <Text style={[styles.customBuzzText, { color: colors.text }]}>{item.text}</Text>
@@ -874,3 +675,10 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
 });
+
+
+
+
+
+
+
