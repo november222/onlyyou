@@ -67,6 +67,6 @@
                             "typescript":  "~5.8.3"
                         },
     "overrides":  {
-
+                      "expo-dev-launcher":  "5.1.2"
                   }
 }
