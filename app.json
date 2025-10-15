@@ -107,13 +107,12 @@
     "experiments": {
       "typedRoutes": true
     },
+    "owner": "caili96",
     "extra": {
       "router": {
         "origin": false
       },
-      "eas": {
-        "projectId": "a24d0def-168e-4b7f-a8e3-57c3f6d87701"
-      }
+      "eas": {}
     }
   }
 }
