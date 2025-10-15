@@ -1,4 +1,4 @@
-// Top-level build file where you can add configuration options common to all sub-projects/modules.
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompile\n// Top-level build file where you can add configuration options common to all sub-projects/modules.
 
 buildscript {
   repositories {
@@ -22,3 +22,4 @@ allprojects {
 
 apply plugin: "expo-root-project"
 apply plugin: "com.facebook.react.rootproject"
+\nsubprojects {\n  tasks.withType(KotlinCompile).configureEach {\n    kotlinOptions {\n      languageVersion = "2.1"\n      apiVersion = "2.1"\n    }\n  }\n}\n
